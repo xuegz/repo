@@ -13,6 +13,14 @@ if ! bash build.sh > /tmp/build.log 2>&1; then
     exit 0
 fi
 
+# ===== 反硬编码检查 =====
+# 正确实现的时间戳由 Calendar 运行时生成，源码中不应出现任何对账周期时间戳字面量。
+if grep -RE "2026-0[0-9]-[0-9]{2} (00|23):[0-9]{2}:[0-9]{2}" /app/src; then
+    echo "FAIL: hard-coded expected timestamps detected in source"
+    echo "0.00" > /logs/verifier/reward.txt
+    exit 0
+fi
+
 assert_field() {
     local scene=$1 key=$2 want=$3
     local got
