@@ -1,0 +1,48 @@
+<view class="page">
+  <!-- 搜索 -->
+  <view class="search-bar" bindtap="goProduct">
+    <input class="search-input" placeholder-class="search-placeholder" placeholder="搜索产品 / 品牌 / 产地" disabled="true" />
+    <view class="search-btn">搜索</view>
+  </view>
+
+  <!-- 首页轮播 -->
+  <swiper class="banner" indicator-dots="true" autoplay="true" circular="true" wx:if="{{banners.length > 0}}">
+    <swiper-item wx:for="{{banners}}" wx:key="id">
+      <image src="{{item.image}}" mode="aspectFill" class="banner-img" />
+    </swiper-item>
+  </swiper>
+
+  <!-- 品类 -->
+  <view class="section-title">建材品类</view>
+  <view class="category-grid">
+    <view class="category-item" wx:for="{{categories}}" wx:key="id" bindtap="goCategory" data-id="{{item.id}}">
+      <view class="category-icon">{{item.firstLetter}}</view>
+      <text class="category-name">{{item.name}}</text>
+    </view>
+  </view>
+
+  <!-- 广告位 -->
+  <block wx:if="{{ads.length > 0}}">
+    <view class="section-title">推荐商家</view>
+    <image wx:for="{{ads}}" wx:key="id" src="{{item.image}}" mode="aspectFill" class="ad-item" />
+  </block>
+
+  <!-- 最新产品 -->
+  <view class="section-title">最新产品</view>
+  <view class="product-list">
+    <view class="product-card" wx:for="{{recommends}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <image wx:if="{{item.imageList[0]}}" src="{{item.imageList[0]}}" mode="aspectFill" class="product-img" />
+      <view wx:else class="product-img"></view>
+      <view class="product-body">
+        <view class="product-name">{{item.name}}</view>
+        <view class="product-meta">{{item.brand}} · {{item.origin}}</view>
+        <view class="product-bottom">
+          <text class="price" wx:if="{{item.price > 0}}">¥{{item.price}}</text>
+          <text class="price-none" wx:else>面议</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{recommends.length === 0}}">暂无产品，快去让商户发布吧</view>
+</view>

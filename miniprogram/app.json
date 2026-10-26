@@ -1,0 +1,30 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/product/product",
+    "pages/detail/detail",
+    "pages/shop/shop",
+    "pages/mine/mine"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#1f2937",
+    "navigationBarTitleText": "建材商户平台",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f7fa",
+    "enablePullDownRefresh": true
+  },
+  "tabBar": {
+    "color": "#909399",
+    "selectedColor": "#409eff",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/product/product", "text": "找产品" },
+      { "pagePath": "pages/mine/mine", "text": "我的" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

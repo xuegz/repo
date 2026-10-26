@@ -1,0 +1,35 @@
+<view class="page" wx:if="{{merchant.id}}">
+  <view class="card">
+    <view class="shop-name">{{merchant.name}}</view>
+    <view class="info-row"><text class="info-label">联系人</text><text>{{merchant.contactName || '-'}}</text></view>
+    <view class="info-row"><text class="info-label">电话</text><text>{{merchant.phone}}</text></view>
+    <view class="info-row"><text class="info-label">市场</text><text>{{merchant.market || '-'}}</text></view>
+    <view class="info-row"><text class="info-label">地址</text><text>{{addressText}}</text></view>
+    <view class="btn-row">
+      <button class="btn-phone" bindtap="callPhone">电话联系档口</button>
+    </view>
+  </view>
+
+  <block wx:if="{{merchant.intro}}">
+    <view class="section-title">商户简介</view>
+    <view class="card"><view class="detail-desc">{{merchant.intro}}</view></view>
+  </block>
+
+  <view class="section-title">在售产品</view>
+  <view class="product-list">
+    <view class="product-card" wx:for="{{products}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <image wx:if="{{item.imageList[0]}}" src="{{item.imageList[0]}}" mode="aspectFill" class="product-img" />
+      <view wx:else class="product-img"></view>
+      <view class="product-body">
+        <view class="product-name">{{item.name}}</view>
+        <view class="product-meta">{{item.brand}} · {{item.origin}}</view>
+        <view class="product-bottom">
+          <text class="price" wx:if="{{item.price > 0}}">¥{{item.price}}</text>
+          <text class="price-none" wx:else>面议</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{products.length === 0}}">该商户暂未发布在售产品</view>
+</view>

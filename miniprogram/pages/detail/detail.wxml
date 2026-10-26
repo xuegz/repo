@@ -1,0 +1,41 @@
+<view class="page" wx:if="{{product.id}}">
+  <!-- 产品图 -->
+  <swiper class="detail-swiper" indicator-dots="true" circular="true" wx:if="{{product.imageList.length > 0}}">
+    <swiper-item wx:for="{{product.imageList}}" wx:key="*this">
+      <image src="{{item}}" mode="aspectFill" class="detail-img" />
+    </swiper-item>
+  </swiper>
+
+  <!-- 基本信息 -->
+  <view class="card">
+    <view class="detail-name">{{product.name}}</view>
+    <view class="detail-price" wx:if="{{product.price > 0}}">
+      ¥{{product.price}}<text class="unit" wx:if="{{product.unit}}">/{{product.unit}}</text>
+    </view>
+    <view class="detail-price" wx:else>面议</view>
+
+    <view class="info-row"><text class="info-label">品牌</text><text>{{product.brand || '未填写'}}</text></view>
+    <view class="info-row"><text class="info-label">类型</text><text>{{product.typeName || '未填写'}}</text></view>
+    <view class="info-row"><text class="info-label">规格</text><text>{{product.spec || '未填写'}}</text></view>
+    <view class="info-row"><text class="info-label">产地</text><text>{{product.origin || '未填写'}}</text></view>
+  </view>
+
+  <!-- 描述 -->
+  <view class="card" wx:if="{{product.description}}">
+    <view class="section-title" style="margin: 0 0 10rpx">产品描述</view>
+    <view class="detail-desc">{{product.description}}</view>
+  </view>
+
+  <!-- 档口信息 -->
+  <view class="card" wx:if="{{product.merchantId}}">
+    <view class="section-title" style="margin: 0 0 10rpx">档口信息</view>
+    <view class="info-row"><text class="info-label">商户</text><text>{{product.merchantName}}</text></view>
+    <view class="info-row"><text class="info-label">电话</text><text>{{product.merchantPhone}}</text></view>
+    <view class="btn-row">
+      <button class="btn-phone" bindtap="callPhone" wx:if="{{product.merchantPhone}}">电话联系档口</button>
+      <button class="btn-shop" bindtap="goShop">进入商户主页</button>
+    </view>
+  </view>
+
+  <view class="tip-row">右上角可转发给同行，方便调货询价</view>
+</view>

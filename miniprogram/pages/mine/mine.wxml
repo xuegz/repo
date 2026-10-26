@@ -1,0 +1,40 @@
+<view class="page">
+  <view class="card mine-header">
+    <view class="mine-title">建材商户平台</view>
+    <view class="mine-sub">同行调货 · 价格对比 · 厂家找渠道</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title" style="margin: 0 0 10rpx">我的浏览记录</view>
+    <view class="history-item" wx:for="{{history}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <image wx:if="{{item.imageList[0]}}" src="{{item.imageList[0]}}" mode="aspectFill" class="history-img" />
+      <view wx:else class="history-img"></view>
+      <view class="history-info">
+        <view class="product-name">{{item.name}}</view>
+        <view class="product-meta">{{item.merchantName}}</view>
+      </view>
+    </view>
+    <view class="empty" wx:if="{{history.length === 0}}">还没有浏览记录</view>
+  </view>
+
+  <view class="card">
+    <view class="menu-item" bindtap="callService">
+      <text>联系客服</text>
+      <text class="menu-right">{{servicePhone}}</text>
+    </view>
+    <view class="menu-item" bindtap="showTutorial">
+      <text>使用教程</text>
+      <text class="menu-right">›</text>
+    </view>
+    <view class="menu-item" bindtap="showDisclaimer">
+      <text>免责说明</text>
+      <text class="menu-right">›</text>
+    </view>
+    <view class="menu-item" bindtap="clearHistory">
+      <text>清除浏览记录</text>
+      <text class="menu-right">›</text>
+    </view>
+  </view>
+
+  <view class="footer">建材商户平台 · 让建材生意更好做</view>
+</view>

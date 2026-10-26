@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+spring:
+  # h2 = 内存库开箱即用（本地演示，重启数据重置）
+  # mysql = 正式环境，需先安装 MySQL 8 并导入 sql/jiancai.sql
+  profiles:
+    active: h2
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+
+# 自定义配置
+jiancai:
+  # 首次启动自动创建默认账号（已存在则跳过）：admin/123456、merchant/123456
+  init-default-account: true
+  jwt:
+    # 生产环境请替换为随机字符串
+    secret: jiancai-platform-secret-key-please-change-me-2026
+    expire-hours: 24
+  upload:
+    # 图片上传目录（Windows 示例）
+    path: D:/jiancai-upload/
+    # 对外访问前缀
+    url-prefix: /upload/
