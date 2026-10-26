@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: atoken-update-account
+
+app:
+  id: atoken-update-account

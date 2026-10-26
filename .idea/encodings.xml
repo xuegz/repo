@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/atoken-blockchain-request/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-flyway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-flyway/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-generate-code/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-generate-code/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-update-account/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-update-account/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-update-account/src/test/java/com/atoken/ksm/KsmBlockInfoCoreTest.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-update-core/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-update-dao/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atoken-update-service/src/main/java" charset="UTF-8" />
+    <file url="PROJECT" charset="GBK" />
+  </component>
+</project>

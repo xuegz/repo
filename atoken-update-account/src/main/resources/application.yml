@@ -1,0 +1,216 @@
+server:
+  port: 15040
+
+spring:
+  redis:
+    host: 172.17.3.100
+    port: 6379
+  datasource:
+#    url: jdbc:mysql://172.17.3.100:3306/ont_query?useSSL=false&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false
+#    username: developerr
+#    password: tNzDRFkPCAX0o
+#    url: jdbc:mysql://localhost:3306/ont_query?useSSL=false&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false
+#    username: root
+#    password: root
+    url: jdbc:mysql://172.17.3.225:3306/ont_query?useSSL=false&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&serverTimezone=Asia/Shanghai
+    username: developer
+    password: tNzDRFkPCAX0o
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 10
+      query-timeout: 6000
+      transaction-query-timeout: 6000
+      remove-abandoned-timeout: 1800
+      filters: stat,config
+
+  rabbitmq:
+    addresses: amqp://172.17.3.122:5672
+
+blockchain:
+  asset: ont
+  coin-fee: false
+  block:
+    init:
+      height: 4102734
+    number:
+      limit: 10
+    confirm: 1
+  request:
+    url: http://39.96.27.184:20336
+  max-rollback-count: 20
+
+  xwc:
+    host: http://154.209.69.120
+    rpc-port: 23457
+    dataBase: coin_account
+    mainAsset: xwc
+    blockConfirm: 1
+    threadPoolSize: 1
+    tablePrefix: xwc
+    initBlockHeight: 6072189
+    delayHeight: 0
+    maxRollbackCount: 20
+    blockNumberLimit: 100
+    hasCoinFee: false
+    handlerNum: 5
+    handlerTxRecordMaxThread: 20
+
+  atom:
+    mainAsset: atom
+    hasCoinFee: false
+    initBlockHeight: 1
+    blockNumberLimit: 100
+    blockConfirm: 1
+    delayHeight: 0
+    host: http://39.96.27.184
+    rest-port: 1317
+    rpc-port: 26657
+    browser-url: https://api.cosmostation.io
+    maxRollbackCount: 20
+    dataBase: atom_query
+    threadPoolSize: 1
+    imgUploadUrl: http://192.168.103.178:8080/api/crm/file/upload/url
+    guava:
+      capacity: 10 #api信息缓存的容量
+      maximum-size: 100 #api信息缓存的最大容量
+      over-time: 86400 #当缓存项在指定的时间段内没有被读或写就会被回收
+      concurrency-level: 8 #并发级别,即允许最多2个线程并发更新, 默认值为4
+
+  dot:
+    host: http://39.96.194.39
+    rpc-port: 9933
+    mainAsset: dot
+    hasCoinFee: false
+    initBlockHeight: 1532733
+    blockNumberLimit: 100
+    blockConfirm: 1
+    delayHeight: 0
+    maxRollbackCount: 20
+    dataBase: dot_query
+    threadPoolSize: 1
+    handlerNum: 5
+    handlerTxRecordMaxThread: 20
+    guava:
+      capacity: 10 #api信息缓存的容量
+      maximum-size: 100 #api信息缓存的最大容量
+      over-time: 86400 #当缓存项在指定的时间段内没有被读或写就会被回收
+      concurrency-level: 8 #并发级别,即允许最多2个线程并发更新, 默认值为4
+
+  ksm:
+    host: http://39.96.194.39
+    rpc-port: 19933
+    mainAsset: ksm
+    hasCoinFee: false
+    initBlockHeight: 1532733
+    blockNumberLimit: 100
+    blockConfirm: 1
+    delayHeight: 0
+    maxRollbackCount: 20
+    tablePrefix: ksm
+    threadPoolSize: 1
+    handlerNum: 5
+    handlerTxRecordMaxThread: 20
+    guava:
+      capacity: 10 #api信息缓存的容量
+      maximum-size: 100 #api信息缓存的最大容量
+      over-time: 86400 #当缓存项在指定的时间段内没有被读或写就会被回收
+      concurrency-level: 8 #并发级别,即允许最多2个线程并发更新, 默认值为4
+
+  kar:
+    host: http://172.17.3.66
+    rpc-port: 8080
+    mainAsset: kar
+    hasCoinFee: false
+    initBlockHeight: 85874
+    blockNumberLimit: 100
+    blockConfirm: 1
+    delayHeight: 0
+    maxRollbackCount: 20
+    tablePrefix: kar
+    threadPoolSize: 1
+    handlerNum: 5
+    handlerTxRecordMaxThread: 20
+    subscan-url: https://karura.subscan.io
+    guava:
+      capacity: 10 #api信息缓存的容量
+      maximum-size: 100 #api信息缓存的最大容量
+      over-time: 86400 #当缓存项在指定的时间段内没有被读或写就会被回收
+      concurrency-level: 8 #并发级别,即允许最多2个线程并发更新, 默认值为4
+
+  tomo:
+    mainAsset: tomo
+    hasCoinFee: true
+    initBlockHeight: 15882632
+    blockNumberLimit: 100
+    blockConfirm: 1
+    delayHeight: 0
+    scan-url: https://scan.tomochain.com
+    rpc-url: https://rpc.tomochain.com
+    api-url: https://api.cosmostation.io
+    master-url: https://master.tomochain.com
+    maxRollbackCount: 20
+    tablePrefix: tomo
+    threadPoolSize: 3
+    imgUploadUrl: http://192.168.103.178:8080/api/crm/file/upload/url
+    unbounded-time: 216000
+    blockHistoryRetainTime: 1 # 天
+  ht:
+    dataBase: coin_account
+    mainAsset: ht
+    blockConfirm: 1
+    threadPoolSize: 1
+    tablePrefix: ht
+    initBlockHeight: 2593452
+    delayHeight: 0
+    maxRollbackCount: 20
+    blockNumberLimit: 100
+    hasCoinFee: false
+  bnb:
+    dataBase: coin_account
+    mainAsset: ht
+    blockConfirm: 1
+    threadPoolSize: 10
+    tablePrefix: bnb
+    initBlockHeight: 2593452
+    delayHeight: 0
+    maxRollbackCount: 20
+    blockNumberLimit: 100
+    hasCoinFee: false
+
+xxl:
+  job:
+    admin:
+#      addresses: http://localhost:15032/xxl-job-admin # 调度中心部署跟地址：如调度中心集群部署存在多个地址则用逗号分隔。执行器将会使用该地址进行"执行器心跳注册"和"任务结果回调"。
+      addresses: http://172.17.3.218:8181
+    executor:
+      # 执行器"AppName"和地址信息配置：AppName执行器心跳注册分组依据；地址信息用于"调度中心请求并触发任务"和"执行器注册"。执行器默认端口为9999，执行器IP默认为空表示自动获取IP，多网卡时可手动设置指定IP，该IP不会绑定Host仅作为通讯实用。单机部署多个执行器时，注意要配置不同执行器端口；
+      appname: atoken-update-job
+      ip:
+      port: 15041
+      # 执行器运行日志文件存储的磁盘位置，需要对该路径拥有读写权限
+      logpath: /opt/atoken/logs
+      # 执行器Log文件定期清理功能，指定日志保存天数，日志文件过期自动删除。限制至少保持3天，否则功能不生效；
+      logretentiondays: 7
+    # xxl-job, access token：执行器通讯TOKEN，非空时启用
+    accessToken: wcs_!*0127aim
+
+#
+# logging
+#
+logging:
+  config: classpath:conf/logging/logback-spring.xml
+  path: targets/logs/
+  level:
+    default: INFO
+    commons: INFO
+    biz: INFO
+    mybatis: INFO
+
+dingding:
+  message:
+    url: https://oapi.dingtalk.com/robot/send?access_token=fc4e4673879ad06007ed6c373b36ffef0d0dcd6f6afb659c2e70da3a3f593c4e
+    isAtAll: true
+    atMobiles:

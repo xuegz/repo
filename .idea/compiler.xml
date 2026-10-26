@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="atoken-flyway" />
+        <module name="atoken-update-dao" />
+        <module name="atoken-generate-code" />
+        <module name="atoken-update-core" />
+        <module name="atoken-blockchain-request" />
+        <module name="atoken-update-account" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="atoken-blockchain-request" target="1.8" />
+      <module name="atoken-flyway" target="1.8" />
+      <module name="atoken-generate-code" target="1.8" />
+      <module name="atoken-update-account" target="1.8" />
+      <module name="atoken-update-core" target="1.8" />
+      <module name="atoken-update-dao" target="1.8" />
+      <module name="atoken-update-parent" target="1.8" />
+      <module name="atoken-update-service" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="atoken-blockchain-request" options="-parameters" />
+      <module name="atoken-flyway" options="-parameters" />
+      <module name="atoken-generate-code" options="-parameters" />
+      <module name="atoken-update-account" options="-parameters" />
+      <module name="atoken-update-core" options="-parameters" />
+      <module name="atoken-update-dao" options="-parameters" />
+      <module name="atoken-update-service" options="-parameters" />
+    </option>
+  </component>
+</project>

@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.jooq:joor-java-8:0.9.11">
+    <CLASSES>
+      <root url="jar://D:/maven_lib/org/jooq/joor-java-8/0.9.11/joor-java-8-0.9.11.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://D:/maven_lib/org/jooq/joor-java-8/0.9.11/joor-java-8-0.9.11-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://D:/maven_lib/org/jooq/joor-java-8/0.9.11/joor-java-8-0.9.11-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

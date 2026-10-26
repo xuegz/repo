@@ -1,0 +1,194 @@
+{
+  "number": "1532672",
+  "hash": "0x3ca14913b91839517b34ebc3c719610de914c9418bb1cceeff35e6691ca18751",
+  "parentHash": "0x6769ea4d2c12ddf5460842a7bf1949e6163ad458ed9f2c7a262a586b27719e69",
+  "stateRoot": "0xf4660e4c04e32089033d2a99fa2b01ea867ca91b394adeaa5065b0e39515f070",
+  "extrinsicsRoot": "0xd7634136b542575480eeaae67137b80079016c36a4e8abb37b9ac940f3bd3821",
+  "authorId": "1zugcajKZ8XwjWvC5QZWcrpjfnjZZ9FfxRB9f5Hy6GdXBpZ",
+  "logs": [
+    {
+      "type": "PreRuntime",
+      "index": "6",
+      "value": [
+        "BABE",
+        "0x03010000002758e40f00000000aeaf651191e310d8463df49dc6105cd8652564d176e89493fa41d6a971bef53c3e8cf20a5e92b2605787273d51f97b21db40058a6caae2b10fbc6056d8cf23004b79b404bbdb5cc8ab93addb106ef6c53a0ffd2a688f14983f0ca1ca8947be0e"
+      ]
+    },
+    {
+      "type": "Seal",
+      "index": "5",
+      "value": [
+        "BABE",
+        "0x2447274423e239e24cb6a34fb0c128423e027466f3bc6fda60740cad4686204ed73f86fea45c2e7f058576b0d1de32baca802b812b396a2297a53e1a8f66f589"
+      ]
+    }
+  ],
+  "onInitialize": {
+    "events": []
+  },
+  "extrinsics": [
+    {
+      "method": {
+        "pallet": "timestamp",
+        "method": "set"
+      },
+      "signature": null,
+      "nonce": "0",
+      "args": {
+        "now": "1599738090000"
+      },
+      "tip": "0",
+      "hash": "0x538e06f5b3329e29e9e6dae354ebea5209fe974cbe279649a53f77f41d023b10",
+      "info": {},
+      "events": [
+        {
+          "method": {
+            "pallet": "system",
+            "method": "ExtrinsicSuccess"
+          },
+          "data": [
+            {
+              "weight": "158000000",
+              "class": "Mandatory",
+              "paysFee": "Yes"
+            }
+          ]
+        }
+      ],
+      "success": true,
+      "paysFee": true
+    },
+    {
+      "method": {
+        "pallet": "finalityTracker",
+        "method": "finalHint"
+      },
+      "signature": null,
+      "nonce": "0",
+      "args": {
+        "hint": "1532668"
+      },
+      "tip": "0",
+      "hash": "0x3bad1b24ad35786ccc4102ea27ee9a28fec5088e562c5b67ad2a018fb88fab19",
+      "info": {},
+      "events": [
+        {
+          "method": {
+            "pallet": "system",
+            "method": "ExtrinsicSuccess"
+          },
+          "data": [
+            {
+              "weight": "0",
+              "class": "Mandatory",
+              "paysFee": "Yes"
+            }
+          ]
+        }
+      ],
+      "success": true,
+      "paysFee": true
+    },
+    {
+      "method": {
+        "pallet": "parachains",
+        "method": "setHeads"
+      },
+      "signature": null,
+      "nonce": "0",
+      "args": {
+        "heads": []
+      },
+      "tip": "0",
+      "hash": "0xcf52705d1ade64fc0b05859ac28358c0770a217dd76b75e586ae848c56ae810d",
+      "info": {},
+      "events": [
+        {
+          "method": {
+            "pallet": "system",
+            "method": "ExtrinsicSuccess"
+          },
+          "data": [
+            {
+              "weight": "1000000000",
+              "class": "Mandatory",
+              "paysFee": "Yes"
+            }
+          ]
+        }
+      ],
+      "success": true,
+      "paysFee": true
+    },
+    {
+      "method": {
+        "pallet": "staking",
+        "method": "bondExtra"
+      },
+      "signature": {
+        "signature": "0xbe30a5a5c42e0e05c9665603b47294aaed3d11c4e4c50ac506faaf89ff30eb38b744ce1424e7087bb50a41192d9a31cf51be1e6ceaffcd4e40b0ece87928c98e",
+        "signer": "14azzvA6yCJSEibbTFBuMR8F3cJwQvWPxh1KeoYxToBrM67C"
+      },
+      "nonce": "2",
+      "args": {
+        "max_additional": "6685232000000"
+      },
+      "tip": "0",
+      "hash": "0xac52ce5322056e7e3481611b358aa9cd2314f156fe9bc2e7dfbca30bb2c8ab98",
+      "info": {
+        "weight": "355000000",
+        "class": "Normal",
+        "partialFee": "123000000"
+      },
+      "events": [
+        {
+          "method": {
+            "pallet": "staking",
+            "method": "Bonded"
+          },
+          "data": [
+            "14azzvA6yCJSEibbTFBuMR8F3cJwQvWPxh1KeoYxToBrM67C",
+            "6685109739998"
+          ]
+        },
+        {
+          "method": {
+            "pallet": "treasury",
+            "method": "Deposit"
+          },
+          "data": [
+            "98400000"
+          ]
+        },
+        {
+          "method": {
+            "pallet": "balances",
+            "method": "Deposit"
+          },
+          "data": [
+            "1zugcajKZ8XwjWvC5QZWcrpjfnjZZ9FfxRB9f5Hy6GdXBpZ",
+            "24600000"
+          ]
+        },
+        {
+          "method": {
+            "pallet": "system",
+            "method": "ExtrinsicSuccess"
+          },
+          "data": [
+            {
+              "weight": "355000000",
+              "class": "Normal",
+              "paysFee": "Yes"
+            }
+          ]
+        }
+      ],
+      "success": true,
+      "paysFee": true
+    }
+  ],
+  "onFinalize": {
+    "events": []
+  }
+}

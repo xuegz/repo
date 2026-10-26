@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: polkadot-java:polkadot-java:1.0.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://D:/maven_lib/polkadot-java/polkadot-java/1.0.0-SNAPSHOT/polkadot-java-1.0.0-20190724.110802-3.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://D:/maven_lib/polkadot-java/polkadot-java/1.0.0-SNAPSHOT/polkadot-java-1.0.0-20190724.110802-3-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://D:/maven_lib/polkadot-java/polkadot-java/1.0.0-SNAPSHOT/polkadot-java-1.0.0-20190724.110802-3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

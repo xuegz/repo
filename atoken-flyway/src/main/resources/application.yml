@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/flyway?Unicode=true&characterEncoding=UTF-8
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  ## 设定 flyway 属性
+  flyway:
+    clean-disabled: true # flyway 的 clean 命令会删除指定 schema 下的所有 table, 杀伤力太大了, 应该禁掉.
+    enabled: true # 启用或禁用 flyway
+    locations: classpath:db/migration # 设定 SQL 脚本的目录,多个路径使用逗号分隔, 比如取值为 classpath:db/migration,filesystem:/sql-migrations
+    baseline-on-migrate: true # 如果指定 schema 包含了其他表,但没有 flyway schema history 表的话, 在执行 flyway migrate 命令之前, 必须先执行 flyway baseline 命令.,设置 spring.flyway.baseline-on-migrate 为 true 后, flyway 将在需要 baseline 的时候, 自动执行一次 baseline.
+    baseline-version: 1 # 指定 baseline 的版本号,缺省值为 1, 低于该版本号的 SQL 文件, migrate 的时候被忽略.
+    table: flyway_schema_history_myapp # 设定 flyway 的 metadata 表名, 缺省为 flyway_schema_history
+    out-of-order: true # 开发环境最好开启 outOfOrder, 生产环境关闭 outOfOrder .
+    url: jdbc:mysql://localhost:3306/flyway?Unicode=true&characterEncoding=UTF-8
+    user: root
+    password: root

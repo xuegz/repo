@@ -1,0 +1,32 @@
+
+[	java:S106ƒ"9Replace this use of System.out or System.err by a logger.(²‘àÏùÿÿÿÿ8ÁÜ«áÔ/
+T
+java:S3655j"7Call "Optional#isPresent()" before accessing the value.(ûÏ¢Æ8“ƒŞáÔ/
+\
+java:S4830€"@Enable server certificate validation on this SSL/TLS connection.(ÉÂµ°øÿÿÿÿ
+C
+java:S1602¼",Remove useless curly braces around statement(”İÂ½
+C
+java:S1075j"&Remove this hard-coded path-delimiter.(ûÏ¢Æ8“ƒŞáÔ/
+S
+java:S3655³"7Call "Optional#isPresent()" before accessing the value.(‚–¶Şûÿÿÿÿ
+]
+java:S3252æ"FUse static access with "com.alibaba.fastjson.JSON" for "toJSONString".(äÛ»Ò
+
+java:S1186€"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(ÉÂµ°øÿÿÿÿ
+W
+java:S4830ü"@Enable server certificate validation on this SSL/TLS connection.(Ú¥È¢
+Q
+java:S1172ˆ"5Remove this unused method parameter "responseIsList".(ù¸Ì·ûÿÿÿÿ
+U
+java:S1117a"8Rename "data" which hides the field declared at line 45.(Òõš™8“ƒŞáÔ/
+
+java:S1157ö"cReplace these toUpperCase()/toLowerCase() and equals() calls with a single equalsIgnoreCase() call.(è«êéşÿÿÿÿ
+˜
+java:S1186ü"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(Ú¥È¢
+=
+java:S1168…"&Return an empty array instead of null.(¥¹ï
+C
+java:S1602Í",Remove useless curly braces around statement(”İÂ½
+E
+java:S1172œ".Remove this unused method parameter "request".(½÷¯Å

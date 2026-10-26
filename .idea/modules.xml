@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/atoken-blockchain-request/atoken-blockchain-request.iml" filepath="$PROJECT_DIR$/atoken-blockchain-request/atoken-blockchain-request.iml" />
+      <module fileurl="file://$PROJECT_DIR$/atoken-flyway/atoken-flyway.iml" filepath="$PROJECT_DIR$/atoken-flyway/atoken-flyway.iml" />
+      <module fileurl="file://$PROJECT_DIR$/atoken-generate-code/atoken-generate-code.iml" filepath="$PROJECT_DIR$/atoken-generate-code/atoken-generate-code.iml" />
+      <module fileurl="file://$PROJECT_DIR$/atoken-update-account/atoken-update-account.iml" filepath="$PROJECT_DIR$/atoken-update-account/atoken-update-account.iml" />
+      <module fileurl="file://$PROJECT_DIR$/atoken-update-core/atoken-update-core.iml" filepath="$PROJECT_DIR$/atoken-update-core/atoken-update-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/atoken-update-dao/atoken-update-dao.iml" filepath="$PROJECT_DIR$/atoken-update-dao/atoken-update-dao.iml" />
+      <module fileurl="file://$PROJECT_DIR$/atoken-update-parent.iml" filepath="$PROJECT_DIR$/atoken-update-parent.iml" />
+    </modules>
+  </component>
+</project>

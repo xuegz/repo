@@ -1,0 +1,8 @@
+com\atoken\update\entity\DelegateDetail.class
+com\atoken\update\entity\Token.class
+com\atoken\update\entity\Address.class
+com\atoken\update\entity\AddressAsset.class
+com\atoken\update\entity\Block.class
+com\atoken\update\entity\Tx.class
+com\atoken\update\entity\TxDetail.class
+com\atoken\update\entity\Validator.class

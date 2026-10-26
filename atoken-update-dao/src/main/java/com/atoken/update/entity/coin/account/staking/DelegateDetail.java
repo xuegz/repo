@@ -1,0 +1,106 @@
+package com.atoken.update.entity.coin.account.staking;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+public class DelegateDetail {
+    private Long id;
+
+    private String walletId;
+
+    private String addr;
+
+    private String validatorAddr;
+
+    private BigDecimal delegateAmount;
+
+    private BigDecimal unbondingAmount;
+
+    private BigDecimal rewardsAmount;
+
+    private String status;
+
+    private Date createTime;
+
+    private Date updateTime;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getWalletId() {
+        return walletId;
+    }
+
+    public void setWalletId(String walletId) {
+        this.walletId = walletId == null ? null : walletId.trim();
+    }
+
+    public String getAddr() {
+        return addr;
+    }
+
+    public void setAddr(String addr) {
+        this.addr = addr == null ? null : addr.trim();
+    }
+
+    public String getValidatorAddr() {
+        return validatorAddr;
+    }
+
+    public void setValidatorAddr(String validatorAddr) {
+        this.validatorAddr = validatorAddr == null ? null : validatorAddr.trim();
+    }
+
+    public BigDecimal getDelegateAmount() {
+        return delegateAmount;
+    }
+
+    public void setDelegateAmount(BigDecimal delegateAmount) {
+        this.delegateAmount = delegateAmount;
+    }
+
+    public BigDecimal getUnbondingAmount() {
+        return unbondingAmount;
+    }
+
+    public void setUnbondingAmount(BigDecimal unbondingAmount) {
+        this.unbondingAmount = unbondingAmount;
+    }
+
+    public BigDecimal getRewardsAmount() {
+        return rewardsAmount;
+    }
+
+    public void setRewardsAmount(BigDecimal rewardsAmount) {
+        this.rewardsAmount = rewardsAmount;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+    }
+}

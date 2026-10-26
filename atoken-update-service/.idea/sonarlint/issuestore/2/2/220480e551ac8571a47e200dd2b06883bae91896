@@ -1,0 +1,17 @@
+
+R	java:S125Ó"<This block of commented-out lines of code should be removed.(ĞéœÛ
+L
+java:S1874÷"5Remove this use of "ROUND_HALF_UP"; it is deprecated.(¤öŸ±
+8
+java:S2111÷"!Use "BigDecimal.valueOf" instead.(¤öŸ±
+R	java:S125Í"<This block of commented-out lines of code should be removed.(…ƒı
+G
+java:S1874÷"0Remove this use of "setScale"; it is deprecated.(¤öŸ±
+I
+java:S1068."3Remove this unused "transferMessage" private field.(í¾Ùä
+O
+java:S1197ë"8Move the array designator from the variable to the type.(àÚ©§
+h
+java:S3776U"RRefactor this method to reduce its Cognitive Complexity from 36 to the 15 allowed.(™ÄØ´
+C
+java:S1172¸",Remove this unused method parameter "state".(ËèÅù

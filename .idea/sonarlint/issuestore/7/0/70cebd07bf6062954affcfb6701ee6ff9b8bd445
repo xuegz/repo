@@ -1,0 +1,10 @@
+
+n
+java:S1128
+"SRemove this unused import 'org.springframework.beans.factory.annotation.Qualifier'.(íàÄ®ıÿÿÿÿ
+f
+java:S1128"KRemove this unused import 'com.xxl.job.core.handler.annotation.JobHandler'.(ƒÙ™ÿÿÿÿÿ
+`
+java:S1128"ERemove this unused import 'org.springframework.stereotype.Component'.(Ş÷Ñ¸ÿÿÿÿÿ
+n
+java:S1128	"SRemove this unused import 'org.springframework.beans.factory.annotation.Autowired'.(¡¸Îùÿÿÿÿ

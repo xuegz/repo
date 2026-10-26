@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.atoken:aotken-apollo-client:1.0.3-RELEASE">
+    <CLASSES>
+      <root url="jar://D:/maven_lib/com/atoken/aotken-apollo-client/1.0.3-RELEASE/aotken-apollo-client-1.0.3-RELEASE.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://D:/maven_lib/com/atoken/aotken-apollo-client/1.0.3-RELEASE/aotken-apollo-client-1.0.3-RELEASE-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://D:/maven_lib/com/atoken/aotken-apollo-client/1.0.3-RELEASE/aotken-apollo-client-1.0.3-RELEASE-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
