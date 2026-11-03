@@ -54,7 +54,7 @@
   <!-- 产品列表 -->
   <view class="product-list">
     <view class="product-card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
-      <image wx:if="{{item.imageList[0]}}" src="{{tools.fileUrl(item.imageList[0])}}" mode="aspectFill" class="product-img" />
+      <image wx:if="{{item.imageList[0]}}" src="{{tools.thumbUrl(item.imageList[0], 300)}}" mode="aspectFill" class="product-img" lazy-load />
       <image wx:else src="/assets/placeholder/product.jpg" mode="aspectFill" class="product-img" />
       <view class="product-body">
         <view class="product-name">{{item.name}}</view>

@@ -11,7 +11,7 @@
   <view class="inquiry-card" wx:for="{{list}}" wx:key="id">
     <view class="inquiry-head">
       <view class="inquiry-product" bindtap="goProduct" data-id="{{item.productId}}">
-        <image wx:if="{{item.productImage}}" src="{{tools.fileUrl(item.productImage)}}" mode="aspectFill" class="inquiry-product-img" />
+        <image wx:if="{{item.productImage}}" src="{{tools.thumbUrl(item.productImage, 120)}}" mode="aspectFill" class="inquiry-product-img" lazy-load />
         <image wx:else src="/assets/placeholder/product-small.jpg" mode="aspectFill" class="inquiry-product-img" />
         <view class="inquiry-product-info">
           <view class="product-name">{{item.productName || '通用询价'}}</view>

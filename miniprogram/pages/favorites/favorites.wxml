@@ -9,7 +9,7 @@
   <block wx:if="{{type === 1}}">
     <view class="product-list">
       <view class="product-card" wx:for="{{list}}" wx:key="id" bindtap="goProduct" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
-        <image wx:if="{{item.imageList[0]}}" src="{{tools.fileUrl(item.imageList[0])}}" mode="aspectFill" class="product-img" />
+        <image wx:if="{{item.imageList[0]}}" src="{{tools.thumbUrl(item.imageList[0], 300)}}" mode="aspectFill" class="product-img" lazy-load />
         <image wx:else src="/assets/placeholder/product.jpg" mode="aspectFill" class="product-img" />
         <view class="fav-remove" catchtap="removeFavorite" data-id="{{item.id}}">×</view>
         <view class="product-body">
@@ -26,7 +26,7 @@
 
   <block wx:else>
     <view class="shop-card" wx:for="{{list}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
-      <image wx:if="{{item.logo}}" src="{{tools.fileUrl(item.logo)}}" mode="aspectFill" class="shop-avatar" />
+      <image wx:if="{{item.logo}}" src="{{tools.thumbUrl(item.logo, 120)}}" mode="aspectFill" class="shop-avatar" lazy-load />
       <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
       <view class="shop-info">
         <view class="shop-name-line">{{item.name}}</view>

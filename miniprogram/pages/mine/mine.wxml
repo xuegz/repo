@@ -9,7 +9,7 @@
   <view class="card">
     <view class="section-title" style="margin: 0 0 10rpx">我的浏览记录</view>
     <view class="history-item" wx:for="{{history}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-      <image wx:if="{{item.imageList[0]}}" src="{{tools.fileUrl(item.imageList[0])}}" mode="aspectFill" class="history-img" />
+      <image wx:if="{{item.imageList[0]}}" src="{{tools.thumbUrl(item.imageList[0], 120)}}" mode="aspectFill" class="history-img" lazy-load />
       <image wx:else src="/assets/placeholder/product-small.jpg" mode="aspectFill" class="history-img" />
       <view class="history-info">
         <view class="product-name">{{item.name}}</view>

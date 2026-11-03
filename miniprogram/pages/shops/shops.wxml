@@ -50,7 +50,7 @@
   <view class="section-title">入驻商户</view>
 
   <view class="shop-card" wx:for="{{list}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
-    <image wx:if="{{item.logo}}" src="{{tools.fileUrl(item.logo)}}" mode="aspectFill" class="shop-avatar" />
+    <image wx:if="{{item.logo}}" src="{{tools.thumbUrl(item.logo, 120)}}" mode="aspectFill" class="shop-avatar" lazy-load />
     <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
     <view class="shop-info">
       <view class="shop-name-line">{{item.name}}</view>

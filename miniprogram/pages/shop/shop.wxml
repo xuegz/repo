@@ -2,7 +2,7 @@
 
 <view class="page" wx:if="{{merchant.id}}">
   <view class="card">
-    <image wx:if="{{merchant.logo}}" src="{{tools.fileUrl(merchant.logo)}}" mode="aspectFill" class="shop-logo" />
+    <image wx:if="{{merchant.logo}}" src="{{tools.thumbUrl(merchant.logo, 300)}}" mode="aspectFill" class="shop-logo" lazy-load />
     <image wx:else src="/assets/placeholder/shop-wide.jpg" mode="aspectFill" class="shop-logo" />
     <view class="shop-name">{{merchant.name}}</view>
     <view class="info-row"><text class="info-label">联系人</text><text>{{merchant.contactName || '-'}}</text></view>
@@ -29,7 +29,7 @@
   <view class="section-title">在售产品</view>
   <view class="product-list">
     <view class="product-card" wx:for="{{products}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
-      <image wx:if="{{item.imageList[0]}}" src="{{tools.fileUrl(item.imageList[0])}}" mode="aspectFill" class="product-img" />
+      <image wx:if="{{item.imageList[0]}}" src="{{tools.thumbUrl(item.imageList[0], 300)}}" mode="aspectFill" class="product-img" lazy-load />
       <image wx:else src="/assets/placeholder/product.jpg" mode="aspectFill" class="product-img" />
       <view class="product-body">
         <view class="product-name">{{item.name}}</view>

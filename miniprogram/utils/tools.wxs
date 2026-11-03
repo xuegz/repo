@@ -16,6 +16,23 @@ function fileUrl(path) {
   return HOST + path
 }
 
+/**
+ * 列表图片缩略图地址
+ * - OSS 图片自动加 resize 参数，减少流量
+ * - 本地静态图保持原地址
+ */
+function thumbUrl(path, width) {
+  var url = fileUrl(path)
+  if (!url) {
+    return ''
+  }
+  width = width || 300
+  if (url.indexOf('.aliyuncs.com') > -1 || url.indexOf('://') > -1 && url.indexOf('oss') > -1) {
+    return url + '?x-oss-process=image/resize,w_' + width + ',m_lfit'
+  }
+  return url
+}
+
 /** 价格显示：为空显示面议 */
 function priceText(price, unit) {
   if (price === null || price === undefined || price <= 0) {
@@ -63,6 +80,7 @@ function has(val) {
 
 module.exports = {
   fileUrl: fileUrl,
+  thumbUrl: thumbUrl,
   priceText: priceText,
   dateText: dateText,
   firstChar: firstChar,

@@ -28,7 +28,7 @@
   <!-- 首页轮播 -->
   <swiper class="banner" indicator-dots="true" autoplay="true" circular="true" wx:if="{{banners.length > 0}}">
     <swiper-item wx:for="{{banners}}" wx:key="id">
-      <image src="{{tools.fileUrl(item.image)}}" mode="aspectFill" class="banner-img" />
+      <image src="{{tools.thumbUrl(item.image, 400)}}" mode="aspectFill" class="banner-img" lazy-load />
     </swiper-item>
   </swiper>
 
@@ -81,14 +81,14 @@
   <!-- 广告位 -->
   <block wx:if="{{ads.length > 0}}">
     <view class="section-title">市场推广</view>
-    <image wx:for="{{ads}}" wx:key="id" src="{{tools.fileUrl(item.image)}}" mode="aspectFill" class="ad-item" />
+    <image wx:for="{{ads}}" wx:key="id" src="{{tools.thumbUrl(item.image, 240)}}" mode="aspectFill" class="ad-item" lazy-load />
   </block>
 
   <!-- 入驻商户 -->
   <block wx:if="{{merchants.length > 0}}">
     <view class="section-title">入驻商户</view>
     <view class="shop-card" wx:for="{{merchants}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
-      <image wx:if="{{item.logo}}" src="{{tools.fileUrl(item.logo)}}" mode="aspectFill" class="shop-avatar" />
+      <image wx:if="{{item.logo}}" src="{{tools.thumbUrl(item.logo, 120)}}" mode="aspectFill" class="shop-avatar" lazy-load />
       <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
       <view class="shop-info">
         <view class="shop-name-line">{{item.name}}</view>
@@ -104,7 +104,7 @@
   <view class="section-title">最新产品</view>
   <view class="product-list">
     <view class="product-card" wx:for="{{recommends}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
-      <image wx:if="{{item.imageList[0]}}" src="{{tools.fileUrl(item.imageList[0])}}" mode="aspectFill" class="product-img" />
+      <image wx:if="{{item.imageList[0]}}" src="{{tools.thumbUrl(item.imageList[0], 300)}}" mode="aspectFill" class="product-img" lazy-load />
       <image wx:else src="/assets/placeholder/product.jpg" mode="aspectFill" class="product-img" />
       <view class="product-body">
         <view class="product-name">{{item.name}}</view>

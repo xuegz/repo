@@ -36,7 +36,7 @@
     hover-class="tap-hover"
     hover-stay-time="60"
   >
-    <image wx:if="{{item.logo}}" src="{{tools.fileUrl(item.logo)}}" mode="aspectFill" class="shop-avatar" />
+    <image wx:if="{{item.logo}}" src="{{tools.thumbUrl(item.logo, 120)}}" mode="aspectFill" class="shop-avatar" lazy-load />
     <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
     <view class="shop-info">
       <view class="shop-name-line">{{item.name}}</view>
