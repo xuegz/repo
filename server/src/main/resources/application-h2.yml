@@ -5,11 +5,7 @@ spring:
   datasource:
     driver-class-name: org.h2.Driver
     # MODE=MySQL 兼容 MySQL 语法；DB_CLOSE_DELAY=-1 保证内存库在连接关闭时不丢失
+    # 建表与演示数据由 Flyway 在启动时执行 classpath:db/migration
     url: jdbc:h2:mem:jiancai;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
     username: sa
     password:
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:db/schema-h2.sql
-      data-locations: classpath:db/data-h2.sql

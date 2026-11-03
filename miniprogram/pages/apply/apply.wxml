@@ -1,0 +1,79 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <view class="card apply-header">
+    <view class="apply-title">商户入驻申请</view>
+    <view class="apply-sub">限时免费入驻，提交后平台将在 1 个工作日内完成审核</view>
+  </view>
+
+  <view class="card">
+    <view class="form-item">
+      <view class="form-label">商户名称 <text class="req">*</text></view>
+      <input class="form-input" placeholder="如：三秦板材总汇" value="{{form.name}}" data-field="name" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">联系人 <text class="req">*</text></view>
+      <input class="form-input" placeholder="如：张老板" value="{{form.contactName}}" data-field="contactName" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">联系电话 <text class="req">*</text></view>
+      <input class="form-input" type="number" maxlength="11" placeholder="手机号，审核通过后将作为登录账号" value="{{form.phone}}" data-field="phone" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">主营品类</view>
+      <picker mode="selector" range="{{categories}}" range-key="name" bindchange="onCategoryChange">
+        <view class="picker-view {{selectedCategory ? '' : 'placeholder'}}">{{selectedCategory || '请选择主营品类'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">所属市场</view>
+      <picker mode="selector" range="{{markets}}" range-key="name" bindchange="onMarketChange">
+        <view class="picker-view {{selectedMarket ? '' : 'placeholder'}}">{{selectedMarket || '请选择所属建材市场（选填）'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-row">
+      <view class="form-item half">
+        <view class="form-label">省份</view>
+        <input class="form-input" placeholder="陕西省" value="{{form.province}}" data-field="province" bindinput="onInput" />
+      </view>
+      <view class="form-item half">
+        <view class="form-label">城市</view>
+        <input class="form-input" placeholder="西安市" value="{{form.city}}" data-field="city" bindinput="onInput" />
+      </view>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">详细地址</view>
+      <input class="form-input" placeholder="如：北二环 A 区 1 排 2 号" value="{{form.address}}" data-field="address" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">门店定位</view>
+      <view class="picker-view {{locationText ? '' : 'placeholder'}}" bindtap="chooseLocation">
+        {{locationText || '点击在地图上选择门店位置（选填）'}}
+      </view>
+      <view class="apply-note">选点后顾客可在小程序一键导航到店，也可稍后在商户端补充。</view>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">门店照片</view>
+      <view class="upload-box" bindtap="chooseLogo">
+        <image wx:if="{{form.logo}}" src="{{tools.fileUrl(form.logo)}}" mode="aspectFill" class="logo-img" />
+        <view wx:else class="upload-tip">点击上传门店 / 产品照片</view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">门店简介</view>
+      <textarea class="form-textarea" placeholder="主营范围、经营年限等" value="{{form.intro}}" data-field="intro" bindinput="onInput" />
+    </view>
+
+    <button class="submit-btn" bindtap="submit" loading="{{submitting}}">提交入驻申请</button>
+    <view class="apply-note">审核通过后，平台将为该手机号开通商户账号，登录后即可发布产品。</view>
+  </view>
+</view>

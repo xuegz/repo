@@ -1,10 +1,15 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
 <view class="page" wx:if="{{product.id}}">
   <!-- 产品图 -->
   <swiper class="detail-swiper" indicator-dots="true" circular="true" wx:if="{{product.imageList.length > 0}}">
     <swiper-item wx:for="{{product.imageList}}" wx:key="*this">
-      <image src="{{item}}" mode="aspectFill" class="detail-img" />
+      <image src="{{tools.fileUrl(item)}}" mode="aspectFill" class="detail-img" />
     </swiper-item>
   </swiper>
+  <view class="detail-swiper" wx:else>
+    <image src="/assets/placeholder/product.jpg" mode="aspectFill" class="detail-img" />
+  </view>
 
   <!-- 基本信息 -->
   <view class="card">
@@ -13,11 +18,39 @@
       ¥{{product.price}}<text class="unit" wx:if="{{product.unit}}">/{{product.unit}}</text>
     </view>
     <view class="detail-price" wx:else>面议</view>
+    <view class="price-time" wx:if="{{product.updateTime || product.createTime}}">
+      信息更新于 {{tools.dateText(product.updateTime || product.createTime)}}
+    </view>
 
     <view class="info-row"><text class="info-label">品牌</text><text>{{product.brand || '未填写'}}</text></view>
     <view class="info-row"><text class="info-label">类型</text><text>{{product.typeName || '未填写'}}</text></view>
     <view class="info-row"><text class="info-label">规格</text><text>{{product.spec || '未填写'}}</text></view>
     <view class="info-row"><text class="info-label">产地</text><text>{{product.origin || '未填写'}}</text></view>
+  </view>
+
+  <!-- 同款价格对比 -->
+  <view class="card" wx:if="{{compareList.length > 0}}">
+    <view class="section-title" style="margin: 0 0 10rpx">同款价格对比（{{compareList.length}} 家报价）</view>
+    <view class="compare-summary" wx:if="{{compareSummary}}">
+      <view class="compare-summary-main">
+        同款最低 ¥{{compareSummary.lowest}}<text class="unit" wx:if="{{compareSummary.unit}}">/{{compareSummary.unit}}</text>
+      </view>
+      <view class="compare-summary-sub">{{compareSummary.count}} 家商户报价 · {{compareSummary.diffText}}</view>
+    </view>
+    <view class="compare-item" wx:for="{{compareList}}" wx:key="id" bindtap="goCompareShop" data-id="{{item.merchantId}}">
+      <view class="compare-info">
+        <view class="compare-shop">{{item.merchantName}}</view>
+        <view class="compare-meta">{{item.brand || '未标品牌'}} · {{item.spec || '规格未填'}}</view>
+      </view>
+      <view class="compare-right">
+        <view class="compare-price">{{tools.priceText(item.price, item.unit)}}</view>
+        <button class="compare-call" size="mini" data-phone="{{item.merchantPhone}}" data-id="{{item.id}}" data-merchant-id="{{item.merchantId}}" catchtap="callComparePhone">电话询价</button>
+      </view>
+    </view>
+    <view class="compare-tip">价格为商户自主报价，不同规格/单位不可直接比较；实际成交请以电话沟通为准</view>
+  </view>
+  <view class="card" wx:elif="{{compareLoaded && compareList.length === 0}}">
+    <view class="compare-empty">暂无其他商户报价</view>
   </view>
 
   <!-- 描述 -->
@@ -32,10 +65,39 @@
     <view class="info-row"><text class="info-label">商户</text><text>{{product.merchantName}}</text></view>
     <view class="info-row"><text class="info-label">电话</text><text>{{product.merchantPhone}}</text></view>
     <view class="btn-row">
-      <button class="btn-phone" bindtap="callPhone" wx:if="{{product.merchantPhone}}">电话联系档口</button>
-      <button class="btn-shop" bindtap="goShop">进入商户主页</button>
+      <button class="btn-shop" bindtap="openNav">到店导航</button>
     </view>
   </view>
 
   <view class="tip-row">右上角可转发给同行，方便调货询价</view>
+
+  <view class="detail-bottom-space"></view>
+  <view class="bottom-bar" wx:if="{{product.id}}">
+    <view class="bar-icon {{favorited ? 'active' : ''}}" bindtap="toggleFavorite">
+      <text class="bar-icon-char">{{favorited ? '★' : '☆'}}</text>
+      <text class="bar-icon-label">收藏</text>
+    </view>
+    <button class="bar-btn bar-ghost" bindtap="goShop">商户主页</button>
+    <button class="bar-btn bar-primary" bindtap="callPhone" disabled="{{!product.merchantPhone}}">电话联系</button>
+    <button class="bar-btn bar-accent" bindtap="openInquiry">聊价格</button>
+  </view>
+
+  <!-- 询价弹层 -->
+  <view class="mask" wx:if="{{inquiryShow}}" bindtap="closeInquiry">
+    <view class="inquiry-panel" catchtap="noop">
+      <view class="panel-title">向 {{product.merchantName}} 询价</view>
+      <scroll-view scroll-y class="inquiry-body" style="height: {{inquiryBodyHeight}}px">
+        <input class="inquiry-input" placeholder="采购数量 / 规格，如 100 平方米" value="{{inquiryForm.quantity}}" data-field="quantity" bindinput="onInquiryInput" />
+        <picker mode="date" value="{{inquiryForm.expectDate}}" start="{{today}}" end="2099-12-31" bindchange="onExpectDateChange">
+          <view class="inquiry-input inquiry-picker {{inquiryForm.expectDate ? '' : 'placeholder'}}">
+            {{inquiryForm.expectDate ? '期望到货：' + inquiryForm.expectDate : '期望到货时间（可选，点击选择）'}}
+          </view>
+        </picker>
+        <input class="inquiry-input" placeholder="联系方式（电话 / 微信号）*" value="{{inquiryForm.contact}}" data-field="contact" bindinput="onInquiryInput" />
+        <textarea class="inquiry-textarea" placeholder="需求说明（可选）：施工位置、含税/运费要求等" value="{{inquiryForm.remark}}" data-field="remark" bindinput="onInquiryInput" />
+      </scroll-view>
+      <button class="submit-btn" bindtap="submitInquiry" loading="{{inquirySubmitting}}">提交询价</button>
+      <view class="inquiry-tip">商户报价后可在「我的-我的询价」查看；着急可直接电话联系档口</view>
+    </view>
+  </view>
 </view>

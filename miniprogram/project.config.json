@@ -10,11 +10,22 @@
     "enhance": true,
     "postcss": true,
     "minified": true,
-    "newFeature": true
+    "newFeature": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "condition": false
   },
   "compileType": "miniprogram",
-  "libVersion": "3.0.0",
-  "appid": "touristappid",
+  "libVersion": "3.17.5",
+  "appid": "wxe89d8f5f1af02052",
   "projectname": "jiancai-mp",
-  "miniprogramRoot": "./"
+  "miniprogramRoot": "",
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
 }

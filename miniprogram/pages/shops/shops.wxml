@@ -1,0 +1,74 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <view class="search-bar">
+    <input
+      class="search-input"
+      placeholder-class="search-placeholder"
+      placeholder="搜索商户名称"
+      value="{{keyword}}"
+      bindinput="onKeywordInput"
+      bindconfirm="doSearch"
+    />
+    <view class="search-btn" bindtap="doSearch">搜索</view>
+  </view>
+
+  <view class="shop-toolbar">
+    <view class="sort-tabs">
+      <view class="sort-tab {{sortMode === 'hot' ? 'active' : ''}}" bindtap="selectSort" data-mode="hot">综合热度</view>
+      <view class="sort-tab {{sortMode === 'distance' ? 'active' : ''}}" bindtap="selectSort" data-mode="distance">
+        离我最近<text wx:if="{{locating}}">…</text>
+      </view>
+    </view>
+    <view class="toolbar-map" bindtap="goMap">
+      <text>地图找商户</text>
+      <text class="toolbar-map-count" wx:if="{{mapCount > 0}}">{{mapCount}}</text>
+      <text class="toolbar-arrow">›</text>
+    </view>
+  </view>
+
+  <block wx:if="{{markets.length > 0}}">
+    <view class="section-title">建材市场</view>
+    <scroll-view scroll-x="true" class="market-scroll">
+      <view
+        class="market-card"
+        wx:for="{{markets}}"
+        wx:key="id"
+        bindtap="goMarket"
+        data-id="{{item.id}}"
+        hover-class="tap-hover"
+        hover-stay-time="60"
+      >
+        <view class="market-card-name">{{item.name}}</view>
+        <view class="market-card-meta">{{item.merchantCount || 0}} 家商户</view>
+        <view class="market-card-address">{{item.address || item.city || '西安市'}}</view>
+        <view class="market-card-more">查看入驻商家 ›</view>
+      </view>
+    </scroll-view>
+  </block>
+
+  <view class="section-title">入驻商户</view>
+
+  <view class="shop-card" wx:for="{{list}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
+    <image wx:if="{{item.logo}}" src="{{tools.fileUrl(item.logo)}}" mode="aspectFill" class="shop-avatar" />
+    <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
+    <view class="shop-info">
+      <view class="shop-name-line">{{item.name}}</view>
+      <view class="shop-line">{{item.market || '未填写市场'}} · {{item.contactName}} {{item.phone}}</view>
+      <view class="shop-line gray">{{item.city}}{{item.address}}</view>
+      <view class="shop-tags">
+        <text class="shop-tag distance" wx:if="{{item.distance !== null && item.distance !== undefined}}">距您 {{tools.distanceText(item.distance)}}</text>
+        <text class="shop-tag muted-tag" wx:elif="{{sortMode === 'distance'}}">暂无位置</text>
+        <text class="shop-tag">在售 {{item.productCount}} 件</text>
+        <text class="shop-tag">浏览 {{item.views}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{loaded && list.length === 0}}">暂无入驻商户</view>
+
+  <view class="apply-entry" bindtap="goApply">
+    <text>我要入驻 / 推荐同行</text>
+    <text class="apply-entry-btn">免费申请</text>
+  </view>
+</view>

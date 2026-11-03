@@ -1,0 +1,58 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <view class="market-hero">
+    <view class="market-hero-name">{{market.name}}</view>
+    <view class="market-hero-meta">{{market.city || '西安市'}} · {{market.address || '地址待完善'}}</view>
+    <view class="market-stats">
+      <view class="market-stat">
+        <text class="market-stat-num">{{market.merchantCount || 0}}</text>
+        <text class="market-stat-label">入驻商户</text>
+      </view>
+      <view class="market-stat">
+        <text class="market-stat-num">{{productCount}}</text>
+        <text class="market-stat-label">在售产品</text>
+      </view>
+    </view>
+    <view class="market-actions">
+      <view class="market-action ghost" bindtap="goMap">地图找商户</view>
+      <view class="market-action primary" bindtap="openNav">导航到市场</view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{market.intro}}">
+    <view class="market-intro-title">市场介绍</view>
+    <view class="market-intro">{{market.intro}}</view>
+  </view>
+
+  <view class="section-title">入驻商户（{{merchants.length}}）</view>
+
+  <view
+    class="shop-card"
+    wx:for="{{merchants}}"
+    wx:key="id"
+    bindtap="goShop"
+    data-id="{{item.id}}"
+    hover-class="tap-hover"
+    hover-stay-time="60"
+  >
+    <image wx:if="{{item.logo}}" src="{{tools.fileUrl(item.logo)}}" mode="aspectFill" class="shop-avatar" />
+    <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
+    <view class="shop-info">
+      <view class="shop-name-line">{{item.name}}</view>
+      <view class="shop-line">{{item.contactName || '联系人待完善'}} {{item.phone}}</view>
+      <view class="shop-tags">
+        <text class="shop-tag">在售 {{item.productCount}} 件</text>
+        <text class="shop-tag" wx:if="{{item.categoryName}}">{{item.categoryName}}</text>
+      </view>
+    </view>
+    <view class="market-call" catchtap="callShop" data-index="{{index}}">电话</view>
+  </view>
+
+  <view class="empty" wx:if="{{loaded && merchants.length === 0}}">该市场暂无入驻商户，欢迎推荐同行入驻</view>
+
+  <view class="apply-entry" bindtap="goApply">
+    <text>我要入驻该市场 / 推荐同行</text>
+    <text class="apply-entry-btn">免费申请</text>
+  </view>
+</view>

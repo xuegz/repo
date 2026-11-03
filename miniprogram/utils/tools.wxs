@@ -1,0 +1,72 @@
+// 小程序 WXML 模板工具函数
+// 上传/服务器地址（与 request.js 保持一致）
+var HOST = 'http://47.111.99.105'
+
+/**
+ * 拼接图片完整访问地址
+ * 后端返回 /upload/xxx.jpg 这样的相对路径，小程序展示需要带上域名
+ */
+function fileUrl(path) {
+  if (!path) {
+    return ''
+  }
+  if (path.indexOf('http') === 0) {
+    return path
+  }
+  return HOST + path
+}
+
+/** 价格显示：为空显示面议 */
+function priceText(price, unit) {
+  if (price === null || price === undefined || price <= 0) {
+    return '面议'
+  }
+  if (unit) {
+    return '¥' + price + '/' + unit
+  }
+  return '¥' + price
+}
+
+/** 取首字符（商户头像占位） */
+function firstChar(val) {
+  if (!val) {
+    return ''
+  }
+  return val.substring(0, 1)
+}
+
+/** 日期显示：2026-10-27T... -> 10-27 */
+function dateText(val) {
+  if (!val || !val.substring) {
+    return ''
+  }
+  var day = val.substring(0, 10)
+  return day.substring(5)
+}
+
+/** 距离显示：0.8 -> 800m，3.2 -> 3.2km */
+function distanceText(km) {
+  if (km === null || km === undefined || km === '') {
+    return ''
+  }
+  var num = parseFloat(km)
+  if (num < 1) {
+    return Math.round(num * 1000) + 'm'
+  }
+  return num.toFixed(1) + 'km'
+}
+
+/** 是否有值 */
+function has(val) {
+  return val !== null && val !== undefined && val !== ''
+}
+
+module.exports = {
+  fileUrl: fileUrl,
+  priceText: priceText,
+  dateText: dateText,
+  firstChar: firstChar,
+  distanceText: distanceText,
+  has: has,
+  HOST: HOST
+}

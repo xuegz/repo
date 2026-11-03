@@ -35,10 +35,11 @@ public class MerchantService extends ServiceImpl<MerchantMapper, Merchant> {
     private UserService userService;
 
     /** 分页并附加展示信息 */
-    public IPage<Merchant> pageWithInfo(IPage<Merchant> page, String name, Integer status, String market) {
+    public IPage<Merchant> pageWithInfo(IPage<Merchant> page, String name, Integer status, String market, Long marketId) {
         IPage<Merchant> result = page(page, Wrappers.<Merchant>lambdaQuery()
                 .like(name != null && !name.isBlank(), Merchant::getName, name)
                 .like(market != null && !market.isBlank(), Merchant::getMarket, market)
+                .eq(marketId != null, Merchant::getMarketId, marketId)
                 .eq(status != null, Merchant::getStatus, status)
                 .orderByDesc(Merchant::getCreateTime));
         fillInfo(result.getRecords());

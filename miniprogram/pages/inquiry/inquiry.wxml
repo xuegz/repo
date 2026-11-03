@@ -1,0 +1,54 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <scroll-view scroll-x="true" class="cat-scroll inquiry-tabs">
+    <view class="cat-tab {{filter === -1 ? 'active' : ''}}" bindtap="selectFilter" data-status="-1">全部</view>
+    <view class="cat-tab {{filter === 0 ? 'active' : ''}}" bindtap="selectFilter" data-status="0">待报价</view>
+    <view class="cat-tab {{filter === 1 ? 'active' : ''}}" bindtap="selectFilter" data-status="1">已报价</view>
+    <view class="cat-tab {{filter === 2 ? 'active' : ''}}" bindtap="selectFilter" data-status="2">跟进中</view>
+  </scroll-view>
+
+  <view class="inquiry-card" wx:for="{{list}}" wx:key="id">
+    <view class="inquiry-head">
+      <view class="inquiry-product" bindtap="goProduct" data-id="{{item.productId}}">
+        <image wx:if="{{item.productImage}}" src="{{tools.fileUrl(item.productImage)}}" mode="aspectFill" class="inquiry-product-img" />
+        <image wx:else src="/assets/placeholder/product-small.jpg" mode="aspectFill" class="inquiry-product-img" />
+        <view class="inquiry-product-info">
+          <view class="product-name">{{item.productName || '通用询价'}}</view>
+          <view class="product-meta">{{item.merchantName}} · {{item.timeText}}</view>
+        </view>
+      </view>
+      <text class="status-pill {{item.statusClass}}">{{item.statusText}}</text>
+    </view>
+
+    <view class="inquiry-meta">
+      <text class="inquiry-meta-row" wx:if="{{item.quantity}}">数量/规格：{{item.quantity}}</text>
+      <text class="inquiry-meta-row" wx:if="{{item.expectDate}}">期望到货：{{item.expectDate}}</text>
+      <text class="inquiry-meta-row">联系方式：{{item.contact}}</text>
+      <text class="inquiry-meta-row" wx:if="{{item.remark}}">需求说明：{{item.remark}}</text>
+    </view>
+
+    <view class="quote-box {{item.quoteExpired ? 'expired' : ''}}" wx:if="{{item.hasQuote}}">
+      <view class="quote-title">
+        <text>商户报价<text class="quote-badge" wx:if="{{item.quoteExpired}}">已过期</text></text>
+        <text class="quote-time" wx:if="{{item.quoteTimeText}}">{{item.quoteTimeText}}</text>
+      </view>
+      <view class="quote-price-row">
+        <text class="quote-price" wx:if="{{item.quotePriceText}}">单价 ¥{{item.quotePriceText}}</text>
+        <text class="quote-price" wx:if="{{item.quoteTotalText}}">总价 ¥{{item.quoteTotalText}}</text>
+      </view>
+      <view class="quote-sub" wx:if="{{item.quoteValidUntil}}">
+        {{item.quoteExpired ? '报价已于 ' + item.quoteValidUntil + ' 过期，建议电话确认' : '报价有效期至 ' + item.quoteValidUntil}}
+      </view>
+      <view class="quote-sub" wx:if="{{item.quoteRemark}}">{{item.quoteRemark}}</view>
+    </view>
+
+    <view class="inquiry-actions">
+      <button class="inquiry-btn" wx:if="{{item.productId}}" bindtap="goProduct" data-id="{{item.productId}}">查看产品</button>
+      <button class="inquiry-btn" bindtap="goShop" data-id="{{item.merchantId}}">商户主页</button>
+      <button class="inquiry-btn accent" bindtap="callMerchant" data-phone="{{item.merchantPhone}}" data-id="{{item.merchantId}}">{{item.quoteExpired ? '电话确认' : '电话联系'}}</button>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{loaded && list.length === 0}}">暂无询价记录，去产品详情点「聊价格」试试</view>
+</view>

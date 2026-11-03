@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-row :gutter="16">
-      <el-col v-for="card in cards" :key="card.key" :span="4">
+      <el-col v-for="card in cards" :key="card.key" :xs="12" :sm="8" :md="6">
         <el-card shadow="hover" class="stat-card">
           <div class="label">{{ card.label }}</div>
           <div class="value">{{ overview[card.key] ?? 0 }}</div>
@@ -14,7 +14,7 @@
         <span>平台说明</span>
       </template>
       <el-descriptions :column="1" border>
-        <el-descriptions-item label="入驻收费">365 元 / 年（首年可设为免费引流）</el-descriptions-item>
+        <el-descriptions-item label="入驻收费">当前免费入驻；会员收费（365 元 / 年）能力已预留，暂未开通</el-descriptions-item>
         <el-descriptions-item label="核心品类">卫浴、防水、油漆涂料、管道、瓷砖、板材、灯具、五金</el-descriptions-item>
         <el-descriptions-item label="平台价值">同行调货 · 跨区域价格对比 · 厂家找渠道 · 商户找货源</el-descriptions-item>
       </el-descriptions>
@@ -32,7 +32,8 @@ const cards = [
   { label: '产品总数', key: 'productTotal' },
   { label: '待审产品', key: 'productPending' },
   { label: '浏览总量', key: 'viewTotal' },
-  { label: '转发总量', key: 'forwardTotal' }
+  { label: '转发总量', key: 'forwardTotal' },
+  { label: '电话联系', key: 'callTotal' }
 ]
 
 const overview = ref({})
@@ -48,6 +49,7 @@ onMounted(load)
 <style scoped>
 .stat-card {
   text-align: center;
+  margin-bottom: 16px;
 }
 .label {
   color: #909399;

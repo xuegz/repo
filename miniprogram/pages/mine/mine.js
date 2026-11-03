@@ -24,6 +24,22 @@ Page({
     wx.navigateTo({ url: '/pages/detail/detail?id=' + e.currentTarget.dataset.id })
   },
 
+  goApply: function () {
+    wx.navigateTo({ url: '/pages/apply/apply' })
+  },
+
+  goShops: function () {
+    wx.navigateTo({ url: '/pages/shops/shops' })
+  },
+
+  goInquiries: function () {
+    wx.navigateTo({ url: '/pages/inquiry/inquiry' })
+  },
+
+  goFavorites: function () {
+    wx.navigateTo({ url: '/pages/favorites/favorites' })
+  },
+
   callService: function () {
     wx.makePhoneCall({
       phoneNumber: this.data.servicePhone,
@@ -34,7 +50,7 @@ Page({
   showTutorial: function () {
     wx.showModal({
       title: '使用教程',
-      content: '1. 首页按品类浏览建材产品；2. 进入产品详情可查看档口电话并直接拨号；3. 右上角转发给同行即可快速调货；4. 个人中心可查看浏览记录。',
+      content: '1. 首页按品类浏览建材产品；2. 进入产品详情可查看档口电话并直接拨号；3. 在产品详情底部可收藏产品、向商户发起询价；4.「我的询价」里能查看商户报价，「我的收藏」可找回产品和商户。',
       showCancel: false
     })
   },
@@ -51,12 +67,15 @@ Page({
     const that = this
     wx.showModal({
       title: '提示',
-      content: '确定清除本机浏览记录？',
+      content: '确定清除浏览记录？收藏与询价记录不受影响。',
       success: function (res) {
         if (res.confirm) {
-          wx.removeStorageSync('openid')
-          that.setData({ history: [] })
-          wx.showToast({ title: '已清除', icon: 'success' })
+          request('/history/clear', 'POST', { openid: getOpenid() })
+            .then(function () {
+              that.setData({ history: [] })
+              wx.showToast({ title: '已清除', icon: 'success' })
+            })
+            .catch(function () {})
         }
       }
     })

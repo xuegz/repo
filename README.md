@@ -10,24 +10,30 @@
 
 ```
 jiancai/
-├── sql/jiancai.sql        # 数据库初始化脚本（建库 + 建表 + 初始数据）
 ├── server/                # 后端 Spring Boot 3.2（JDK 17）
-│   └── src/main/java/com/jiancai
-│       ├── common/        # 统一返回 R、业务异常、全局异常处理
-│       ├── config/        # Web 配置（拦截器/跨域/静态资源）、MyBatis-Plus 分页
-│       ├── security/      # JWT 工具、登录拦截器、用户上下文
-│       ├── entity/        # 9 张表对应实体
-│       ├── mapper/        # MyBatis-Plus Mapper
-│       ├── service/       # 业务逻辑
-│       └── controller/    # 接口
+│   └── src/main
+│       ├── java/com/jiancai
+│       │   ├── common/    # 统一返回 R、业务异常、全局异常处理
+│       │   ├── config/    # Web 配置（拦截器/跨域/静态资源）、MyBatis-Plus 分页
+│       │   ├── security/  # JWT 工具、登录拦截器、用户上下文
+│       │   ├── entity/    # 数据表对应实体
+│       │   ├── mapper/    # MyBatis-Plus Mapper
+│       │   ├── service/   # 业务逻辑
+│       │   └── controller/# 接口
+│       └── resources/db/migration  # Flyway 迁移脚本（MySQL / H2 共用）
 ├── admin/                 # 管理后台 Web（Vue3 + Vite + Element Plus）
 │   └── src/views          # 平台端页面 + views/merchant（商户端页面，按角色切换）
 └── miniprogram/           # 微信小程序（原生）
-    ├── pages/index        # 首页：轮播 + 品类 + 广告 + 最新产品
-    ├── pages/product      # 找产品：搜索 + 品类筛选 + 分页
-    ├── pages/detail       # 产品详情：图片 + 参数 + 档口电话 + 转发
-    ├── pages/shop         # 商户主页：门店信息 + 在售产品
-    └── pages/mine         # 我的：浏览记录 + 客服 + 教程 + 免责说明
+    ├── pages/index        # 首页：轮播 + 品类 + 商户入口 + 推荐商户 + 最新产品
+    ├── pages/product      # 找产品：搜索（历史/热门）+ 品类筛选 + 价格排序 + 分页
+    ├── pages/detail       # 产品详情：图片 + 参数 + 同款比价 + 收藏 + 询价 + 转发
+    ├── pages/shops        # 商户列表：按市场/名称筛选，支持“离我最近”排序
+    ├── pages/shop         # 商户主页：门店信息 + 在售产品 + 收藏
+    ├── pages/apply        # 商户入驻申请（免费，提交后待审核）
+    ├── pages/inquiry      # 我的询价：查看商户报价、有效期与跟进状态
+    ├── pages/favorites    # 我的收藏：收藏的产品 / 商户
+    ├── pages/mine         # 我的：我的询价 + 我的收藏 + 浏览记录 + 入驻入口 + 客服 + 教程 + 免责说明
+    └── utils              # 请求封装、浏览转发上报、模板工具函数
 ```
 
 ## 二、技术选型
@@ -42,38 +48,59 @@ jiancai/
 
 ### 1. 选择数据库模式（二选一）
 
-**方式 A：H2 内存库（默认，开箱即用）**
+数据库结构由 **Flyway** 统一管理，脚本位于 `server/src/main/resources/db/migration`，MySQL 与 H2 共用同一套迁移，后端启动时自动建表并写入演示数据，无需手工执行 SQL。
 
-不需要安装任何数据库，直接启动即可。内置演示数据：8 个品类、3 个商户、10 个产品。
-数据保存在内存中，**重启服务后会恢复为初始演示数据**，适合先看功能和演示。
+**方式 A：H2 内存库（备用，开箱即用）**
 
-**方式 B：MySQL 8（正式环境）**
+不需要安装任何数据库，把 `application.yml` 的 `spring.profiles.active` 改回 `h2` 即可。
+数据保存在内存中，**重启服务后会恢复为初始演示数据**，适合临时演示。
 
-1. 安装 MySQL 8 后执行脚本（或用 Navicat / SQLyog 打开执行）：
+**方式 B：MySQL 8（当前启用 ✅）**
 
-```sql
-source D:/工作1/sql/jiancai.sql
+本机已安装免安装版 MySQL 8.0.28（位于 `D:\mysql-8.0.28-winx64`，账号 root/root，库名 jiancai），
+`application.yml` 已切换为 `active: mysql`，数据持久化不丢失。
+
+数据库启动方式（电脑重启后需手动执行）：
+
+```
+D:\mysql-8.0.28-winx64\bin\mysqld.exe --defaults-file=D:\mysql-8.0.28-winx64\my.ini
 ```
 
-2. 编辑 `server/src/main/resources/application.yml`，把
+重置数据库（会清空重建，仅在需要恢复演示数据时使用）：删库后重启后端，Flyway 会自动重新执行全部迁移：
 
-```yaml
-spring:
-  profiles:
-    active: h2
+```
+D:\mysql-8.0.28-winx64\bin\mysql.exe -uroot -proot -e "DROP DATABASE IF EXISTS jiancai;"
 ```
 
-改成 `active: mysql`，并在 `application-mysql.yml` 中填写数据库账号密码。
+> 已有库首次接入 Flyway 时会以 V2 建立基线、跳过历史脚本，不会覆盖现有数据；后续新增脚本从 `V3__` 起按版本号自动执行。
+> 修改表结构请新增迁移脚本，不要直接改库或改历史脚本（Flyway 会校验校验和）。
 
-### 2. 配置图片上传目录
+### 2. 配置图片上传
 
-编辑 `server/src/main/resources/application.yml`：
+默认保存到本地：
 
 ```yaml
 jiancai:
   upload:
     path: D:/jiancai-upload/   # 图片保存目录，需有写权限
 ```
+
+生产环境建议使用**阿里云 OSS**。凭据不要写进仓库，放到工作目录下的 `server/config/application.yml`（已加入 `.gitignore`，Spring Boot 会自动加载），或用同名环境变量注入：
+
+```yaml
+jiancai:
+  oss:
+    endpoint: oss-cn-beijing.aliyuncs.com   # 或 OSS_ENDPOINT
+    bucket: cailutong                      # 或 OSS_BUCKET
+    access-key-id: xxxx                    # 或 OSS_ACCESS_KEY_ID
+    access-key-secret: xxxx                # 或 OSS_ACCESS_KEY_SECRET
+    public-domain:                         # 可选，CDN/自定义域名；留空用 https://{bucket}.{endpoint}
+    dir-prefix: jiancai                    # 对象前缀，最终形如 jiancai/2026/11/uuid.jpg
+```
+
+- 未配置 `access-key-id`/`access-key-secret` 时自动回退本地磁盘，无需改代码。
+- 图片需公开访问，请把 Bucket 读写权限设为**公共读**（若提示被"阻止公共访问"拦截，需先行关闭）。
+- `server/config/application.yml` 依赖工作目录为 `server/`，请在 `server` 目录下启动后端。
 
 ### 3. 启动后端（端口 8080）
 
@@ -108,37 +135,83 @@ npm run dev
 
 1. 微信开发者工具 → 导入项目 → 目录选 `D:\工作1\miniprogram`，AppID 换成你自己的（或选"测试号"）。
 2. 右上角"详情" → 本地设置 → 勾选 **不校验合法域名**（开发阶段）。
-3. 把 `miniprogram/utils/request.js` 里的 `BASE_URL` 改成后端地址：
-   - 模拟器：`http://localhost:8080/api/mp`
-   - 真机调试：`http://192.168.x.x:8080/api/mp`（本机局域网 IP）
-   - 线上：必须是 `https://域名/api/mp`
+3. 把 `miniprogram/utils/request.js` 里的 `HOST` 改成后端地址：
+   - 模拟器：`http://localhost:8080`
+   - 真机调试：`http://192.168.x.x:8080`（本机局域网 IP）
+   - 线上：必须是 `https://域名`
+   - **当前默认值已指向 `http://47.111.99.105`**（ECS 生产环境，走 80 端口）。仅开发版/体验版可用，需勾选“不校验合法域名”；本地联调时改回 localhost
 
 ## 四、主要接口
 
 | 前缀 | 说明 | 鉴权 |
 |---|---|---|
 | `/api/auth/**` | 登录、商户入驻申请 | 否 |
-| `/api/mp/**` | 小程序：首页聚合、品类、产品列表/详情、商户主页、浏览/转发上报、浏览记录 | 否 |
+| `/api/mp/**` | 小程序：首页聚合、品类、产品列表/详情、**商户列表/市场/商户主页**、**附近距离排序**、**价格排序**、**比价搜索**、**同款比价**、商户入驻、浏览/转发/**电话联系**上报、浏览记录、**我的询价/报价查看**、**产品与商户收藏** | 否 |
 | `/api/admin/**` | 平台端：商户管理、产品审核、品类、轮播/广告、数据总览 | 管理员 |
-| `/api/merchant/**` | 商户端：门店信息、产品发布/上下架、数据看板 | 商户 |
+| `/api/merchant/**` | 商户端：门店信息、产品发布/上下架、数据看板、**询价报价与跟进** | 商户 |
 
 ## 五、业务流转
 
 ```
-商户提交入驻(/api/auth/register)
+小程序"免费入驻"提交资料（pages/apply → /api/auth/register）
       ↓ 状态=待审核
-平台审核通过 → 自动开通商户账号（手机号/123456）
+平台端商户管理 → 审核通过 → 自动开通商户账号（手机号/123456）
       ↓
 商户登录商户端 → 维护门店 → 发布产品（状态=待审核）
       ↓
-平台审核产品 → 在售
+平台端产品管理 → 审核通过 → 在售
       ↓
-小程序首页/搜索展示 → 用户浏览、转发（统计回流到商户端"被浏览/被转发"）
+小程序展示：首页 / 商户列表 / 产品列表 / 详情页同款比价
+      ↓
+用户浏览、转发、电话询价（统计回流到商户端"被浏览/被转发"）
+      ↓
+用户提交询价（数量/期望到货/联系方式）→ 商户端报价（单价/总价/有效期）
+      ↓
+小程序「我的-我的询价」查看报价 → 电话或到店成交
 ```
 
-## 六、当前未实现（下一阶段可做）
+## 六、核心能力说明
 
-- **真实 openid**：现用本地随机标识，需后端接入 `code2session` 换取真实 openid（登录态、用户体系才完整）。
-- **在线缴费**：`payment_record` 表与 365 元/年 的会员体系已设计，尚未对接微信支付与到期自动下架逻辑。
-- **省/市/市场三级筛选与价格对比页**：接口已预留 `market` 参数，前端页面未做。
+**小程序价格对比**（同行调货、跨商户比价的核心）：
+
+- **列表页价格排序**：`GET /api/mp/products?sort=price_asc`，同款产品按价格从低到高排列
+- **详情页同款比价**：`GET /api/mp/product/compare?id=`，匹配优先级「同名 → 同品类+品牌+类型 → 同品类」，展示其他商户报价并可一键电话询价
+- **比价搜索**：`GET /api/mp/price-compare?keyword=`，输入产品名或品牌，返回各家按价格升序的报价
+
+**品类管理（最多三级）**：平台端「品类管理」为可折叠树，支持在一级/二级品类下新增子类，三级品类不可再加子类；按一级/二级品类筛选产品时会一并包含其下所有子类的产品。
+
+**商户入驻（当前免费）**：小程序「我的」→ 商户入驻 → 填写资料（含门头照上传）→ 平台端商户管理审核 → 通过后自动开通账号。
+
+**行为记录（浏览 / 转发 / 电话联系）**：
+
+- 小程序三处拨号（产品页「电话联系档口」、比价列表「电话询价」、商户主页拨号）均上报 `POST /api/mp/call`
+- 每次浏览、转发、拨号写入 `view_record` / `forward_record` / `call_record`，并同步累加产品与商户的 `views` / `forwards` / `calls` 计数
+- 商户端「数据看板」可看：被浏览、被转发、被电话联系总量 + **最近动态流水**（时间、类型、对象、脱敏访客标识）
+- 平台端「数据总览」含电话联系总量
+
+**导航到店**：商户端「我的门店」填写经纬度（腾讯地图坐标拾取器获取），小程序商户主页/产品详情展示「到店导航」；未填坐标时自动降级为复制地址。
+
+**询价闭环**：产品详情「聊价格」提交数量/期望到货/联系方式/需求说明 → `inquiry` 表 → 商户端「询价线索」报价（单价、总价、有效期、说明）→ 状态流转「待报价 → 已报价 → 跟进中」→ 小程序「我的询价」查看报价并可直接电话联系商户。商户可删除无效线索。
+
+**收藏**：产品详情与商户主页可收藏/取消收藏 → `favorite` 表（同一访客对同一对象唯一）→ 「我的-我的收藏」按产品/商户分栏找回。
+
+**附近商户**：商户列表支持「综合热度 / 离我最近」切换。选择离我最近时小程序申请定位，后端按 Haversine 球面距离计算并由近到远排序，列表展示「距您 xxx」；未填写坐标的商户排在最后。接口为 `GET /api/mp/merchants?lat=&lng=&sort=distance`。
+
+**市场公告**：平台端「内容管理 → 市场公告」发布，小程序首页顶部滚动展示（`notice` 表）。
+
+**商户热度排序**：商户列表默认按「浏览 1 分 + 转发 2 分 + 电话 5 分」加权排序，活跃商户优先曝光；授权定位后可切换距离排序。
+
+## 七、部署（阿里云 ECS）
+
+生产环境已部署在阿里云 ECS，访问地址 http://47.111.99.105/ （管理后台，账号见上文默认账号）。
+
+- 架构：Nginx 80 → 静态 `admin/dist` + `/api/` 反代 8080；Spring Boot 直连本机 MySQL 8；图片走 OSS。
+- 服务器布局、发布/回滚、数据库备份、排障顺序、改密码与凭据轮换见 [docs/ECS部署运维.md](docs/ECS部署运维.md)。
+- 尚未配置 HTTPS：域名 `mycailutong.com` 仍未实名与备案，备案完成后再补 443 与证书。
+
+## 八、当前未实现（下一阶段可做）
+
+- **真实 openid**：现用本地随机标识，换设备浏览记录会断，需后端接入 `code2session` 换取真实 openid。
+- **在线缴费（暂不做）**：会员收费（365 元/年）与微信支付**当前明确不实现**，所有商户入驻免费；`payment_record` 表结构保留备用，后续如需收费可直接在此基础上扩展，无需改动其他模块。
+- **省市三级联动筛选**：目前支持按市场、名称筛选商户，尚未做省/市下拉联动。
 - **厂家入驻与招商页**：按你的第 ④、⑤ 步规划扩展。

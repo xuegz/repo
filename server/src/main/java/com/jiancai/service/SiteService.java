@@ -28,6 +28,13 @@ public class SiteService {
                 .orderByAsc(Banner::getSort).orderByDesc(Banner::getId));
     }
 
+    /** 小程序首页只展示启用的轮播 */
+    public List<Banner> listEnabledBanner() {
+        return bannerMapper.selectList(Wrappers.<Banner>lambdaQuery()
+                .eq(Banner::getStatus, 1)
+                .orderByAsc(Banner::getSort).orderByDesc(Banner::getId));
+    }
+
     public void saveBanner(Banner banner) {
         if (banner.getSort() == null) {
             banner.setSort(0);

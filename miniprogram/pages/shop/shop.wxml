@@ -1,12 +1,23 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
 <view class="page" wx:if="{{merchant.id}}">
   <view class="card">
+    <image wx:if="{{merchant.logo}}" src="{{tools.fileUrl(merchant.logo)}}" mode="aspectFill" class="shop-logo" />
+    <image wx:else src="/assets/placeholder/shop-wide.jpg" mode="aspectFill" class="shop-logo" />
     <view class="shop-name">{{merchant.name}}</view>
     <view class="info-row"><text class="info-label">联系人</text><text>{{merchant.contactName || '-'}}</text></view>
     <view class="info-row"><text class="info-label">电话</text><text>{{merchant.phone}}</text></view>
-    <view class="info-row"><text class="info-label">市场</text><text>{{merchant.market || '-'}}</text></view>
+    <view class="info-row" wx:if="{{merchant.marketId}}" bindtap="goMarket">
+      <text class="info-label">市场</text>
+      <text class="market-link">{{merchant.market || '-'}} ›</text>
+    </view>
+    <view class="info-row" wx:else><text class="info-label">市场</text><text>{{merchant.market || '-'}}</text></view>
     <view class="info-row"><text class="info-label">地址</text><text>{{addressText}}</text></view>
+    <view class="map-link" wx:if="{{merchant.latitude && merchant.longitude}}" bindtap="goMap">在地图上查看位置 ›</view>
     <view class="btn-row">
       <button class="btn-phone" bindtap="callPhone">电话联系档口</button>
+      <button class="btn-shop" bindtap="openNav">到店导航</button>
+      <button class="btn-fav" bindtap="toggleFavorite">{{favorited ? '★ 已收藏' : '☆ 收藏'}}</button>
     </view>
   </view>
 
@@ -17,14 +28,14 @@
 
   <view class="section-title">在售产品</view>
   <view class="product-list">
-    <view class="product-card" wx:for="{{products}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-      <image wx:if="{{item.imageList[0]}}" src="{{item.imageList[0]}}" mode="aspectFill" class="product-img" />
-      <view wx:else class="product-img"></view>
+    <view class="product-card" wx:for="{{products}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
+      <image wx:if="{{item.imageList[0]}}" src="{{tools.fileUrl(item.imageList[0])}}" mode="aspectFill" class="product-img" />
+      <image wx:else src="/assets/placeholder/product.jpg" mode="aspectFill" class="product-img" />
       <view class="product-body">
         <view class="product-name">{{item.name}}</view>
         <view class="product-meta">{{item.brand}} · {{item.origin}}</view>
         <view class="product-bottom">
-          <text class="price" wx:if="{{item.price > 0}}">¥{{item.price}}</text>
+          <text class="price" wx:if="{{item.price > 0}}">¥{{item.price}}<text class="unit" wx:if="{{item.unit}}">/{{item.unit}}</text></text>
           <text class="price-none" wx:else>面议</text>
         </view>
       </view>

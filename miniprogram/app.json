@@ -4,6 +4,12 @@
     "pages/product/product",
     "pages/detail/detail",
     "pages/shop/shop",
+    "pages/shops/shops",
+    "pages/market/market",
+    "pages/map/map",
+    "pages/apply/apply",
+    "pages/inquiry/inquiry",
+    "pages/favorites/favorites",
     "pages/mine/mine"
   ],
   "window": {
@@ -16,14 +22,35 @@
   },
   "tabBar": {
     "color": "#909399",
-    "selectedColor": "#409eff",
+    "selectedColor": "#ff7a00",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [
-      { "pagePath": "pages/index/index", "text": "首页" },
-      { "pagePath": "pages/product/product", "text": "找产品" },
-      { "pagePath": "pages/mine/mine", "text": "我的" }
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/tabbar/home.png",
+        "selectedIconPath": "assets/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/product/product",
+        "text": "找产品",
+        "iconPath": "assets/tabbar/product.png",
+        "selectedIconPath": "assets/tabbar/product-active.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "assets/tabbar/mine.png",
+        "selectedIconPath": "assets/tabbar/mine-active.png"
+      }
     ]
+  },
+  "requiredPrivateInfos": ["chooseLocation", "getLocation"],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于选择门店位置、查找附近商户"
+    }
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"

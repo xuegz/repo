@@ -16,13 +16,15 @@ const routes = [
       // 平台端
       { path: 'dashboard', component: () => import('@/views/Dashboard.vue'), meta: { title: '数据总览', roles: [1] } },
       { path: 'merchant', component: () => import('@/views/MerchantList.vue'), meta: { title: '商户管理', roles: [1] } },
+      { path: 'market', component: () => import('@/views/MarketList.vue'), meta: { title: '市场管理', roles: [1] } },
       { path: 'product', component: () => import('@/views/ProductAudit.vue'), meta: { title: '产品管理', roles: [1] } },
       { path: 'category', component: () => import('@/views/CategoryList.vue'), meta: { title: '品类管理', roles: [1] } },
       { path: 'content', component: () => import('@/views/ContentManage.vue'), meta: { title: '内容管理', roles: [1] } },
       // 商户端
       { path: 'm/dashboard', component: () => import('@/views/merchant/MerchantDashboard.vue'), meta: { title: '数据看板', roles: [2] } },
       { path: 'm/shop', component: () => import('@/views/merchant/MyShop.vue'), meta: { title: '我的门店', roles: [2] } },
-      { path: 'm/product', component: () => import('@/views/merchant/MyProduct.vue'), meta: { title: '我的产品', roles: [2] } }
+      { path: 'm/product', component: () => import('@/views/merchant/MyProduct.vue'), meta: { title: '我的产品', roles: [2] } },
+      { path: 'm/inquiry', component: () => import('@/views/merchant/InquiryList.vue'), meta: { title: '询价线索', roles: [2] } }
     ]
   }
 ]

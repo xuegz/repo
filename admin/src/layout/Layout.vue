@@ -48,6 +48,7 @@ const realName = localStorage.getItem('realName') || '未登录'
 const adminMenus = [
   { path: '/dashboard', title: '数据总览', icon: 'DataLine' },
   { path: '/merchant', title: '商户管理', icon: 'Shop' },
+  { path: '/market', title: '市场管理', icon: 'OfficeBuilding' },
   { path: '/product', title: '产品管理', icon: 'Goods' },
   { path: '/category', title: '品类管理', icon: 'Menu' },
   { path: '/content', title: '内容管理', icon: 'Picture' }
@@ -56,7 +57,8 @@ const adminMenus = [
 const merchantMenus = [
   { path: '/m/dashboard', title: '数据看板', icon: 'DataLine' },
   { path: '/m/shop', title: '我的门店', icon: 'Shop' },
-  { path: '/m/product', title: '我的产品', icon: 'Goods' }
+  { path: '/m/product', title: '我的产品', icon: 'Goods' },
+  { path: '/m/inquiry', title: '询价线索', icon: 'ChatDotRound' }
 ]
 
 const menus = computed(() => (role === 1 ? adminMenus : merchantMenus))

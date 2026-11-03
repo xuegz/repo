@@ -6,7 +6,7 @@
       </el-form-item>
       <el-form-item label="品类">
         <el-select v-model="query.categoryId" placeholder="全部" clearable style="width: 140px">
-          <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
+          <el-option v-for="c in categories" :key="c.id" :label="c.label" :value="c.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="状态">
@@ -34,8 +34,12 @@
             fit="cover"
             style="width: 56px; height: 56px; border-radius: 4px"
             preview-teleported
-          />
-          <span v-else style="color: #c0c4cc">无图</span>
+          >
+            <template #error>
+              <img :src="productPlaceholder" class="ph-img" />
+            </template>
+          </el-image>
+          <img v-else :src="productPlaceholder" class="ph-img" />
         </template>
       </el-table-column>
       <el-table-column prop="name" label="产品名称" min-width="150" />
@@ -87,6 +91,8 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/api/request'
+import { categorySelectOptions } from '@/utils/category'
+import productPlaceholder from '@/assets/product-placeholder.jpg'
 
 const query = reactive({ pageNum: 1, pageSize: 10, name: '', categoryId: null, status: null })
 const tableData = ref([])
@@ -143,7 +149,7 @@ const remove = async (row) => {
 onMounted(() => {
   load()
   request.get('/admin/category/list').then((res) => {
-    categories.value = res.data
+    categories.value = categorySelectOptions(res.data)
   })
 })
 </script>
@@ -155,5 +161,12 @@ onMounted(() => {
 .pager {
   margin-top: 16px;
   justify-content: flex-end;
+}
+.ph-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  object-fit: cover;
+  display: block;
 }
 </style>

@@ -3,6 +3,7 @@ package com.jiancai.controller;
 import com.jiancai.common.BusinessException;
 import com.jiancai.common.R;
 import com.jiancai.entity.Merchant;
+import com.jiancai.service.MarketService;
 import com.jiancai.service.MerchantService;
 import com.jiancai.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class AuthController {
 
     @Autowired
     private MerchantService merchantService;
+
+    @Autowired
+    private MarketService marketService;
 
     /** 平台端与商户端共用登录入口 */
     @PostMapping("/login")
@@ -46,6 +50,8 @@ public class AuthController {
         merchant.setStatus(0);
         merchant.setViews(0);
         merchant.setForwards(0);
+        merchant.setCalls(0);
+        marketService.syncMerchantMarket(merchant);
         merchantService.save(merchant);
         return R.ok();
     }

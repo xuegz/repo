@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jiancai.common.R;
 import com.jiancai.entity.Merchant;
+import com.jiancai.service.MarketService;
 import com.jiancai.service.MerchantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +21,17 @@ public class AdminMerchantController {
     @Autowired
     private MerchantService merchantService;
 
+    @Autowired
+    private MarketService marketService;
+
     @GetMapping("/page")
     public R<IPage<Merchant>> page(@RequestParam(defaultValue = "1") long pageNum,
                                    @RequestParam(defaultValue = "10") long pageSize,
                                    @RequestParam(required = false) String name,
                                    @RequestParam(required = false) Integer status,
-                                   @RequestParam(required = false) String market) {
-        return R.ok(merchantService.pageWithInfo(new Page<>(pageNum, pageSize), name, status, market));
+                                   @RequestParam(required = false) String market,
+                                   @RequestParam(required = false) Long marketId) {
+        return R.ok(merchantService.pageWithInfo(new Page<>(pageNum, pageSize), name, status, market, marketId));
     }
 
     /** 平台代商户建档 / 编辑 */
@@ -36,7 +41,9 @@ public class AdminMerchantController {
             merchant.setStatus(1);
             merchant.setViews(0);
             merchant.setForwards(0);
+            merchant.setCalls(0);
         }
+        marketService.syncMerchantMarket(merchant);
         merchantService.saveOrUpdate(merchant);
         return R.ok();
     }

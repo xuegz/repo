@@ -17,7 +17,9 @@
         </el-col>
       </el-row>
       <el-form-item label="所属市场">
-        <el-input v-model="form.market" placeholder="如 大明宫建材城" />
+        <el-select v-model="form.marketId" placeholder="请选择建材市场" clearable filterable style="width: 100%">
+          <el-option v-for="m in markets" :key="m.id" :label="m.name" :value="m.id" />
+        </el-select>
       </el-form-item>
       <el-row :gutter="10">
         <el-col :span="12">
@@ -30,9 +32,20 @@
       <el-form-item label="详细地址">
         <el-input v-model="form.address" placeholder="如 北二环大明宫建材市场 A 区 1 排 2 号" />
       </el-form-item>
+      <el-form-item label="门店坐标">
+        <el-row :gutter="10" style="width: 100%">
+          <el-col :span="12"><el-input v-model="form.latitude" placeholder="纬度，如 34.3086" /></el-col>
+          <el-col :span="12"><el-input v-model="form.longitude" placeholder="经度，如 108.9402" /></el-col>
+        </el-row>
+        <div class="coord-tip">
+          选填，填写后小程序展示「到店导航」按钮。坐标可在
+          <a href="https://lbs.qq.com/getPoint/" target="_blank" rel="noreferrer">腾讯地图坐标拾取器</a>
+          搜索门店地址后复制。
+        </div>
+      </el-form-item>
       <el-form-item label="主营品类">
         <el-select v-model="form.categoryId" clearable style="width: 100%">
-          <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
+          <el-option v-for="c in categories" :key="c.id" :label="c.label" :value="c.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="门头照片">
@@ -62,9 +75,11 @@ import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/api/request'
+import { categorySelectOptions } from '@/utils/category'
 
 const form = ref({})
 const categories = ref([])
+const markets = ref([])
 const loading = ref(false)
 const uploadHeaders = { Authorization: localStorage.getItem('token') || '' }
 
@@ -83,19 +98,33 @@ const onUploadSuccess = (res) => {
 }
 
 const save = async () => {
-  await request.post('/merchant/shop/save', form.value)
+  const payload = { ...form.value }
+  if (payload.latitude === '') payload.latitude = null
+  if (payload.longitude === '') payload.longitude = null
+  await request.post('/merchant/shop/save', payload)
   ElMessage.success('保存成功')
   load()
 }
 
 onMounted(async () => {
   const catRes = await request.get('/merchant/categories')
-  categories.value = catRes.data
+  categories.value = categorySelectOptions(catRes.data)
+  const marketRes = await request.get('/mp/markets')
+  markets.value = marketRes.data
   load()
 })
 </script>
 
 <style scoped>
+.coord-tip {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+.coord-tip a {
+  color: #409eff;
+}
 .logo {
   width: 200px;
   height: 120px;

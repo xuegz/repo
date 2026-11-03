@@ -13,3 +13,9 @@ target/
 
 # 上传文件目录
 jiancai-upload/
+
+# 本地私密配置（OSS 等凭据）
+server/config/
+
+# 微信开发者工具个人配置
+miniprogram/project.private.config.json

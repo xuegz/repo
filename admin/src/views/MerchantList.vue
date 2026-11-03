@@ -5,7 +5,9 @@
         <el-input v-model="query.name" placeholder="名称关键词" clearable />
       </el-form-item>
       <el-form-item label="所属市场">
-        <el-input v-model="query.market" placeholder="如 大明宫建材城" clearable />
+        <el-select v-model="query.marketId" placeholder="全部市场" clearable filterable style="width: 220px">
+          <el-option v-for="m in markets" :key="m.id" :label="m.name" :value="m.id" />
+        </el-select>
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
@@ -22,20 +24,23 @@
     </el-form>
 
     <el-table :data="tableData" border v-loading="loading">
-      <el-table-column prop="id" label="ID" width="60" />
-      <el-table-column prop="name" label="商户名称" min-width="160" />
-      <el-table-column prop="contactName" label="联系人" width="100" />
-      <el-table-column prop="phone" label="电话" width="120" />
-      <el-table-column prop="market" label="所属市场" min-width="140" />
-      <el-table-column prop="categoryName" label="主营品类" width="110" />
-      <el-table-column prop="productCount" label="产品数" width="80" />
-      <el-table-column label="状态" width="90">
+      <el-table-column prop="name" label="商户名称" min-width="170" show-overflow-tooltip />
+      <el-table-column label="联系人 / 电话" width="140">
+        <template #default="{ row }">
+          <div>{{ row.contactName || '-' }}</div>
+          <div class="cell-sub">{{ row.phone }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column prop="market" label="所属市场" min-width="150" show-overflow-tooltip />
+      <el-table-column prop="categoryName" label="主营品类" width="96" />
+      <el-table-column prop="productCount" label="产品数" width="70" />
+      <el-table-column label="状态" width="86">
         <template #default="{ row }">
           <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="创建时间" width="170" />
-      <el-table-column label="操作" width="230" fixed="right">
+      <el-table-column prop="createTime" label="创建时间" width="150" :formatter="formatTime" />
+      <el-table-column label="操作" width="184" fixed="right">
         <template #default="{ row }">
           <el-button v-if="row.status === 0" type="success" link @click="audit(row, 1)">通过</el-button>
           <el-button v-if="row.status === 0" type="danger" link @click="audit(row, 2)">拒绝</el-button>
@@ -74,7 +79,9 @@
           </el-col>
         </el-row>
         <el-form-item label="所属市场">
-          <el-input v-model="form.market" placeholder="如 大明宫建材城" />
+          <el-select v-model="form.marketId" placeholder="请选择建材市场" clearable filterable style="width: 100%">
+            <el-option v-for="m in markets" :key="m.id" :label="m.name" :value="m.id" />
+          </el-select>
         </el-form-item>
         <el-row :gutter="10">
           <el-col :span="12">
@@ -89,7 +96,7 @@
         </el-form-item>
         <el-form-item label="主营品类">
           <el-select v-model="form.categoryId" clearable style="width: 100%">
-            <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
+            <el-option v-for="c in categories" :key="c.id" :label="c.label" :value="c.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="简介">
@@ -108,17 +115,20 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
+import { categorySelectOptions } from '@/utils/category'
 
-const query = reactive({ pageNum: 1, pageSize: 10, name: '', market: '', status: null })
+const query = reactive({ pageNum: 1, pageSize: 10, name: '', marketId: null, status: null })
 const tableData = ref([])
 const total = ref(0)
 const loading = ref(false)
 const categories = ref([])
+const markets = ref([])
 const dialogVisible = ref(false)
 const form = ref({})
 
 const statusText = (s) => ({ 0: '待审核', 1: '已通过', 2: '已拒绝' }[s] || '未知')
 const statusType = (s) => ({ 0: 'warning', 1: 'success', 2: 'danger' }[s] || 'info')
+const formatTime = (row, column, value) => (value || '').replace('T', ' ').slice(0, 16)
 
 const load = async () => {
   loading.value = true
@@ -133,14 +143,14 @@ const load = async () => {
 
 const reset = () => {
   query.name = ''
-  query.market = ''
+  query.marketId = null
   query.status = null
   query.pageNum = 1
   load()
 }
 
 const openAdd = () => {
-  form.value = { name: '', contactName: '', phone: '', market: '', province: '', city: '', address: '', categoryId: null, intro: '' }
+  form.value = { name: '', contactName: '', phone: '', marketId: null, market: '', province: '', city: '', address: '', categoryId: null, intro: '' }
   dialogVisible.value = true
 }
 
@@ -170,12 +180,18 @@ const remove = async (row) => {
 
 const loadCategories = async () => {
   const res = await request.get('/admin/category/list')
-  categories.value = res.data
+  categories.value = categorySelectOptions(res.data)
+}
+
+const loadMarkets = async () => {
+  const res = await request.get('/admin/market/options')
+  markets.value = res.data
 }
 
 onMounted(() => {
   load()
   loadCategories()
+  loadMarkets()
 })
 </script>
 
@@ -186,5 +202,10 @@ onMounted(() => {
 .pager {
   margin-top: 16px;
   justify-content: flex-end;
+}
+.cell-sub {
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.4;
 }
 </style>

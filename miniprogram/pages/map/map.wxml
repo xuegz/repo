@@ -1,0 +1,40 @@
+<view class="map-page">
+  <map
+    id="shopMap"
+    class="map-canvas"
+    latitude="{{center.latitude}}"
+    longitude="{{center.longitude}}"
+    scale="{{scale}}"
+    markers="{{markers}}"
+    include-points="{{includePoints}}"
+    enable-zoom
+    enable-scroll
+    enable-rotate="{{false}}"
+    bindmarkertap="onMarkerTap"
+    bindcallouttap="onMarkerTap"
+  ></map>
+
+  <cover-view class="map-top">
+    <cover-view class="map-title">地图找商户 · {{merchantCount}} 家</cover-view>
+    <cover-view class="map-filter" bindtap="onMarketTap">{{market || '全部市场'}} ▾</cover-view>
+  </cover-view>
+
+  <cover-view class="map-tip" wx:if="{{loaded && merchantCount === 0}}">该市场暂无商户标注位置</cover-view>
+
+  <cover-view class="map-card" wx:if="{{selected.id}}">
+    <cover-view class="map-card-head">
+      <cover-view class="map-card-name">{{selected.name}}</cover-view>
+      <cover-view class="map-card-close" bindtap="closeCard">×</cover-view>
+    </cover-view>
+    <cover-view class="map-card-line">{{selected.market || '建材市场'}} · {{selected.contactName || '联系人待完善'}}</cover-view>
+    <cover-view class="map-card-line map-card-address">{{selected.addressText}}</cover-view>
+    <cover-view class="map-card-actions">
+      <cover-view class="map-btn map-btn-ghost" bindtap="goShop">进店</cover-view>
+      <cover-view class="map-btn map-btn-primary" bindtap="callShop">电话</cover-view>
+      <cover-view class="map-btn map-btn-accent" bindtap="openNav">导航</cover-view>
+    </cover-view>
+    <cover-view class="map-hint">导航可跳转腾讯、高德、百度地图</cover-view>
+  </cover-view>
+
+  <cover-view class="map-list-entry" wx:if="{{!selected.id}}" bindtap="goShops">列表找商户 ›</cover-view>
+</view>

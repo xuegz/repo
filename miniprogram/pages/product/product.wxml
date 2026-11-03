@@ -1,3 +1,5 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
 <view class="page">
   <!-- 搜索 -->
   <view class="search-bar">
@@ -12,6 +14,23 @@
     <view class="search-btn" bindtap="doSearch">搜索</view>
   </view>
 
+  <!-- 搜索历史与热门词 -->
+  <view class="hot-panel" wx:if="{{showPanel}}">
+    <block wx:if="{{history.length > 0}}">
+      <view class="panel-head">
+        <text>历史搜索</text>
+        <text class="clear-history" bindtap="clearHistory">清空</text>
+      </view>
+      <view class="word-list">
+        <text class="word" wx:for="{{history}}" wx:key="*this" bindtap="tapWord" data-word="{{item}}">{{item}}</text>
+      </view>
+    </block>
+    <view class="panel-head">热门搜索</view>
+    <view class="word-list">
+      <text class="word hot" wx:for="{{hotWords}}" wx:key="*this" bindtap="tapWord" data-word="{{item}}">{{item}}</text>
+    </view>
+  </view>
+
   <!-- 品类筛选 -->
   <scroll-view scroll-x="true" class="cat-scroll">
     <view class="cat-tab {{categoryId === 0 ? 'active' : ''}}" bindtap="selectCategory" data-id="0">全部</view>
@@ -24,18 +43,27 @@
     >{{item.name}}</view>
   </scroll-view>
 
+  <!-- 排序 + 商户入口 -->
+  <view class="sort-row">
+    <text class="sort-tab {{sort === '' ? 'active' : ''}}" bindtap="setSort" data-sort="">综合</text>
+    <text class="sort-tab {{sort === 'price_asc' ? 'active' : ''}}" bindtap="setSort" data-sort="price_asc">价格从低到高</text>
+    <text class="sort-tab {{sort === 'price_desc' ? 'active' : ''}}" bindtap="setSort" data-sort="price_desc">价格从高到低</text>
+    <text class="sort-entry" bindtap="goShops">找商户 ›</text>
+  </view>
+
   <!-- 产品列表 -->
-  <view class="product-list" style="margin-top: 16rpx">
-    <view class="product-card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-      <image wx:if="{{item.imageList[0]}}" src="{{item.imageList[0]}}" mode="aspectFill" class="product-img" />
-      <view wx:else class="product-img"></view>
+  <view class="product-list">
+    <view class="product-card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
+      <image wx:if="{{item.imageList[0]}}" src="{{tools.fileUrl(item.imageList[0])}}" mode="aspectFill" class="product-img" />
+      <image wx:else src="/assets/placeholder/product.jpg" mode="aspectFill" class="product-img" />
       <view class="product-body">
         <view class="product-name">{{item.name}}</view>
         <view class="product-meta">{{item.brand}} · {{item.origin}}</view>
         <view class="product-bottom">
-          <text class="price" wx:if="{{item.price > 0}}">¥{{item.price}}</text>
+          <text class="price" wx:if="{{item.price > 0}}">¥{{item.price}}<text class="unit" wx:if="{{item.unit}}">/{{item.unit}}</text></text>
           <text class="price-none" wx:else>面议</text>
         </view>
+        <view class="product-shop">{{item.merchantName}}</view>
       </view>
     </view>
   </view>

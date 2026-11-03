@@ -1,8 +1,11 @@
 package com.jiancai.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.jiancai.common.R;
 import com.jiancai.entity.Ad;
 import com.jiancai.entity.Banner;
+import com.jiancai.entity.Notice;
+import com.jiancai.mapper.NoticeMapper;
 import com.jiancai.service.SiteService;
 import com.jiancai.service.StatService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 平台端 - 内容管理（首页轮播、广告位）与数据总览
+ * 平台端 - 内容管理（首页轮播、广告位、市场公告）与数据总览
  */
 @RestController
 @RequestMapping("/api/admin")
@@ -23,6 +26,33 @@ public class AdminContentController {
 
     @Autowired
     private StatService statService;
+
+    @Autowired
+    private NoticeMapper noticeMapper;
+
+    // ---------------- 市场公告 ----------------
+    @GetMapping("/notice/list")
+    public R<List<Notice>> noticeList() {
+        return R.ok(noticeMapper.selectList(Wrappers.<Notice>lambdaQuery()
+                .orderByDesc(Notice::getSort)
+                .orderByDesc(Notice::getCreateTime)));
+    }
+
+    @PostMapping("/notice/save")
+    public R<Void> noticeSave(@RequestBody Notice notice) {
+        if (notice.getId() == null) {
+            noticeMapper.insert(notice);
+        } else {
+            noticeMapper.updateById(notice);
+        }
+        return R.ok();
+    }
+
+    @PostMapping("/notice/remove/{id}")
+    public R<Void> noticeRemove(@PathVariable Long id) {
+        noticeMapper.deleteById(id);
+        return R.ok();
+    }
 
     // ---------------- 首页轮播 ----------------
     @GetMapping("/banner/list")

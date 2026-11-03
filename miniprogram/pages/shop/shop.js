@@ -1,19 +1,56 @@
-const { request, reportView } = require('../../utils/request')
+const {
+  request,
+  reportView,
+  reportCall,
+  toggleFavorite,
+  checkFavorite
+} = require('../../utils/request')
 
 Page({
   data: {
     merchant: {},
     products: [],
-    addressText: '-'
+    addressText: '-',
+    favorited: false
   },
 
   onLoad: function (options) {
     if (options && options.id) {
       const id = Number(options.id)
       this.loadShop(id)
+      this.loadFavorite(id)
       // 商户被浏览统计
       reportView(2, id)
     }
+  },
+
+  onShow: function () {
+    if (this.data.merchant.id) {
+      this.loadFavorite(this.data.merchant.id)
+    }
+  },
+
+  loadFavorite: function (id) {
+    const that = this
+    checkFavorite(2, id)
+      .then(function (favorited) {
+        that.setData({ favorited: !!favorited })
+      })
+      .catch(function () {})
+  },
+
+  toggleFavorite: function () {
+    const that = this
+    const merchant = this.data.merchant
+    if (!merchant.id) {
+      return
+    }
+    toggleFavorite(2, merchant.id)
+      .then(function (data) {
+        that.setData({ favorited: !!(data && data.favorited) })
+        wx.showToast({ title: data && data.favorited ? '已收藏' : '已取消收藏', icon: 'none' })
+      })
+      .catch(function () {})
   },
 
   loadShop: function (id) {
@@ -35,18 +72,63 @@ Page({
   },
 
   callPhone: function () {
-    const phone = this.data.merchant.phone
-    if (!phone) {
+    const merchant = this.data.merchant
+    if (!merchant.phone) {
       return
     }
+    // 上报电话联系记录（商户主页拨号）
+    reportCall(2, merchant.id)
     wx.makePhoneCall({
-      phoneNumber: phone,
+      phoneNumber: merchant.phone,
       fail: function () {}
     })
   },
 
+  openNav: function () {
+    const m = this.data.merchant
+    const addressText = this.data.addressText
+    if (m.latitude && m.longitude) {
+      wx.openLocation({
+        latitude: Number(m.latitude),
+        longitude: Number(m.longitude),
+        name: m.name,
+        address: addressText,
+        scale: 16,
+        fail: function () {}
+      })
+      return
+    }
+    // 未填坐标时复制地址，方便去地图 App 搜索
+    if (addressText && addressText !== '-') {
+      wx.setClipboardData({
+        data: addressText,
+        success: function () {
+          wx.showToast({ title: '地址已复制', icon: 'success' })
+        }
+      })
+    } else {
+      wx.showToast({ title: '该商户未填写地址', icon: 'none' })
+    }
+  },
+
   goDetail: function (e) {
     wx.navigateTo({ url: '/pages/detail/detail?id=' + e.currentTarget.dataset.id })
+  },
+
+  goMap: function () {
+    const merchant = this.data.merchant
+    if (!merchant.id) {
+      return
+    }
+    wx.navigateTo({ url: '/pages/map/map?merchantId=' + merchant.id })
+  },
+
+  goMarket: function () {
+    const merchant = this.data.merchant
+    if (!merchant.marketId) {
+      return
+    }
+    wx.navigateTo({ url: '/pages/market/market?id=' + merchant.marketId })
   },
 
   onShareAppMessage: function () {

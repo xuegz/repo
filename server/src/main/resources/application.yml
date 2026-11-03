@@ -3,9 +3,16 @@ server:
 
 spring:
   # h2 = 内存库开箱即用（本地演示，重启数据重置）
-  # mysql = 正式环境，需先安装 MySQL 8 并导入 sql/jiancai.sql
+  # mysql = 正式环境，数据持久化（本机已安装 D:\mysql-8.0.28-winx64，账号 root/root）
   profiles:
-    active: h2
+    active: mysql
+  # 数据库结构由 Flyway 统一管理，MySQL 与 H2 共用 db/migration 下的同一套脚本
+  # 已有库（非空）首次接入时不回放历史脚本，直接以 V2 为基线，从 V3 起继续演进
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 2
   servlet:
     multipart:
       max-file-size: 10MB
@@ -29,7 +36,18 @@ jiancai:
     secret: jiancai-platform-secret-key-please-change-me-2026
     expire-hours: 24
   upload:
-    # 图片上传目录（Windows 示例）
+    # 图片上传目录（Windows 示例），未配置 OSS 时的本地回退目录
     path: D:/jiancai-upload/
     # 对外访问前缀
     url-prefix: /upload/
+  # 阿里云 OSS：access-key-id 为空时自动回退本地磁盘
+  # 凭据请通过环境变量或未跟踪的 server/config/application.yml 注入，不要提交仓库
+  oss:
+    endpoint: ${OSS_ENDPOINT:}
+    bucket: ${OSS_BUCKET:}
+    access-key-id: ${OSS_ACCESS_KEY_ID:}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
+    # 对外访问域名，留空则使用 https://{bucket}.{endpoint}
+    public-domain: ${OSS_PUBLIC_DOMAIN:}
+    # 对象目录前缀，最终 key 形如 jiancai/2026/11/uuid.jpg
+    dir-prefix: ${OSS_DIR_PREFIX:jiancai}

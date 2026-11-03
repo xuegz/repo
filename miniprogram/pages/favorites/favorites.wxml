@@ -1,0 +1,45 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <scroll-view scroll-x="true" class="cat-scroll inquiry-tabs">
+    <view class="cat-tab {{type === 1 ? 'active' : ''}}" bindtap="selectType" data-type="1">收藏产品</view>
+    <view class="cat-tab {{type === 2 ? 'active' : ''}}" bindtap="selectType" data-type="2">收藏商户</view>
+  </scroll-view>
+
+  <block wx:if="{{type === 1}}">
+    <view class="product-list">
+      <view class="product-card" wx:for="{{list}}" wx:key="id" bindtap="goProduct" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
+        <image wx:if="{{item.imageList[0]}}" src="{{tools.fileUrl(item.imageList[0])}}" mode="aspectFill" class="product-img" />
+        <image wx:else src="/assets/placeholder/product.jpg" mode="aspectFill" class="product-img" />
+        <view class="fav-remove" catchtap="removeFavorite" data-id="{{item.id}}">×</view>
+        <view class="product-body">
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-meta">{{item.merchantName}} · {{item.brand || '未标品牌'}}</view>
+          <view class="product-bottom">
+            <text class="price" wx:if="{{item.price > 0}}">¥{{item.price}}<text class="unit" wx:if="{{item.unit}}">/{{item.unit}}</text></text>
+            <text class="price-none" wx:else>面议</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="shop-card" wx:for="{{list}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
+      <image wx:if="{{item.logo}}" src="{{tools.fileUrl(item.logo)}}" mode="aspectFill" class="shop-avatar" />
+      <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
+      <view class="shop-info">
+        <view class="shop-name-line">{{item.name}}</view>
+        <view class="shop-line">{{item.market || '未填写市场'}} · {{item.city}}{{item.address}}</view>
+        <view class="shop-tags">
+          <text class="shop-tag">在售 {{item.productCount}} 件</text>
+          <text class="shop-tag cancel" catchtap="removeFavorite" data-id="{{item.id}}">取消收藏</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="empty" wx:if="{{loaded && list.length === 0}}">
+    {{type === 1 ? '还没有收藏产品，去详情页点「收藏」吧' : '还没有收藏商户，去商户主页点「收藏」吧'}}
+  </view>
+</view>

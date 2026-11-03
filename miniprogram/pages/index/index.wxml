@@ -1,16 +1,52 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
 <view class="page">
   <!-- 搜索 -->
-  <view class="search-bar" bindtap="goProduct">
-    <input class="search-input" placeholder-class="search-placeholder" placeholder="搜索产品 / 品牌 / 产地" disabled="true" />
-    <view class="search-btn">搜索</view>
+  <view class="search-bar">
+    <input
+      class="search-input"
+      placeholder-class="search-placeholder"
+      placeholder="搜索产品 / 品牌 / 产地"
+      value="{{keyword}}"
+      confirm-type="search"
+      bindinput="onKeywordInput"
+      bindconfirm="goSearch"
+    />
+    <view class="search-btn" bindtap="goSearch">搜索</view>
+  </view>
+
+  <!-- 市场公告 -->
+  <view class="notice-bar" wx:if="{{notices.length > 0}}">
+    <text class="notice-label">公告</text>
+    <swiper class="notice-swiper" vertical autoplay circular interval="4000">
+      <swiper-item wx:for="{{notices}}" wx:key="id">
+        <view class="notice-text" bindtap="showNotice" data-index="{{index}}">{{item.title}}</view>
+      </swiper-item>
+    </swiper>
   </view>
 
   <!-- 首页轮播 -->
   <swiper class="banner" indicator-dots="true" autoplay="true" circular="true" wx:if="{{banners.length > 0}}">
     <swiper-item wx:for="{{banners}}" wx:key="id">
-      <image src="{{item.image}}" mode="aspectFill" class="banner-img" />
+      <image src="{{tools.fileUrl(item.image)}}" mode="aspectFill" class="banner-img" />
     </swiper-item>
   </swiper>
+
+  <!-- 快捷入口 -->
+  <view class="entry-row">
+    <view class="entry-card" bindtap="goShops">
+      <view class="entry-title">入驻商户</view>
+      <view class="entry-sub">已有 {{merchantCount}} 家同行</view>
+    </view>
+    <view class="entry-card" bindtap="goMap">
+      <view class="entry-title">地图找店</view>
+      <view class="entry-sub">看位置 · 一键导航</view>
+    </view>
+    <view class="entry-card entry-primary" bindtap="goApply">
+      <view class="entry-title">免费入驻</view>
+      <view class="entry-sub">限时 0 元 · 1 日审核</view>
+    </view>
+  </view>
 
   <!-- 品类 -->
   <view class="section-title">建材品类</view>
@@ -21,28 +57,65 @@
     </view>
   </view>
 
+  <!-- 热门建材市场 -->
+  <block wx:if="{{markets.length > 0}}">
+    <view class="section-title">热门建材市场</view>
+    <scroll-view scroll-x="true" class="market-scroll">
+      <view
+        class="market-card"
+        wx:for="{{markets}}"
+        wx:key="id"
+        bindtap="goMarket"
+        data-id="{{item.id}}"
+        hover-class="tap-hover"
+        hover-stay-time="60"
+      >
+        <view class="market-card-name">{{item.name}}</view>
+        <view class="market-card-meta">{{item.merchantCount || 0}} 家商户</view>
+        <view class="market-card-address">{{item.address || item.city || '西安市'}}</view>
+        <view class="market-card-more">进入市场 ›</view>
+      </view>
+    </scroll-view>
+  </block>
+
   <!-- 广告位 -->
   <block wx:if="{{ads.length > 0}}">
-    <view class="section-title">推荐商家</view>
-    <image wx:for="{{ads}}" wx:key="id" src="{{item.image}}" mode="aspectFill" class="ad-item" />
+    <view class="section-title">市场推广</view>
+    <image wx:for="{{ads}}" wx:key="id" src="{{tools.fileUrl(item.image)}}" mode="aspectFill" class="ad-item" />
+  </block>
+
+  <!-- 入驻商户 -->
+  <block wx:if="{{merchants.length > 0}}">
+    <view class="section-title">入驻商户</view>
+    <view class="shop-card" wx:for="{{merchants}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
+      <image wx:if="{{item.logo}}" src="{{tools.fileUrl(item.logo)}}" mode="aspectFill" class="shop-avatar" />
+      <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
+      <view class="shop-info">
+        <view class="shop-name-line">{{item.name}}</view>
+        <view class="shop-line">{{item.market || '建材市场'}} · {{item.contactName}} {{item.phone}}</view>
+        <view class="shop-tags">
+          <text class="shop-tag">在售 {{item.productCount}} 件</text>
+        </view>
+      </view>
+    </view>
   </block>
 
   <!-- 最新产品 -->
   <view class="section-title">最新产品</view>
   <view class="product-list">
-    <view class="product-card" wx:for="{{recommends}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-      <image wx:if="{{item.imageList[0]}}" src="{{item.imageList[0]}}" mode="aspectFill" class="product-img" />
-      <view wx:else class="product-img"></view>
+    <view class="product-card" wx:for="{{recommends}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
+      <image wx:if="{{item.imageList[0]}}" src="{{tools.fileUrl(item.imageList[0])}}" mode="aspectFill" class="product-img" />
+      <image wx:else src="/assets/placeholder/product.jpg" mode="aspectFill" class="product-img" />
       <view class="product-body">
         <view class="product-name">{{item.name}}</view>
         <view class="product-meta">{{item.brand}} · {{item.origin}}</view>
         <view class="product-bottom">
-          <text class="price" wx:if="{{item.price > 0}}">¥{{item.price}}</text>
+          <text class="price" wx:if="{{item.price > 0}}">¥{{item.price}}<text class="unit" wx:if="{{item.unit}}">/{{item.unit}}</text></text>
           <text class="price-none" wx:else>面议</text>
         </view>
       </view>
     </view>
   </view>
 
-  <view class="empty" wx:if="{{recommends.length === 0}}">暂无产品，快去让商户发布吧</view>
+  <view class="empty" wx:if="{{recommends.length === 0}}">暂无产品，快让商户发布吧</view>
 </view>

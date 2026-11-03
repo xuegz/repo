@@ -5,12 +5,13 @@
         <el-input v-model="query.name" placeholder="名称关键词" clearable />
       </el-form-item>
       <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
-          <el-option label="待审核" :value="0" />
-          <el-option label="在售" :value="1" />
-          <el-option label="已拒绝" :value="2" />
-          <el-option label="已下架" :value="3" />
-        </el-select>
+        <el-radio-group v-model="query.status" @change="onStatusChange">
+          <el-radio-button :label="-1">全部</el-radio-button>
+          <el-radio-button :label="1">在售({{ counts[1] || 0 }})</el-radio-button>
+          <el-radio-button :label="0">待审核({{ counts[0] || 0 }})</el-radio-button>
+          <el-radio-button :label="2">未通过({{ counts[2] || 0 }})</el-radio-button>
+          <el-radio-button :label="3">已下架({{ counts[3] || 0 }})</el-radio-button>
+        </el-radio-group>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="load">查询</el-button>
@@ -19,7 +20,7 @@
       </el-form-item>
     </el-form>
 
-    <el-table :data="tableData" border v-loading="loading">
+    <el-table :data="tableData" border v-loading="loading" @sort-change="onSortChange">
       <el-table-column label="产品图" width="90">
         <template #default="{ row }">
           <el-image
@@ -29,8 +30,12 @@
             fit="cover"
             preview-teleported
             style="width: 56px; height: 56px; border-radius: 4px"
-          />
-          <span v-else style="color: #c0c4cc">无图</span>
+          >
+            <template #error>
+              <img :src="productPlaceholder" class="ph-img" />
+            </template>
+          </el-image>
+          <img v-else :src="productPlaceholder" class="ph-img" />
         </template>
       </el-table-column>
       <el-table-column prop="name" label="产品名称" min-width="150" />
@@ -48,7 +53,9 @@
           <div v-if="row.status === 2 && row.rejectReason" class="reason">原因：{{ row.rejectReason }}</div>
         </template>
       </el-table-column>
-      <el-table-column prop="views" label="浏览" width="70" />
+      <el-table-column prop="views" label="被浏览" width="95" sortable="custom" />
+      <el-table-column prop="forwards" label="被转发" width="95" sortable="custom" />
+      <el-table-column prop="calls" label="被电话联系" width="115" sortable="custom" />
       <el-table-column prop="createTime" label="创建时间" width="170" />
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
@@ -82,7 +89,7 @@
           <el-col :span="12">
             <el-form-item label="品类">
               <el-select v-model="form.categoryId" clearable style="width: 100%">
-                <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
+                <el-option v-for="c in categories" :key="c.id" :label="c.label" :value="c.id" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -145,11 +152,14 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
+import { categorySelectOptions } from '@/utils/category'
+import productPlaceholder from '@/assets/product-placeholder.jpg'
 
-const query = reactive({ pageNum: 1, pageSize: 10, name: '', status: null })
+const query = reactive({ pageNum: 1, pageSize: 10, name: '', status: -1, sort: '' })
 const tableData = ref([])
 const total = ref(0)
 const loading = ref(false)
+const counts = ref({})
 const categories = ref([])
 const dialogVisible = ref(false)
 const form = ref({})
@@ -162,7 +172,8 @@ const statusType = (s) => ({ 0: 'warning', 1: 'success', 2: 'danger', 3: 'info' 
 const load = async () => {
   loading.value = true
   try {
-    const res = await request.get('/merchant/product/page', { params: query })
+    const params = { ...query, status: query.status === -1 ? null : query.status }
+    const res = await request.get('/merchant/product/page', { params })
     tableData.value = res.data.records
     total.value = res.data.total
   } finally {
@@ -170,11 +181,34 @@ const load = async () => {
   }
 }
 
-const reset = () => {
-  query.name = ''
-  query.status = null
+const loadStatusCount = async () => {
+  const res = await request.get('/merchant/product/status-count')
+  counts.value = res.data || {}
+}
+
+const onStatusChange = () => {
   query.pageNum = 1
   load()
+}
+
+const onSortChange = ({ prop, order }) => {
+  if (!order) {
+    query.sort = ''
+  } else if (prop === 'price') {
+    query.sort = order === 'ascending' ? 'price_asc' : 'price_desc'
+  } else {
+    query.sort = prop
+  }
+  load()
+}
+
+const reset = () => {
+  query.name = ''
+  query.status = -1
+  query.sort = ''
+  query.pageNum = 1
+  load()
+  loadStatusCount()
 }
 
 const openAdd = () => {
@@ -209,6 +243,7 @@ const removeImage = (index) => {
 
 const save = async () => {
   form.value.images = imageList.value.join(',')
+  form.value.imageList = [...imageList.value]
   const isNew = !form.value.id
   await request.post('/merchant/product/save', form.value)
   ElMessage.success(isNew ? '已提交，等待平台审核' : '保存成功')
@@ -230,8 +265,9 @@ const remove = async (row) => {
 
 onMounted(async () => {
   const catRes = await request.get('/merchant/categories')
-  categories.value = catRes.data
+  categories.value = categorySelectOptions(catRes.data)
   load()
+  loadStatusCount()
 })
 </script>
 
@@ -278,5 +314,12 @@ onMounted(async () => {
   color: #fff;
   font-size: 14px;
   cursor: pointer;
+}
+.ph-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  object-fit: cover;
+  display: block;
 }
 </style>
