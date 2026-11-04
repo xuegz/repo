@@ -117,6 +117,28 @@ Page({
     wx.navigateTo({ url: '/pages/market/market?id=' + e.currentTarget.dataset.id })
   },
 
+  /** 广告位跳转：支持 product?keyword=xxx 与小程序内页面路径 */
+  goAd: function (e) {
+    const link = e.currentTarget.dataset.link || ''
+    if (!link) {
+      return
+    }
+    if (link.indexOf('product?') === 0) {
+      const match = link.match(/keyword=([^&]+)/)
+      if (match) {
+        wx.setStorageSync('searchKeyword', decodeURIComponent(match[1]))
+      }
+      wx.removeStorageSync('filterCategoryId')
+      wx.switchTab({ url: '/pages/product/product' })
+      return
+    }
+    if (link.indexOf('/pages/') === 0) {
+      wx.navigateTo({ url: link })
+      return
+    }
+    wx.setClipboardData({ data: link })
+  },
+
   /** 品类跳转：通过 storage 传参后切到 tab 页 */
   goCategory: function (e) {
     wx.removeStorageSync('searchKeyword')

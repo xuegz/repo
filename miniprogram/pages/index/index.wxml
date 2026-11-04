@@ -81,7 +81,16 @@
   <!-- 广告位 -->
   <block wx:if="{{ads.length > 0}}">
     <view class="section-title">市场推广</view>
-    <image wx:for="{{ads}}" wx:key="id" src="{{tools.thumbUrl(item.image, 240)}}" mode="aspectFill" class="ad-item" lazy-load />
+    <image
+      wx:for="{{ads}}"
+      wx:key="id"
+      src="{{tools.thumbUrl(item.image, 240)}}"
+      mode="aspectFill"
+      class="ad-item"
+      lazy-load
+      bindtap="goAd"
+      data-link="{{item.link}}"
+    />
   </block>
 
   <!-- 入驻商户 -->
