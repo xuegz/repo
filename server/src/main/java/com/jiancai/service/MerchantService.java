@@ -14,6 +14,7 @@ import com.jiancai.mapper.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class MerchantService extends ServiceImpl<MerchantMapper, Merchant> {
+
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     @Autowired
     private CategoryMapper categoryMapper;
@@ -81,10 +84,47 @@ public class MerchantService extends ServiceImpl<MerchantMapper, Merchant> {
                     .eq(SysUser::getMerchantId, id).count();
             if (exists == 0) {
                 userService.createUser(merchant.getPhone(), "123456",
-                        merchant.getContactName(), merchant.getPhone(), 2, id);
+                        merchant.getContactName(), merchant.getPhone(), 2, id, true);
             }
         }
         updateById(merchant);
+    }
+
+    /** 平台重置商户密码：生成临时密码并返回给平台，商户首次登录需修改 */
+    public Map<String, Object> resetMerchantPassword(Long merchantId) {
+        Merchant merchant = getById(merchantId);
+        if (merchant == null) {
+            throw new BusinessException("商户不存在");
+        }
+        SysUser user = userService.lambdaQuery()
+                .eq(SysUser::getMerchantId, merchantId)
+                .last("LIMIT 1")
+                .one();
+        String tempPassword = randomPassword();
+        if (user == null) {
+            if (merchant.getPhone() == null || merchant.getPhone().isBlank()) {
+                throw new BusinessException("商户未填写联系电话，无法生成登录账号");
+            }
+            Long userId = userService.createUser(merchant.getPhone(), tempPassword,
+                    merchant.getContactName(), merchant.getPhone(), 2, merchantId, true);
+            user = userService.getById(userId);
+        } else {
+            userService.resetPassword(user.getId(), tempPassword);
+        }
+        Map<String, Object> result = new HashMap<>(4);
+        result.put("username", user.getUsername());
+        result.put("password", tempPassword);
+        return result;
+    }
+
+    /** 避开易混淆字符的 8 位临时密码 */
+    private String randomPassword() {
+        final String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        StringBuilder sb = new StringBuilder(8);
+        for (int i = 0; i < 8; i++) {
+            sb.append(chars.charAt(RANDOM.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 
     /** 会员到期情况统计（用于平台首页） */

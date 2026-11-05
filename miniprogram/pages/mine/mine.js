@@ -1,4 +1,4 @@
-const { request, getOpenid } = require('../../utils/request')
+const { openidRequest } = require('../../utils/request')
 
 Page({
   data: {
@@ -12,8 +12,7 @@ Page({
 
   loadHistory: function () {
     const that = this
-    const openid = getOpenid()
-    request('/history?openid=' + openid)
+    openidRequest('/history', 'GET')
       .then(function (data) {
         that.setData({ history: data || [] })
       })
@@ -70,7 +69,7 @@ Page({
       content: '确定清除浏览记录？收藏与询价记录不受影响。',
       success: function (res) {
         if (res.confirm) {
-          request('/history/clear', 'POST', { openid: getOpenid() })
+          openidRequest('/history/clear', 'POST')
             .then(function () {
               that.setData({ history: [] })
               wx.showToast({ title: '已清除', icon: 'success' })

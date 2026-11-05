@@ -1,4 +1,4 @@
-const { request, getOpenid, toggleFavorite } = require('../../utils/request')
+const { openidRequest, toggleFavorite } = require('../../utils/request')
 
 Page({
   data: {
@@ -30,7 +30,7 @@ Page({
 
   loadList: function (cb) {
     const that = this
-    request('/favorites', 'GET', { openid: getOpenid(), targetType: this.data.type })
+    openidRequest('/favorites', 'GET', { targetType: this.data.type })
       .then(function (data) {
         that.setData({ list: data || [], loaded: true })
       })

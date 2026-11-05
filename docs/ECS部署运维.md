@@ -45,8 +45,21 @@
 
 - 后端配置 = 仓库内 `server/src/main/resources/application.yml`（默认值、不含密钥）+ 服务器上 `/opt/jiancai/config/application.yml`（覆盖项、含密钥）。
 - 外部配置优先级更高，改完需 `systemctl restart jiancai`。
-- 覆盖项包含：`server.port`、`spring.profiles.active=mysql`、`spring.datasource.*`、`mybatis-plus.*`、`jiancai.jwt.secret`、`jiancai.upload.path=/opt/jiancai/upload/`、`jiancai.oss.*`、`jiancai.wx.*`。
+- 覆盖项包含：`server.port`、`spring.profiles.active=mysql`、`spring.datasource.*`、`mybatis-plus.*`、`jiancai.jwt.secret`、`jiancai.upload.path=/opt/jiancai/upload/`、`jiancai.oss.*`、`jiancai.wx.appid`、`jiancai.wx.secret`。
 - 修改配置前先备份：`cp /opt/jiancai/config/application.yml{,.bak}`。
+
+### 微信小程序登录配置
+
+仓库内 `application.yml` 已默认 `jiancai.wx.appid=wxe89d8f5f1af02052`，`secret` 为空。首次启用需在服务器配置的 `jiancai:` 下补充（注意两空格缩进）：
+
+```yaml
+jiancai:
+  wx:
+    appid: wxe89d8f5f1af02052
+    secret: 在微信公众平台复制的 AppSecret
+```
+
+AppSecret 获取/重置：微信公众平台 → 开发管理 → 开发设置 → 开发者ID。**不要提交仓库，也不要粘贴到聊天或工单**。改完执行 `systemctl restart jiancai`，用假 code 调 `POST /api/mp/login`：返回「微信登录失败」说明已配置并打通微信接口，返回「微信登录未配置」说明 secret 未生效。
 
 ## 四、日常发布
 
@@ -142,7 +155,7 @@ tail -f /var/log/nginx/access.log /var/log/nginx/error.log
 
 ## 七、安全待办
 
-1. **默认账号**：`admin/123456`、`merchant/123456` 以及新商户初始密码 `123456` 仍在线上。改密码（BCrypt，strength 10）：
+1. **默认账号与密码策略**：`admin/123456`、演示账号 `merchant/123456` 仍在线上，建议尽快在后台右上角「修改密码」或按下方方式改掉。商户账号（含导入数据与审核开通）初始密码为 `123456`，V11 起标记 `must_change_password`，首次登录强制修改；平台可在「商户管理 → 重置密码」生成随机临时密码，商户下次登录仍需改密。管理员改密码（BCrypt，strength 10）：
 
    ```bash
    # 在服务器上生成哈希（已内置 spring-security-crypto 依赖）
@@ -165,10 +178,19 @@ tail -f /var/log/nginx/access.log /var/log/nginx/error.log
 3. **HTTPS**：等域名 `mycailutong.com` 完成实名 + ICP 备案后再做，需 Nginx 443 + 证书 + 小程序合法域名（当前域名未实名、未备案，无法解析）。
 4. **MySQL 不暴露公网**：当前 3306 只监听回环；安全组不要放行 3306。
 
-## 八、当前验证基线（2026-11-03）
+## 八、当前验证基线（2026-11-05）
 
 - `http://47.111.99.105/` → 200，跳转 `/login`
-- `POST /api/auth/login`（admin/123456）→ 200 并返回 token
+- `POST /api/auth/login`（admin/123456）→ 200 并返回 token，`mustChangePassword=false`
+- 商户手机号 + `123456` 登录 → 200，`mustChangePassword=true`
+- `POST /api/account/password`（带 token，原密码/新密码）→ 200
+- `POST /api/admin/merchant/reset-password`（管理员，merchantId）→ 200，返回临时密码
 - `GET /api/mp/categories` → 200，返回 8 个品类
 - 带 token 访问 `/api/admin/{stats,merchants,products}` → 200
 - `POST /api/admin/upload` → 200，返回 OSS 地址且图片 URL 可公网访问
+- 同一账号连续 5 次密码错误 → 返回「密码错误次数过多，请 10 分钟后再试」；成功登录后计数清零（限流在内存中，重启服务即清空）
+- 产品审核 / 商户审核 / 重置密码后，`GET /api/admin/log/page` 能查到操作人、内容与 IP（V12 `operation_log`）
+- `POST /api/admin/product/import` 上传模板 CSV → 200 返回 `{total, imported, errors}`；有错误行时 `imported=0` 且不落库
+- `GET /api/admin/product/export`、`GET /api/merchant/product/export` → 200，`text/csv` 且带 UTF-8 BOM
+- `POST /api/mp/login` 空 code → 返回「缺少微信登录凭证」；配置 AppSecret 后，假 code 应返回「微信登录失败」而非「微信登录未配置」
+- 商户端菜单「询价线索」待报价角标与小程序「我的」红点均按 `/merchant/inquiry/counts` 与 `/mp/inquiries` 数据展示

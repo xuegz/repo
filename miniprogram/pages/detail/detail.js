@@ -1,9 +1,9 @@
 const {
   request,
+  openidRequest,
   reportView,
   reportForward,
   reportCall,
-  getOpenid,
   toggleFavorite,
   checkFavorite
 } = require('../../utils/request')
@@ -232,14 +232,13 @@ Page({
     }
     const that = this
     this.setData({ inquirySubmitting: true })
-    request('/inquiry', 'POST', {
+    openidRequest('/inquiry', 'POST', {
       productId: this.data.product.id,
       merchantId: this.data.product.merchantId,
       quantity: f.quantity,
       contact: f.contact,
       remark: f.remark,
-      expectDate: f.expectDate,
-      openid: getOpenid()
+      expectDate: f.expectDate
     })
       .then(function () {
         that.setData({ inquiryShow: false, inquirySubmitting: false })

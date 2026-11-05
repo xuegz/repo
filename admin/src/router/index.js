@@ -20,6 +20,8 @@ const routes = [
       { path: 'product', component: () => import('@/views/ProductAudit.vue'), meta: { title: '产品管理', roles: [1] } },
       { path: 'category', component: () => import('@/views/CategoryList.vue'), meta: { title: '品类管理', roles: [1] } },
       { path: 'content', component: () => import('@/views/ContentManage.vue'), meta: { title: '内容管理', roles: [1] } },
+      { path: 'log', component: () => import('@/views/OperationLog.vue'), meta: { title: '操作日志', roles: [1] } },
+      { path: 'change-password', component: () => import('@/views/ChangePassword.vue'), meta: { title: '修改密码', roles: [1, 2] } },
       // 商户端
       { path: 'm/dashboard', component: () => import('@/views/merchant/MerchantDashboard.vue'), meta: { title: '数据看板', roles: [2] } },
       { path: 'm/shop', component: () => import('@/views/merchant/MyShop.vue'), meta: { title: '我的门店', roles: [2] } },
@@ -41,6 +43,11 @@ router.beforeEach((to) => {
   const token = localStorage.getItem('token')
   if (!token) {
     return '/login'
+  }
+  // 首次登录（含平台重置后）必须先修改初始密码
+  const mustChangePassword = localStorage.getItem('mustChangePassword') === '1'
+  if (mustChangePassword && to.path !== '/change-password') {
+    return '/change-password'
   }
   const role = Number(localStorage.getItem('role'))
   const home = role === 1 ? '/dashboard' : '/m/dashboard'

@@ -45,6 +45,7 @@
           <el-button v-if="row.status === 0" type="success" link @click="audit(row, 1)">通过</el-button>
           <el-button v-if="row.status === 0" type="danger" link @click="audit(row, 2)">拒绝</el-button>
           <el-button type="primary" link @click="openEdit(row)">编辑</el-button>
+          <el-button v-if="row.status === 1" type="warning" link @click="resetPassword(row)">重置密码</el-button>
           <el-popconfirm title="确定删除该商户？" @confirm="remove(row)">
             <template #reference>
               <el-button type="danger" link>删除</el-button>
@@ -112,8 +113,8 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { h, onMounted, reactive, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/api/request'
 import { categorySelectOptions } from '@/utils/category'
 
@@ -168,8 +169,27 @@ const save = async () => {
 
 const audit = async (row, status) => {
   await request.post('/admin/merchant/audit', { id: row.id, status })
-  ElMessage.success(status === 1 ? '已通过，商户账号已开通（账号为手机号，初始密码 123456）' : '已拒绝')
+  ElMessage.success(status === 1 ? '已通过，商户账号已开通（账号为手机号，初始密码 123456，首次登录需修改）' : '已拒绝')
   load()
+}
+
+const resetPassword = async (row) => {
+  const confirmed = await ElMessageBox.confirm(`确定重置「${row.name}」的登录密码？`, '重置密码', { type: 'warning' })
+    .then(() => true)
+    .catch(() => false)
+  if (!confirmed) {
+    return
+  }
+  const res = await request.post('/admin/merchant/reset-password', { merchantId: row.id })
+  ElMessageBox.alert(
+    h('div', [
+      h('div', `账号：${res.data.username}`),
+      h('div', ['临时密码：', h('b', res.data.password)]),
+      h('div', { style: 'color:#909399;font-size:12px;margin-top:6px' }, '请告知商户，首次登录后需修改密码')
+    ]),
+    '密码已重置',
+    { type: 'success' }
+  )
 }
 
 const remove = async (row) => {

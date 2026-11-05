@@ -17,6 +17,7 @@
         <el-button type="primary" @click="load">查询</el-button>
         <el-button @click="reset">重置</el-button>
         <el-button type="success" @click="openAdd">发布产品</el-button>
+        <el-button :loading="exporting" @click="exportProducts">导出商品</el-button>
       </el-form-item>
     </el-form>
 
@@ -151,6 +152,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
 import request from '@/api/request'
 import { categorySelectOptions } from '@/utils/category'
 import productPlaceholder from '@/assets/product-placeholder.jpg'
@@ -165,6 +167,7 @@ const dialogVisible = ref(false)
 const form = ref({})
 const imageList = ref([])
 const uploadHeaders = { Authorization: localStorage.getItem('token') || '' }
+const exporting = ref(false)
 
 const statusText = (s) => ({ 0: '待审核', 1: '在售', 2: '已拒绝', 3: '已下架' }[s] || '未知')
 const statusType = (s) => ({ 0: 'warning', 1: 'success', 2: 'danger', 3: 'info' }[s] || 'info')
@@ -261,6 +264,28 @@ const remove = async (row) => {
   await request.post(`/merchant/product/remove/${row.id}`)
   ElMessage.success('删除成功')
   load()
+}
+
+const exportProducts = async () => {
+  exporting.value = true
+  try {
+    const res = await axios.get('/api/merchant/product/export', {
+      params: {
+        name: query.name || undefined,
+        status: query.status === -1 ? undefined : query.status
+      },
+      responseType: 'blob',
+      headers: { Authorization: localStorage.getItem('token') }
+    })
+    const url = URL.createObjectURL(res.data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `我的商品-${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  } finally {
+    exporting.value = false
+  }
 }
 
 onMounted(async () => {

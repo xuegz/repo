@@ -12,6 +12,12 @@
         <el-menu-item v-for="item in menus" :key="item.path" :index="item.path">
           <el-icon><component :is="item.icon" /></el-icon>
           <span>{{ item.title }}</span>
+          <el-badge
+            v-if="item.path === '/m/inquiry' && pendingCount > 0"
+            :value="pendingCount"
+            :max="99"
+            class="menu-badge"
+          />
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -24,6 +30,7 @@
           <el-tag size="small" type="success" effect="dark" style="margin: 0 10px">
             {{ role === 1 ? '平台管理员' : '商户' }}
           </el-tag>
+          <el-button link type="primary" @click="router.push('/change-password')">修改密码</el-button>
           <el-button link type="primary" @click="logout">退出登录</el-button>
         </div>
       </el-header>
@@ -35,9 +42,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessageBox } from 'element-plus'
+import { ElMessageBox, ElNotification } from 'element-plus'
+import axios from 'axios'
 
 const route = useRoute()
 const router = useRouter()
@@ -51,7 +59,8 @@ const adminMenus = [
   { path: '/market', title: '市场管理', icon: 'OfficeBuilding' },
   { path: '/product', title: '产品管理', icon: 'Goods' },
   { path: '/category', title: '品类管理', icon: 'Menu' },
-  { path: '/content', title: '内容管理', icon: 'Picture' }
+  { path: '/content', title: '内容管理', icon: 'Picture' },
+  { path: '/log', title: '操作日志', icon: 'Document' }
 ]
 
 const merchantMenus = [
@@ -62,6 +71,47 @@ const merchantMenus = [
 ]
 
 const menus = computed(() => (role === 1 ? adminMenus : merchantMenus))
+
+const pendingCount = ref(0)
+let pollTimer = null
+let lastPending = null
+
+const loadInquiryCount = async () => {
+  try {
+    const res = await axios.get('/api/merchant/inquiry/counts', {
+      headers: { Authorization: localStorage.getItem('token') || '' }
+    })
+    if (res.data && res.data.code === 200) {
+      const pending = Number(res.data.data?.pending || 0)
+      pendingCount.value = pending
+      if (lastPending !== null && pending > lastPending) {
+        ElNotification({
+          title: '有新的询价线索',
+          message: `新增 ${pending - lastPending} 条询价，请及时查看报价`,
+          type: 'success',
+          duration: 6000
+        })
+      }
+      lastPending = pending
+    }
+  } catch (e) {
+    // 轮询失败静默处理，避免打断当前操作
+  }
+}
+
+onMounted(() => {
+  if (role === 2) {
+    loadInquiryCount()
+    pollTimer = setInterval(loadInquiryCount, 30000)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+})
 
 const logout = () => {
   ElMessageBox.confirm('确定退出登录吗？', '提示', { type: 'warning' })
@@ -108,6 +158,12 @@ const logout = () => {
 .user-box {
   display: flex;
   align-items: center;
+}
+.menu-badge {
+  margin-left: auto;
+}
+.menu-badge :deep(.el-badge__content) {
+  border: none;
 }
 .main {
   background: #f5f7fa;

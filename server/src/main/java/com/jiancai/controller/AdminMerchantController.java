@@ -6,6 +6,7 @@ import com.jiancai.common.R;
 import com.jiancai.entity.Merchant;
 import com.jiancai.service.MarketService;
 import com.jiancai.service.MerchantService;
+import com.jiancai.service.OperationLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,9 @@ public class AdminMerchantController {
 
     @Autowired
     private MarketService marketService;
+
+    @Autowired
+    private OperationLogService operationLogService;
 
     @GetMapping("/page")
     public R<IPage<Merchant>> page(@RequestParam(defaultValue = "1") long pageNum,
@@ -53,8 +57,23 @@ public class AdminMerchantController {
     public R<Void> audit(@RequestBody Map<String, Object> body) {
         Long id = Long.valueOf(body.get("id").toString());
         Integer status = Integer.valueOf(body.get("status").toString());
+        Merchant merchant = merchantService.getById(id);
         merchantService.audit(id, status);
+        String actionText = status == 1 ? "通过" : status == 2 ? "拒绝" : "更新";
+        operationLogService.record("merchant_audit", "merchant", id,
+                actionText + "商户「" + (merchant == null ? id : merchant.getName()) + "」");
         return R.ok();
+    }
+
+    /** 重置商户登录密码，返回临时密码（商户首次登录需修改） */
+    @PostMapping("/reset-password")
+    public R<Map<String, Object>> resetPassword(@RequestBody Map<String, Object> body) {
+        Long merchantId = Long.valueOf(body.get("merchantId").toString());
+        Merchant merchant = merchantService.getById(merchantId);
+        Map<String, Object> result = merchantService.resetMerchantPassword(merchantId);
+        operationLogService.record("merchant_reset_password", "merchant", merchantId,
+                "重置商户「" + (merchant == null ? merchantId : merchant.getName()) + "」登录密码");
+        return R.ok(result);
     }
 
     @PostMapping("/remove/{id}")

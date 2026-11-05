@@ -1,4 +1,4 @@
-const { request, getOpenid, reportCall } = require('../../utils/request')
+const { openidRequest, reportCall } = require('../../utils/request')
 
 const STATUS_META = {
   0: { text: '待报价', cls: 'pending' },
@@ -22,6 +22,19 @@ function moneyText(v) {
     return ''
   }
   return Number(v).toFixed(2)
+}
+
+function markQuoteSeen(list) {
+  let latest = 0
+  ;(list || []).forEach(function (item) {
+    if (!item.quoteTime) return
+    const t = new Date(item.quoteTime).getTime()
+    if (t && t > latest) latest = t
+  })
+  if (latest) {
+    wx.setStorageSync('quoteSeenTime', latest)
+  }
+  wx.hideTabBarRedDot({ index: 2, fail: function () {} })
 }
 
 Page({
@@ -51,13 +64,14 @@ Page({
 
   loadList: function (cb) {
     const that = this
-    const params = { openid: getOpenid() }
+    const params = {}
     if (this.data.filter !== -1) {
       params.status = this.data.filter
     }
-    request('/inquiries', 'GET', params)
+    openidRequest('/inquiries', 'GET', params)
       .then(function (data) {
         that.setData({ list: that.decorate(data || []), loaded: true })
+        markQuoteSeen(data)
       })
       .catch(function () {
         that.setData({ loaded: true })

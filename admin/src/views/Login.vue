@@ -22,7 +22,7 @@
         </el-button>
       </el-form>
 
-      <div class="tip">平台管理员：admin / 123456　商户：merchant / 123456</div>
+      <div class="tip">平台管理员：admin / 123456　商户：merchant / 123456<br />商户首次登录需修改初始密码</div>
     </div>
   </div>
 </template>
@@ -51,8 +51,13 @@ const submit = async () => {
     localStorage.setItem('role', data.role)
     localStorage.setItem('realName', data.realName || '')
     localStorage.setItem('merchantId', data.merchantId || '')
+    localStorage.setItem('mustChangePassword', data.mustChangePassword ? '1' : '')
     ElMessage.success('登录成功')
-    router.push(data.role === 1 ? '/dashboard' : '/m/dashboard')
+    if (data.mustChangePassword) {
+      router.push('/change-password')
+    } else {
+      router.push(data.role === 1 ? '/dashboard' : '/m/dashboard')
+    }
   } finally {
     loading.value = false
   }

@@ -30,6 +30,8 @@ public class SysUser {
     private Long merchantId;
     /** 1=启用 0=禁用 */
     private Integer status;
+    /** 1=首次登录需修改密码 */
+    private Integer mustChangePassword;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

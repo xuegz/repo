@@ -13,13 +13,18 @@ import com.jiancai.security.UserContext;
 import com.jiancai.service.CategoryService;
 import com.jiancai.service.MarketService;
 import com.jiancai.service.MerchantService;
+import com.jiancai.service.ProductCsvService;
 import com.jiancai.service.ProductService;
 import com.jiancai.service.StatService;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
@@ -52,6 +57,9 @@ public class MerchantController {
 
     @Autowired
     private MarketService marketService;
+
+    @Autowired
+    private ProductCsvService productCsvService;
 
     private Long currentMerchantId() {
         Long merchantId = UserContext.getMerchantId();
@@ -160,6 +168,18 @@ public class MerchantController {
         checkOwner(id, currentMerchantId());
         productService.removeById(id);
         return R.ok();
+    }
+
+    /** 导出本商户商品清单 */
+    @GetMapping("/product/export")
+    public ResponseEntity<byte[]> exportProducts(@RequestParam(required = false) String name,
+                                                 @RequestParam(required = false) Integer status) {
+        byte[] data = productCsvService.exportMerchantCsv(currentMerchantId(), name, status);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"my-products-" + LocalDate.now() + ".csv\"")
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .body(data);
     }
 
     // ---------------- 数据看板 ----------------

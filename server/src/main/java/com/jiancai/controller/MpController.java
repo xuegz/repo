@@ -23,6 +23,7 @@ import com.jiancai.service.MerchantService;
 import com.jiancai.service.ProductService;
 import com.jiancai.service.SiteService;
 import com.jiancai.service.StatService;
+import com.jiancai.service.WxLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -70,6 +71,22 @@ public class MpController {
 
     @Autowired
     private NoticeMapper noticeMapper;
+
+    @Autowired
+    private WxLoginService wxLoginService;
+
+    /** 微信登录：小程序 wx.login 的 code 换 openid */
+    @PostMapping("/login")
+    public R<Map<String, Object>> login(@RequestBody Map<String, Object> body) {
+        String code = body.get("code") == null ? "" : body.get("code").toString().trim();
+        if (code.isEmpty()) {
+            throw new BusinessException("缺少微信登录凭证");
+        }
+        if (code.length() > 128) {
+            throw new BusinessException("微信登录凭证不合法");
+        }
+        return R.ok(wxLoginService.code2Session(code));
+    }
 
     /** 首页聚合：轮播 + 广告位 + 品类 + 热门市场 + 推荐产品 */
     @GetMapping("/home")

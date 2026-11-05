@@ -51,3 +51,7 @@ jiancai:
     public-domain: ${OSS_PUBLIC_DOMAIN:}
     # 对象目录前缀，最终 key 形如 jiancai/2026/11/uuid.jpg
     dir-prefix: ${OSS_DIR_PREFIX:jiancai}
+  # 微信小程序登录：secret 请通过环境变量或未跟踪的配置文件注入，不要提交仓库
+  wx:
+    appid: ${WX_APPID:wxe89d8f5f1af02052}
+    secret: ${WX_SECRET:}
