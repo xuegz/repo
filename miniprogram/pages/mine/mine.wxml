@@ -2,8 +2,15 @@
 
 <view class="page">
   <view class="card mine-header">
-    <view class="mine-title">建材商户平台</view>
-    <view class="mine-sub">同行调货 · 价格对比 · 厂家找渠道</view>
+    <view class="mine-user">
+      <view class="mine-avatar">建</view>
+      <view class="mine-user-info">
+        <view class="mine-title">{{loginState === 'ok' ? '微信用户' : (loginState === 'loading' ? '登录中…' : '未登录')}}</view>
+        <view class="mine-sub">{{loginState === 'ok' ? '已通过微信登录，数据自动同步' : '登录后同步浏览、收藏与询价'}}</view>
+      </view>
+      <view wx:if="{{loginState === 'ok'}}" class="mine-badge">已登录</view>
+      <view wx:else class="mine-login" bindtap="doLogin">{{loginState === 'loading' ? '登录中' : '微信登录'}}</view>
+    </view>
   </view>
 
   <view class="card">

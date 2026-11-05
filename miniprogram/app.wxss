@@ -278,6 +278,47 @@ page {
   background: linear-gradient(135deg, #1f2937, #ff7a00);
   color: #fff;
 }
+.mine-user {
+  display: flex;
+  align-items: center;
+}
+.mine-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: #fff;
+  color: #ff7a00;
+  font-size: 38rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mine-user-info {
+  flex: 1;
+  margin-left: 20rpx;
+  overflow: hidden;
+}
+.mine-badge {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 22rpx;
+}
+.mine-login {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  padding: 10rpx 26rpx;
+  border-radius: 30rpx;
+  background: #fff;
+  color: #ff7a00;
+  font-size: 24rpx;
+  font-weight: bold;
+}
 .mine-title {
   font-size: 34rpx;
   font-weight: bold;

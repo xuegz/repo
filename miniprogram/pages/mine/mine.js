@@ -1,13 +1,32 @@
-const { openidRequest } = require('../../utils/request')
+const { openidRequest, ensureLogin } = require('../../utils/request')
 
 Page({
   data: {
     history: [],
-    servicePhone: '400-000-0000'
+    servicePhone: '400-000-0000',
+    loginState: 'loading'
   },
 
   onShow: function () {
+    this.loadLogin()
     this.loadHistory()
+  },
+
+  loadLogin: function () {
+    const that = this
+    ensureLogin()
+      .then(function () {
+        that.setData({ loginState: 'ok' })
+      })
+      .catch(function () {
+        that.setData({ loginState: 'fail' })
+      })
+  },
+
+  doLogin: function () {
+    if (this.data.loginState === 'loading') return
+    this.setData({ loginState: 'loading' })
+    this.loadLogin()
   },
 
   loadHistory: function () {
