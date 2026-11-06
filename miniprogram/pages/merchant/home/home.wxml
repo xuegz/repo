@@ -57,6 +57,14 @@
       </view>
       <view class="m-entry-arrow">›</view>
     </view>
+    <view class="m-entry" bindtap="goMessages">
+      <view class="m-entry-icon">信</view>
+      <view class="m-entry-info">
+        <view class="m-entry-title">我的消息<text class="m-entry-badge" wx:if="{{stats.chatUnread > 0}}">{{stats.chatUnread}}</text></view>
+        <view class="m-entry-sub">回复顾客的在线咨询</view>
+      </view>
+      <view class="m-entry-arrow">›</view>
+    </view>
     <view class="m-entry" bindtap="goShopEdit">
       <view class="m-entry-icon">店</view>
       <view class="m-entry-info">

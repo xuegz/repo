@@ -10,6 +10,8 @@
     "pages/apply/apply",
     "pages/inquiry/inquiry",
     "pages/favorites/favorites",
+    "pages/message/message",
+    "pages/chat/chat",
     "pages/mine/mine"
   ],
   "subPackages": [
@@ -21,7 +23,9 @@
         "products/products",
         "edit/edit",
         "inquiries/inquiries",
-        "shop/shop"
+        "shop/shop",
+        "messages/messages",
+        "chat/chat"
       ]
     }
   ],
@@ -50,6 +54,12 @@
         "text": "找产品",
         "iconPath": "assets/tabbar/product.png",
         "selectedIconPath": "assets/tabbar/product-active.png"
+      },
+      {
+        "pagePath": "pages/message/message",
+        "text": "消息",
+        "iconPath": "assets/tabbar/message.png",
+        "selectedIconPath": "assets/tabbar/message-active.png"
       },
       {
         "pagePath": "pages/mine/mine",

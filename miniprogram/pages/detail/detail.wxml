@@ -61,7 +61,10 @@
 
   <!-- 档口信息 -->
   <view class="card" wx:if="{{product.merchantId}}">
-    <view class="section-title" style="margin: 0 0 10rpx">档口信息</view>
+    <view class="info-head">
+      <view class="section-title" style="margin: 0 0 10rpx">档口信息</view>
+      <view class="info-link" bindtap="goShop">查看商户主页 ›</view>
+    </view>
     <view class="info-row"><text class="info-label">商户</text><text>{{product.merchantName}}</text></view>
     <view class="info-row"><text class="info-label">电话</text><text>{{product.merchantPhone}}</text></view>
     <view class="btn-row">
@@ -77,7 +80,7 @@
       <text class="bar-icon-char">{{favorited ? '★' : '☆'}}</text>
       <text class="bar-icon-label">收藏</text>
     </view>
-    <button class="bar-btn bar-ghost" bindtap="goShop">商户主页</button>
+    <button class="bar-btn bar-ghost" bindtap="goChat">在线咨询</button>
     <button class="bar-btn bar-primary" bindtap="callPhone" disabled="{{!product.merchantPhone}}">电话联系</button>
     <button class="bar-btn bar-accent" bindtap="openInquiry">聊价格</button>
   </view>

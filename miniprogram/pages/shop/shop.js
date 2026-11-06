@@ -84,6 +84,18 @@ Page({
     })
   },
 
+  goChat: function () {
+    const m = this.data.merchant
+    if (!m || !m.id) {
+      wx.showToast({ title: '商户信息加载中，请稍后', icon: 'none' })
+      return
+    }
+    wx.navigateTo({
+      url: '/pages/chat/chat?merchantId=' + m.id
+        + '&merchantName=' + encodeURIComponent(m.name || '商户')
+    })
+  },
+
   openNav: function () {
     const m = this.data.merchant
     const addressText = this.data.addressText

@@ -1,0 +1,27 @@
+<view class="msg-page">
+  <view wx:if="{{loading}}" class="msg-empty">加载中…</view>
+
+  <view wx:elif="{{list.length === 0}}" class="msg-empty">
+    <view class="msg-empty-icon">信</view>
+    <view class="msg-empty-title">还没有消息</view>
+    <view class="msg-empty-sub">在商户主页或商品详情点「在线咨询」，就能直接和商户沟通</view>
+    <button class="msg-empty-btn" bindtap="goHome">去看看</button>
+  </view>
+
+  <view wx:else class="msg-list">
+    <view class="msg-item" wx:for="{{list}}" wx:key="conversationId" data-item="{{item}}" bindtap="openChat" hover-class="msg-item-hover" hover-stay-time="60">
+      <image wx:if="{{item.merchantLogo}}" class="msg-avatar-img" src="{{item.merchantLogo}}" mode="aspectFill" />
+      <view wx:else class="msg-avatar">{{item.initial}}</view>
+      <view class="msg-main">
+        <view class="msg-row">
+          <text class="msg-name">{{item.merchantName}}</text>
+          <text class="msg-time">{{item.timeText}}</text>
+        </view>
+        <view class="msg-preview">{{item.lastContent}}</view>
+      </view>
+      <view wx:if="{{item.unread > 0}}" class="msg-badge">{{item.badge}}</view>
+    </view>
+  </view>
+
+  <view class="msg-tip" wx:if="{{list.length > 0}}">消息仅用于沟通商品与价格，请勿在聊天中转账</view>
+</view>

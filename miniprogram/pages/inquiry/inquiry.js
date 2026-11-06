@@ -34,7 +34,7 @@ function markQuoteSeen(list) {
   if (latest) {
     wx.setStorageSync('quoteSeenTime', latest)
   }
-  wx.hideTabBarRedDot({ index: 2, fail: function () {} })
+  wx.hideTabBarRedDot({ index: 3, fail: function () {} })
 }
 
 Page({

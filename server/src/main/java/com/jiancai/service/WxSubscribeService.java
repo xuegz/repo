@@ -40,6 +40,7 @@ public class WxSubscribeService {
     private static final String TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token";
     private static final String SEND_URL = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send";
     private static final String TEMPLATE_LIST_URL = "https://api.weixin.qq.com/wxaapi/newtmpl/gettemplate";
+    private static final String MSG_SEC_CHECK_URL = "https://api.weixin.qq.com/wxa/msg_sec_check";
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -185,6 +186,49 @@ public class WxSubscribeService {
         return objectMapper.readTree(response.body());
     }
 
+    /** 用户文本内容安全检测；接口异常时放行并记日志，避免聊天整体不可用 */
+    public boolean isTextSafe(String openid, String content) {
+        if (openid == null || openid.isBlank() || content == null || content.isBlank()) {
+            return true;
+        }
+        try {
+            Map<String, Object> body = new HashMap<>(6);
+            body.put("openid", openid);
+            body.put("scene", 2);
+            body.put("version", 2);
+            body.put("content", content);
+            JsonNode result = postJson(MSG_SEC_CHECK_URL, body, false);
+            int errcode = result.path("errcode").asInt(0);
+            if (errcode == 40001 || errcode == 42001) {
+                result = postJson(MSG_SEC_CHECK_URL, body, true);
+                errcode = result.path("errcode").asInt(0);
+            }
+            if (errcode != 0) {
+                log.warn("内容安全检测失败 errcode={}, errmsg={}", errcode, result.path("errmsg").asText(""));
+                return true;
+            }
+            return !"risky".equals(result.path("result").path("suggest").asText("pass"));
+        } catch (Exception e) {
+            log.warn("内容安全检测异常：{}", e.getMessage());
+            return true;
+        }
+    }
+
+    /** 商户在会话中回复后提醒用户；未授权或额度用尽时静默跳过 */
+    public void sendChatNotice(String openid, Merchant merchant, String summary, String asker, String page) {
+        if (openid == null || openid.isBlank() || !isQuoteEnabled()) {
+            return;
+        }
+        try {
+            String merchantName = merchant == null || merchant.getName() == null || merchant.getName().isBlank()
+                    ? "商户" : merchant.getName();
+            sendMessage(openid, templateId(), page,
+                    quoteData(merchantName, summary, asker, "在线咨询"), false);
+        } catch (Exception e) {
+            log.warn("会话提醒发送失败 openid={}, err={}", mask(openid), e.getMessage());
+        }
+    }
+
     /** 平台端测试发送：模板未配置或微信返回错误时抛出可读提示 */
     public void sendTest(String openid) {
         if (!isQuoteEnabled()) {
@@ -289,17 +333,17 @@ public class WxSubscribeService {
 
     private JsonNode postSend(Map<String, Object> body, boolean refreshToken)
             throws IOException, InterruptedException {
+        return postJson(SEND_URL, body, refreshToken);
+    }
+
+    private JsonNode postJson(String url, Map<String, Object> body, boolean refreshToken)
+            throws IOException, InterruptedException {
         String token = getAccessToken(refreshToken);
-        HttpRequest request;
-        try {
-            request = HttpRequest.newBuilder(URI.create(SEND_URL + "?access_token=" + token))
-                    .timeout(Duration.ofSeconds(10))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
-                    .build();
-        } catch (IOException e) {
-            throw new IOException("订阅消息内容序列化失败", e);
-        }
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url + "?access_token=" + token))
+                .timeout(Duration.ofSeconds(10))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
+                .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         return objectMapper.readTree(response.body());
     }

@@ -8,7 +8,8 @@ Page({
       onSale: 0,
       pending: 0,
       views: 0,
-      leads: 0
+      leads: 0,
+      chatUnread: 0
     }
   },
 
@@ -63,6 +64,11 @@ Page({
         that.setData({ 'stats.leads': Number((data && data.pending) || 0) })
       })
       .catch(function () {})
+    merchant.merchantRequest('/chat/unread')
+      .then(function (count) {
+        that.setData({ 'stats.chatUnread': Number(count || 0) })
+      })
+      .catch(function () {})
   },
 
   goProducts: function (e) {
@@ -84,6 +90,10 @@ Page({
 
   goShopEdit: function () {
     wx.navigateTo({ url: '/pages/merchant/shop/shop' })
+  },
+
+  goMessages: function () {
+    wx.navigateTo({ url: '/pages/merchant/messages/messages' })
   },
 
   goShop: function () {

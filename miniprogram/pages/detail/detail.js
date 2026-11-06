@@ -181,6 +181,21 @@ Page({
     wx.navigateTo({ url: '/pages/shop/shop?id=' + this.data.product.merchantId })
   },
 
+  /** 打开与商户的会话，并自动带上当前商品卡片 */
+  goChat: function () {
+    const product = this.data.product || {}
+    if (!product.merchantId) {
+      wx.showToast({ title: '该商品暂未关联商户', icon: 'none' })
+      return
+    }
+    let url = '/pages/chat/chat?merchantId=' + product.merchantId
+      + '&merchantName=' + encodeURIComponent(product.merchantName || '商户')
+    if (product.id) {
+      url += '&productId=' + product.id
+    }
+    wx.navigateTo({ url: url })
+  },
+
   /** 到店导航：有坐标打开地图，无坐标复制地址 */
   openNav: function () {
     const p = this.data.product

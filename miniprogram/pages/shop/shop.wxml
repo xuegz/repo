@@ -16,6 +16,7 @@
     <view class="map-link" wx:if="{{merchant.latitude && merchant.longitude}}" bindtap="goMap">在地图上查看位置 ›</view>
     <view class="shop-actions">
       <view class="shop-action-primary" bindtap="callPhone" hover-class="shop-action-hover">电话联系</view>
+      <view class="shop-action-ghost" bindtap="goChat" hover-class="shop-action-hover">在线咨询</view>
       <view class="shop-action-ghost" bindtap="openNav" hover-class="shop-action-hover">到店导航</view>
       <view class="shop-action-fav {{favorited ? 'active' : ''}}" bindtap="toggleFavorite">
         <text class="shop-action-fav-icon">{{favorited ? '★' : '☆'}}</text>

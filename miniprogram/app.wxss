@@ -232,6 +232,16 @@ page {
   width: 120rpx;
   color: #909399;
 }
+.info-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.info-link {
+  font-size: 24rpx;
+  color: #ff7a00;
+  padding: 10rpx 0;
+}
 .detail-desc {
   font-size: 27rpx;
   color: #606266;

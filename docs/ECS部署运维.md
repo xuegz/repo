@@ -109,6 +109,32 @@ ssh -i ~/.ssh/jiancai-ecs root@47.111.99.105 \
 
 **注意**：如果新版本引入了新的 Flyway 迁移（如 `V3__`），回滚 jar 不会回滚数据库结构；MySQL 的 DDL 不可逆，涉及删列/改类型的迁移必须先备份再发布。
 
+### 4.4 WebSocket（站内消息）
+
+站内消息走 `/ws/chat`，普通 `/api/` 反代不会转发 Upgrade 头，需在 `/etc/nginx/conf.d/jiancai.conf` 的 `server` 块内补充：
+
+```nginx
+location /ws/ {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_read_timeout 600s;
+}
+```
+
+改完 `nginx -t && systemctl reload nginx`。验证：
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' \
+  -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+  -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+  http://127.0.0.1:8080/ws/chat?role=user\&openid=test   # 期望 101，鉴权失败是 403/关闭
+```
+
+握手失败不影响功能：小程序端 8 秒增量轮询会自动兜底。`ws://` 在体验版/正式版可能被合法域名校验拦截（未备案无 HTTPS），备案后换 `wss://`。
+
 ## 五、数据库
 
 ### 5.1 迁移规范

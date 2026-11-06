@@ -1,4 +1,4 @@
-const { ensureLogin, checkQuoteNotice } = require('./utils/request')
+const { ensureLogin, checkQuoteNotice, checkChatNotice } = require('./utils/request')
 
 App({
   globalData: {
@@ -9,13 +9,15 @@ App({
     // 启动即完成微信登录，后续 openid 相关请求直接复用
     ensureLogin().catch(function () {})
     this.refreshQuoteNotice()
+    this.refreshChatNotice()
   },
   onShow: function () {
     this.refreshQuoteNotice()
-    const that = this
+    this.refreshChatNotice()
     if (this.quoteTimer) clearInterval(this.quoteTimer)
     this.quoteTimer = setInterval(function () {
       checkQuoteNotice()
+      checkChatNotice()
     }, 60000)
   },
   onHide: function () {
@@ -29,5 +31,10 @@ App({
     setTimeout(function () {
       checkQuoteNotice()
     }, 800)
+  },
+  refreshChatNotice: function () {
+    setTimeout(function () {
+      checkChatNotice()
+    }, 900)
   }
 })

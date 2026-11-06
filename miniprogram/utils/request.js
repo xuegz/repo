@@ -264,12 +264,49 @@ function checkQuoteNotice() {
             })
             const seen = Number(wx.getStorageSync('quoteSeenTime') || 0)
             if (latest && latest > seen) {
-              wx.showTabBarRedDot({ index: 2, fail: function () {} })
+              wx.showTabBarRedDot({ index: 3, fail: function () {} })
               resolve(latest)
             } else {
-              wx.hideTabBarRedDot({ index: 2, fail: function () {} })
+              wx.hideTabBarRedDot({ index: 3, fail: function () {} })
               resolve(0)
             }
+          },
+          fail: function () {
+            resolve(0)
+          }
+        })
+      })
+    })
+    .catch(function () {
+      return 0
+    })
+}
+
+/**
+ * 站内消息未读数：有未读时在 tabBar「消息」显示角标
+ * 静默请求，返回未读总数
+ */
+function checkChatNotice() {
+  return ensureLogin()
+    .then(function (openid) {
+      return new Promise(function (resolve) {
+        wx.request({
+          url: BASE_URL + '/chat/unread',
+          method: 'GET',
+          data: { openid: openid },
+          success: function (res) {
+            const body = res.data || {}
+            const count = body.code === 200 ? Number(body.data || 0) : 0
+            if (count > 0) {
+              wx.setTabBarBadge({
+                index: 2,
+                text: count > 99 ? '99+' : String(count),
+                fail: function () {}
+              })
+            } else {
+              wx.removeTabBarBadge({ index: 2, fail: function () {} })
+            }
+            resolve(count)
           },
           fail: function () {
             resolve(0)
@@ -294,6 +331,7 @@ module.exports = {
   toggleFavorite: toggleFavorite,
   checkFavorite: checkFavorite,
   checkQuoteNotice: checkQuoteNotice,
+  checkChatNotice: checkChatNotice,
   getSubscribeConfig: getSubscribeConfig,
   requestSubscribe: requestSubscribe
 }
