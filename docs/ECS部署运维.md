@@ -145,14 +145,32 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 
 ### 5.2 备份与恢复
 
+每日自动备份已配置：`crontab` 03:15 执行 `/opt/jiancai/scripts/mysql-backup.sh`，产物为 `/opt/jiancai/backup/jiancai-YYYY-MM-DD_HHMMSS.sql.gz`，保留 7 天；日志追加到 `/opt/jiancai/logs/backup.log`。
+
+凭据保存在 `/root/.jiancai-backup.cnf`（600，仅 root 可读，`[client]` 段含 user/password），脚本优先用它；文件缺失时回退 `mysql_config_editor` 的登录路径 `jiancai-backup`。数据库密码变更后同步更新（二选一）：
+
 ```bash
-# 备份
-mysqldump -ujiancai -p --single-transaction --routines jiancai > /opt/jiancai/backup/jiancai-$(date +%F).sql
-# 恢复
-mysql -ujiancai -p jiancai < /opt/jiancai/backup/jiancai-2026-11-03.sql
+printf '[client]\nuser=jiancai\npassword=新密码\n' > /root/.jiancai-backup.cnf && chmod 600 /root/.jiancai-backup.cnf
+mysql_config_editor set --login-path=jiancai-backup --user=jiancai --password   # 交互输入，存 ~/.mylogin.cnf
 ```
 
-建议加 crontab 每日备份并保留 7 天。
+手动执行与校验：
+
+```bash
+/opt/jiancai/scripts/mysql-backup.sh                          # 立即备份一次
+gzip -t /opt/jiancai/backup/jiancai-*.sql.gz                  # 压缩包完整性
+gzip -dc /opt/jiancai/backup/jiancai-*.sql.gz | tail -n 3     # 应包含 Dump completed
+gzip -dc /opt/jiancai/backup/jiancai-*.sql.gz | grep -c '^CREATE TABLE'   # 与库内表数一致（当前 21）
+```
+
+恢复（会覆盖目标库现有对象，先确认备份文件再执行）：
+
+```bash
+gzip -dc /opt/jiancai/backup/jiancai-2026-11-06_235650.sql.gz \
+  | mysql --defaults-extra-file=/root/.jiancai-backup.cnf jiancai
+```
+
+`jiancai` 账号只有 `jiancai.*` 权限，建不了临时库，所以恢复演练只能在同库做（等于覆盖现网数据），这也是没有做自动演练的原因。备份与本机同盘，无法抵御磁盘/实例故障；如需异地，另配 ECS 快照或把 `backup/` 同步到 OSS。
 
 ## 六、日志与排障
 
