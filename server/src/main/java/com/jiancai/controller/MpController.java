@@ -343,32 +343,29 @@ public class MpController {
 
     /** 上报浏览：targetType 1=产品 2=商户 */
     @PostMapping("/view")
-    public R<Void> view(@RequestBody Map<String, Object> body) {
-        Integer targetType = Integer.valueOf(body.get("targetType").toString());
-        Long targetId = Long.valueOf(body.get("targetId").toString());
-        String openid = body.get("openid") == null ? null : body.get("openid").toString();
-        statService.recordView(targetType, targetId, openid);
+    public R<Void> view(@RequestBody(required = false) Map<String, Object> body) {
+        Integer targetType = requiredTargetType(body);
+        Long targetId = requiredTargetId(body);
+        statService.recordView(targetType, targetId, optionalOpenid(body));
         return R.ok();
     }
 
     /** 上报转发 */
     @PostMapping("/forward")
-    public R<Void> forward(@RequestBody Map<String, Object> body) {
-        Integer targetType = Integer.valueOf(body.get("targetType").toString());
-        Long targetId = Long.valueOf(body.get("targetId").toString());
-        String openid = body.get("openid") == null ? null : body.get("openid").toString();
-        statService.recordForward(targetType, targetId, openid);
+    public R<Void> forward(@RequestBody(required = false) Map<String, Object> body) {
+        Integer targetType = requiredTargetType(body);
+        Long targetId = requiredTargetId(body);
+        statService.recordForward(targetType, targetId, optionalOpenid(body));
         return R.ok();
     }
 
     /** 上报电话联系：targetType 1=产品 2=商户，merchantId 可不传由后端推导 */
     @PostMapping("/call")
-    public R<Void> call(@RequestBody Map<String, Object> body) {
-        Integer targetType = Integer.valueOf(body.get("targetType").toString());
-        Long targetId = Long.valueOf(body.get("targetId").toString());
-        Long merchantId = body.get("merchantId") == null ? null : Long.valueOf(body.get("merchantId").toString());
-        String openid = body.get("openid") == null ? null : body.get("openid").toString();
-        statService.recordCall(targetType, targetId, merchantId, openid);
+    public R<Void> call(@RequestBody(required = false) Map<String, Object> body) {
+        Integer targetType = requiredTargetType(body);
+        Long targetId = requiredTargetId(body);
+        Long merchantId = optionalLong(body, "merchantId");
+        statService.recordCall(targetType, targetId, merchantId, optionalOpenid(body));
         return R.ok();
     }
 
@@ -384,13 +381,13 @@ public class MpController {
 
     /** 提交询价线索：客户留资，商户端跟进 */
     @PostMapping("/inquiry")
-    public R<Void> inquiry(@RequestBody Map<String, Object> body) {
-        String contact = body.get("contact") == null ? null : body.get("contact").toString();
+    public R<Void> inquiry(@RequestBody(required = false) Map<String, Object> body) {
+        String contact = body == null || body.get("contact") == null ? null : body.get("contact").toString().trim();
         if (contact == null || contact.isBlank()) {
             throw new BusinessException("请填写联系方式");
         }
-        Long productId = body.get("productId") == null ? null : Long.valueOf(body.get("productId").toString());
-        Long merchantId = body.get("merchantId") == null ? null : Long.valueOf(body.get("merchantId").toString());
+        Long productId = optionalLong(body, "productId");
+        Long merchantId = optionalLong(body, "merchantId");
         if (merchantId == null && productId != null) {
             Product product = productService.getById(productId);
             merchantId = product == null ? null : product.getMerchantId();
@@ -406,7 +403,7 @@ public class MpController {
         inquiry.setContact(contact);
         inquiry.setRemark(body.get("remark") == null ? null : body.get("remark").toString());
         inquiry.setExpectDate(body.get("expectDate") == null ? null : body.get("expectDate").toString());
-        inquiry.setOpenid(body.get("openid") == null ? null : body.get("openid").toString());
+        inquiry.setOpenid(optionalOpenid(body));
         inquiry.setStatus(0);
         inquiryMapper.insert(inquiry);
         return R.ok();
@@ -506,6 +503,7 @@ public class MpController {
     public R<Boolean> favoriteCheck(@RequestParam String openid,
                                     @RequestParam Integer targetType,
                                     @RequestParam Long targetId) {
+        checkTargetType(targetType);
         return R.ok(favoriteMapper.selectCount(Wrappers.<Favorite>lambdaQuery()
                 .eq(Favorite::getOpenid, openid)
                 .eq(Favorite::getTargetType, targetType)
@@ -516,6 +514,7 @@ public class MpController {
     @GetMapping("/favorites")
     public R<List<?>> favorites(@RequestParam String openid,
                                 @RequestParam Integer targetType) {
+        checkTargetType(targetType);
         List<Favorite> favorites = favoriteMapper.selectList(Wrappers.<Favorite>lambdaQuery()
                 .eq(Favorite::getOpenid, openid)
                 .eq(Favorite::getTargetType, targetType)
@@ -586,5 +585,61 @@ public class MpController {
                 .filter(Objects::nonNull).collect(Collectors.toList());
         productService.fillInfo(result);
         return R.ok(result);
+    }
+
+    private Integer requiredTargetType(Map<String, Object> body) {
+        Long value = optionalLong(body, "targetType");
+        if (value == null) {
+            throw new BusinessException(400, "缺少目标类型");
+        }
+        if (value != 1 && value != 2) {
+            throw new BusinessException(400, "目标类型不合法");
+        }
+        return value.intValue();
+    }
+
+    private Long requiredTargetId(Map<String, Object> body) {
+        Long id = optionalLong(body, "targetId");
+        if (id == null || id <= 0) {
+            throw new BusinessException(400, "缺少目标编号");
+        }
+        return id;
+    }
+
+    private Long optionalLong(Map<String, Object> body, String key) {
+        Object value = body == null ? null : body.get(key);
+        if (value == null) {
+            return null;
+        }
+        String text = value.toString().trim();
+        if (text.isEmpty()) {
+            return null;
+        }
+        try {
+            return Long.valueOf(text);
+        } catch (NumberFormatException e) {
+            throw new BusinessException(400, "参数格式不正确");
+        }
+    }
+
+    private String optionalOpenid(Map<String, Object> body) {
+        Object value = body == null ? null : body.get("openid");
+        if (value == null) {
+            return null;
+        }
+        String openid = value.toString().trim();
+        if (openid.isEmpty()) {
+            return null;
+        }
+        if (openid.length() > 64) {
+            throw new BusinessException(400, "用户标识不合法");
+        }
+        return openid;
+    }
+
+    private void checkTargetType(Integer targetType) {
+        if (targetType == null || (!targetType.equals(1) && !targetType.equals(2))) {
+            throw new BusinessException(400, "目标类型不合法");
+        }
     }
 }

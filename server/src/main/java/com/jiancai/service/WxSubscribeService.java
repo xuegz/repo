@@ -22,14 +22,16 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * 微信小程序订阅消息：access_token 缓存 + 模板消息发送
- * 模板字段名可通过 jiancai.wx.subscribe.fields.* 覆盖，默认对应
- * thing1=商品名称、thing2=商户名称、amount3=报价金额、time4=报价时间、thing5=备注
+ * 模板「咨询回复通知」：回复人、回复时间、回复内容、咨询人、咨询内容
+ * 字段名可通过 jiancai.wx.subscribe.fields.* 覆盖，默认 name1/date2/thing3/name4/thing5
  */
 @Slf4j
 @Service
@@ -37,7 +39,8 @@ public class WxSubscribeService {
 
     private static final String TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token";
     private static final String SEND_URL = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send";
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final String TEMPLATE_LIST_URL = "https://api.weixin.qq.com/wxaapi/newtmpl/gettemplate";
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
@@ -79,20 +82,20 @@ public class WxSubscribeService {
     @Value("${jiancai.wx.subscribe.miniprogram-state:formal}")
     private String miniprogramState;
 
-    @Value("${jiancai.wx.subscribe.fields.product:thing1}")
-    private String fieldProduct;
+    @Value("${jiancai.wx.subscribe.fields.replier:name1}")
+    private String fieldReplier;
 
-    @Value("${jiancai.wx.subscribe.fields.merchant:thing2}")
-    private String fieldMerchant;
+    @Value("${jiancai.wx.subscribe.fields.reply-time:date2}")
+    private String fieldReplyTime;
 
-    @Value("${jiancai.wx.subscribe.fields.amount:amount3}")
-    private String fieldAmount;
+    @Value("${jiancai.wx.subscribe.fields.reply-content:thing3}")
+    private String fieldReplyContent;
 
-    @Value("${jiancai.wx.subscribe.fields.time:time4}")
-    private String fieldTime;
+    @Value("${jiancai.wx.subscribe.fields.asker:name4}")
+    private String fieldAsker;
 
-    @Value("${jiancai.wx.subscribe.fields.remark:thing5}")
-    private String fieldRemark;
+    @Value("${jiancai.wx.subscribe.fields.ask-content:thing5}")
+    private String fieldAskContent;
 
     private volatile String accessToken;
     private volatile long accessTokenExpiresAt;
@@ -134,13 +137,52 @@ public class WxSubscribeService {
                     merchantName = merchant.getName();
                 }
             }
-            String amount = inquiry.getQuoteTotal() != null ? inquiry.getQuoteTotal().toPlainString()
-                    : inquiry.getQuotePrice() != null ? inquiry.getQuotePrice().toPlainString() : "0";
-            String remark = inquiry.getQuoteRemark();
-            sendMessage(openid, templateId(), quotePage, quoteData(productName, merchantName, amount, remark));
+            String replyContent = replyContent(inquiry);
+            String asker = maskContact(inquiry.getContact());
+            sendMessage(openid, templateId(), quotePage, quoteData(merchantName, replyContent, asker, productName), false);
         } catch (Exception e) {
             log.warn("订阅消息发送失败 inquiryId={}, err={}", inquiry.getId(), e.getMessage());
         }
+    }
+
+    /** 拉取账号下的订阅消息模板，用于核对模板字段名 */
+    public List<Map<String, Object>> listTemplates() {
+        try {
+            JsonNode result = getJson(TEMPLATE_LIST_URL, false);
+            int errcode = result.path("errcode").asInt(0);
+            if (errcode == 40001 || errcode == 42001) {
+                result = getJson(TEMPLATE_LIST_URL, true);
+                errcode = result.path("errcode").asInt(0);
+            }
+            if (errcode != 0) {
+                throw new BusinessException("获取模板失败(" + errcode + "): " + result.path("errmsg").asText(""));
+            }
+            List<Map<String, Object>> list = new ArrayList<>();
+            for (JsonNode item : result.path("data")) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("templateId", item.path("priTmplId").asText(""));
+                row.put("title", item.path("title").asText(""));
+                row.put("type", item.path("type").asInt(0));
+                row.put("content", item.path("content").asText(""));
+                row.put("example", item.path("example").asText(""));
+                list.add(row);
+            }
+            return list;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException("获取模板失败：" + e.getMessage());
+        }
+    }
+
+    private JsonNode getJson(String url, boolean refreshToken) throws IOException, InterruptedException {
+        String token = getAccessToken(refreshToken);
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url + "?access_token=" + token))
+                .timeout(Duration.ofSeconds(10))
+                .GET()
+                .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        return objectMapper.readTree(response.body());
     }
 
     /** 平台端测试发送：模板未配置或微信返回错误时抛出可读提示 */
@@ -150,7 +192,7 @@ public class WxSubscribeService {
         }
         try {
             sendMessage(openid, templateId(), quotePage,
-                    quoteData("测试商品", "测试商户", "100", "这是一条测试消息"));
+                    quoteData("测试商户", "单价100元，总价100元", "微信用户", "测试商品"), true);
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
@@ -158,17 +200,49 @@ public class WxSubscribeService {
         }
     }
 
-    private Map<String, Object> quoteData(String productName, String merchantName, String amount, String remark) {
+    private Map<String, Object> quoteData(String merchantName, String replyContent, String asker, String productName) {
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put(fieldProduct, value(clip(productName, 20)));
-        data.put(fieldMerchant, value(clip(merchantName, 20)));
-        data.put(fieldAmount, value(amount));
-        data.put(fieldTime, value(TIME_FORMAT.format(LocalDateTime.now())));
-        data.put(fieldRemark, value(clip(remark == null || remark.isBlank() ? "点击查看报价详情" : remark, 20)));
+        data.put(fieldReplier, value(clip(merchantName, 10)));
+        data.put(fieldReplyTime, value(TIME_FORMAT.format(LocalDateTime.now())));
+        data.put(fieldReplyContent, value(clip(replyContent, 20)));
+        data.put(fieldAsker, value(clip(asker, 10)));
+        data.put(fieldAskContent, value(clip(productName, 20)));
         return data;
     }
 
-    private void sendMessage(String openid, String templateId, String page, Map<String, Object> data) {
+    /** 回复内容取报价摘要，只有备注时退回备注 */
+    private static String replyContent(Inquiry inquiry) {
+        StringBuilder text = new StringBuilder();
+        if (inquiry.getQuotePrice() != null) {
+            text.append("单价").append(inquiry.getQuotePrice().stripTrailingZeros().toPlainString()).append("元");
+        }
+        if (inquiry.getQuoteTotal() != null) {
+            if (text.length() > 0) {
+                text.append("，");
+            }
+            text.append("总价").append(inquiry.getQuoteTotal().stripTrailingZeros().toPlainString()).append("元");
+        }
+        if (text.length() == 0) {
+            String remark = inquiry.getQuoteRemark();
+            return remark == null || remark.isBlank() ? "商家已回复，点击查看" : remark.trim();
+        }
+        return text.toString();
+    }
+
+    /** 咨询人展示为脱敏联系方式 */
+    private static String maskContact(String contact) {
+        if (contact == null || contact.isBlank()) {
+            return "微信用户";
+        }
+        String text = contact.trim();
+        if (text.length() < 7) {
+            return text;
+        }
+        return text.substring(0, 3) + "****" + text.substring(text.length() - 4);
+    }
+
+    private void sendMessage(String openid, String templateId, String page, Map<String, Object> data,
+                             boolean throwOnNoAuth) {
         Map<String, Object> body = new HashMap<>(8);
         body.put("touser", openid);
         body.put("template_id", templateId);
@@ -202,6 +276,9 @@ public class WxSubscribeService {
         }
         if (errcode == 43101) {
             log.info("用户未订阅该模板消息 openid={}", mask(openid));
+            if (throwOnNoAuth) {
+                throw new BusinessException("该用户尚未订阅此消息，请先在小程序内点击授权");
+            }
             return;
         }
         if (errcode != 0) {

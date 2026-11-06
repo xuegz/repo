@@ -188,6 +188,56 @@ function uploadImage(filePath) {
   })
 }
 
+let subscribeConfigCache = null
+
+/**
+ * 订阅消息模板配置（静默预取，失败按未开启处理）
+ * 返回 { enabled, templateId, page }
+ */
+function getSubscribeConfig() {
+  if (subscribeConfigCache) {
+    return Promise.resolve(subscribeConfigCache)
+  }
+  return new Promise(function (resolve) {
+    wx.request({
+      url: BASE_URL + '/subscribe/config',
+      success: function (res) {
+        const body = res.data || {}
+        const config = body.code === 200 && body.data ? body.data : {}
+        if (config.enabled && config.templateId) {
+          subscribeConfigCache = config
+        }
+        resolve(config)
+      },
+      fail: function () {
+        resolve({})
+      }
+    })
+  })
+}
+
+/**
+ * 申请一次订阅授权：一次授权对应一条通知，需在用户点击事件中调用
+ * 无论接受或拒绝都不抛错，返回 'accept' / 'reject' / 'ban' / ''
+ */
+function requestSubscribe(templateId) {
+  return new Promise(function (resolve) {
+    if (!templateId || !wx.requestSubscribeMessage) {
+      resolve('')
+      return
+    }
+    wx.requestSubscribeMessage({
+      tmplIds: [templateId],
+      success: function (res) {
+        resolve((res && res[templateId]) || '')
+      },
+      fail: function () {
+        resolve('')
+      }
+    })
+  })
+}
+
 /**
  * 检查是否有新的商户报价，未读时在 tabBar「我的」显示红点
  * 静默请求，不打扰用户；返回最新报价时间戳
@@ -243,5 +293,7 @@ module.exports = {
   reportCall: reportCall,
   toggleFavorite: toggleFavorite,
   checkFavorite: checkFavorite,
-  checkQuoteNotice: checkQuoteNotice
+  checkQuoteNotice: checkQuoteNotice,
+  getSubscribeConfig: getSubscribeConfig,
+  requestSubscribe: requestSubscribe
 }

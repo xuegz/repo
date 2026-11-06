@@ -57,10 +57,18 @@
       </view>
       <view class="m-entry-arrow">›</view>
     </view>
-    <view class="m-entry" bindtap="goShop">
+    <view class="m-entry" bindtap="goShopEdit">
       <view class="m-entry-icon">店</view>
       <view class="m-entry-info">
-        <view class="m-entry-title">我的店铺主页</view>
+        <view class="m-entry-title">店铺资料</view>
+        <view class="m-entry-sub">门头照片、地址、坐标与简介</view>
+      </view>
+      <view class="m-entry-arrow">›</view>
+    </view>
+    <view class="m-entry" bindtap="goShop">
+      <view class="m-entry-icon">览</view>
+      <view class="m-entry-info">
+        <view class="m-entry-title">店铺主页预览</view>
         <view class="m-entry-sub">查看顾客看到的产品与门店信息</view>
       </view>
       <view class="m-entry-arrow">›</view>

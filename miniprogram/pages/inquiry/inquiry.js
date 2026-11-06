@@ -1,4 +1,4 @@
-const { openidRequest, reportCall } = require('../../utils/request')
+const { openidRequest, reportCall, getSubscribeConfig, requestSubscribe } = require('../../utils/request')
 
 const STATUS_META = {
   0: { text: '待报价', cls: 'pending' },
@@ -41,11 +41,46 @@ Page({
   data: {
     filter: -1,
     list: [],
-    loaded: false
+    loaded: false,
+    subscribeTipShow: false
+  },
+
+  onLoad: function () {
+    const that = this
+    getSubscribeConfig().then(function (config) {
+      that.subscribeTemplateId = config && config.enabled ? config.templateId : ''
+      if (that.subscribeTemplateId) {
+        that.refreshSubscribeTip()
+      }
+    })
   },
 
   onShow: function () {
     this.loadList()
+  },
+
+  /** 有待报价询价时才提示开启提醒（一次授权只能推送一条） */
+  refreshSubscribeTip: function () {
+    if (this.reminderGranted) {
+      return
+    }
+    const hasPending = (this.data.list || []).some(function (item) {
+      return item.status === 0
+    })
+    this.setData({ subscribeTipShow: !!this.subscribeTemplateId && hasPending })
+  },
+
+  enableReminder: function () {
+    const that = this
+    requestSubscribe(this.subscribeTemplateId).then(function (status) {
+      if (status === 'accept') {
+        that.reminderGranted = true
+        that.setData({ subscribeTipShow: false })
+        wx.showToast({ title: '已开启报价提醒', icon: 'success' })
+      } else {
+        wx.showToast({ title: '未开启，可稍后再试', icon: 'none' })
+      }
+    })
   },
 
   onPullDownRefresh: function () {
@@ -71,6 +106,7 @@ Page({
     openidRequest('/inquiries', 'GET', params)
       .then(function (data) {
         that.setData({ list: that.decorate(data || []), loaded: true })
+        that.refreshSubscribeTip()
         markQuoteSeen(data)
       })
       .catch(function () {

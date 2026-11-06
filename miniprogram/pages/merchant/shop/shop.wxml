@@ -1,0 +1,94 @@
+<wxs src="../../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <view class="loading-tip" wx:if="{{loading}}">加载中…</view>
+
+  <block wx:else>
+    <view class="card">
+      <view class="form-item">
+        <view class="form-label">门店名称 <text class="req">*</text></view>
+        <input class="form-input" value="{{form.name}}" data-field="name" bindinput="onInput" maxlength="60" placeholder="如：XX 建材商行" />
+      </view>
+
+      <view class="form-row">
+        <view class="form-item half">
+          <view class="form-label">联系人</view>
+          <input class="form-input" value="{{form.contactName}}" data-field="contactName" bindinput="onInput" maxlength="30" placeholder="如：王经理" />
+        </view>
+        <view class="form-item half">
+          <view class="form-label">联系电话 <text class="req">*</text></view>
+          <input class="form-input" value="{{form.phone}}" data-field="phone" bindinput="onInput" maxlength="20" placeholder="顾客联系号码" />
+        </view>
+      </view>
+      <view class="m-form-tip">联系电话用于顾客咨询；登录账号不会随手机号变更。</view>
+
+      <view class="form-item">
+        <view class="form-label">所属市场</view>
+        <view class="form-static">{{form.market || '未设置'}}</view>
+        <view class="m-form-tip">如需调整所属市场，请联系平台运营。</view>
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">主营品类</view>
+        <picker mode="selector" range="{{categoryLabels}}" value="{{categoryIndex}}" bindchange="onCategoryChange">
+          <view class="picker-view {{selectedCategory ? '' : 'placeholder'}}">{{selectedCategory || '请选择品类'}}</view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">详细地址</view>
+        <input class="form-input" value="{{form.address}}" data-field="address" bindinput="onInput" maxlength="100" placeholder="市场 / 楼栋 / 门牌号" />
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">门店坐标</view>
+        <view class="coord-text {{form.latitude && form.longitude ? '' : 'placeholder'}}">{{form.latitude && form.longitude ? form.latitude + ', ' + form.longitude : '未设置，顾客无法使用到店导航'}}</view>
+        <view class="coord-actions">
+          <view class="coord-btn" bindtap="chooseLocation">地图选点</view>
+          <view class="coord-btn ghost" wx:if="{{form.latitude && form.longitude}}" bindtap="clearLocation">清除坐标</view>
+        </view>
+        <view class="form-row">
+          <view class="form-item half">
+            <input class="form-input" value="{{form.latitude}}" data-field="latitude" bindinput="onInput" placeholder="纬度" />
+          </view>
+          <view class="form-item half">
+            <input class="form-input" value="{{form.longitude}}" data-field="longitude" bindinput="onInput" placeholder="经度" />
+          </view>
+        </view>
+        <view class="m-form-tip">可地图选点，或手动填写经纬度。</view>
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">门头照片</view>
+        <view class="m-img-grid">
+          <view class="m-img-box" wx:if="{{form.logo}}">
+            <image src="{{tools.thumbUrl(form.logo, 300)}}" mode="aspectFill" />
+            <view class="m-img-del" bindtap="removeLogo">×</view>
+          </view>
+          <view class="m-img-add" wx:else bindtap="chooseLogo">＋</view>
+        </view>
+        <view class="m-form-tip">建议上传清晰门头图，展示在店铺主页。</view>
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">门店简介</view>
+        <textarea class="form-textarea" value="{{form.intro}}" data-field="intro" bindinput="onInput" maxlength="500" placeholder="主营范围、营业时间、经营年限等" />
+        <view class="m-form-tip">{{form.intro.length}}/500</view>
+      </view>
+
+      <button class="submit-btn" bindtap="submit" loading="{{submitting}}">保存资料</button>
+      <view class="m-form-tip">保存后店铺主页立即更新，不影响登录账号与密码。</view>
+    </view>
+
+    <view class="card">
+      <view class="m-entry" bindtap="preview">
+        <view class="m-entry-icon">览</view>
+        <view class="m-entry-info">
+          <view class="m-entry-title">预览店铺主页</view>
+          <view class="m-entry-sub">查看顾客看到的产品与门店信息</view>
+        </view>
+        <view class="m-entry-arrow">›</view>
+      </view>
+    </view>
+  </block>
+</view>

@@ -20,7 +20,8 @@
         "home/home",
         "products/products",
         "edit/edit",
-        "inquiries/inquiries"
+        "inquiries/inquiries",
+        "shop/shop"
       ]
     }
   ],

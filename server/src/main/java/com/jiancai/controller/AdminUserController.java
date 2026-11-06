@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -91,6 +92,12 @@ public class AdminUserController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"users-" + LocalDate.now() + ".csv\"")
                 .contentType(new MediaType("text", "csv", java.nio.charset.StandardCharsets.UTF_8))
                 .body(data);
+    }
+
+    /** 当前账号下的订阅消息模板（含字段名），用于核对映射 */
+    @GetMapping("/subscribe/templates")
+    public R<List<Map<String, Object>>> subscribeTemplates() {
+        return R.ok(wxSubscribeService.listTemplates());
     }
 
     /** 给指定用户发一条测试订阅消息，用于验证模板配置 */

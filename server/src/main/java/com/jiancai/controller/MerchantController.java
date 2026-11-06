@@ -81,7 +81,43 @@ public class MerchantController {
 
     @PostMapping("/shop/save")
     public R<Void> shopSave(@RequestBody Merchant merchant) {
-        merchant.setId(currentMerchantId());
+        String name = merchant.getName() == null ? "" : merchant.getName().trim();
+        if (name.isEmpty()) {
+            throw new BusinessException("请填写门店名称");
+        }
+        if (name.length() > 128) {
+            throw new BusinessException("门店名称不能超过 128 个字");
+        }
+        if (merchant.getPhone() != null && merchant.getPhone().isBlank()) {
+            throw new BusinessException("请填写联系电话");
+        }
+        checkLength(merchant.getContactName(), 64, "联系人");
+        checkLength(merchant.getPhone(), 20, "联系电话");
+        checkLength(merchant.getAddress(), 255, "详细地址");
+        checkLength(merchant.getLogo(), 255, "门头照片地址");
+        checkLength(merchant.getIntro(), 500, "门店简介");
+        checkLength(merchant.getProvince(), 64, "省份");
+        checkLength(merchant.getCity(), 64, "城市");
+        merchant.setName(name);
+
+        boolean clearLocation = Boolean.TRUE.equals(merchant.getClearLocation());
+        BigDecimal latitude = merchant.getLatitude();
+        BigDecimal longitude = merchant.getLongitude();
+        if (!clearLocation) {
+            if ((latitude == null) != (longitude == null)) {
+                throw new BusinessException("请同时填写经纬度或清空坐标");
+            }
+            if (latitude != null && (latitude.doubleValue() < -90 || latitude.doubleValue() > 90)) {
+                throw new BusinessException("纬度需在 -90 到 90 之间");
+            }
+            if (longitude != null && (longitude.doubleValue() < -180 || longitude.doubleValue() > 180)) {
+                throw new BusinessException("经度需在 -180 到 180 之间");
+            }
+        }
+
+        Long merchantId = currentMerchantId();
+        merchant.setId(merchantId);
+        merchant.setClearLocation(null);
         // 审核状态、统计数据、会员有效期不允许商户自行修改
         merchant.setStatus(null);
         merchant.setViews(null);
@@ -92,7 +128,20 @@ public class MerchantController {
         merchant.setUpdateTime(LocalDateTime.now());
         marketService.syncMerchantMarket(merchant);
         merchantService.saveOrUpdate(merchant);
+        if (clearLocation) {
+            // 空值默认不参与更新，需显式清空坐标
+            merchantService.update(Wrappers.<Merchant>lambdaUpdate()
+                    .eq(Merchant::getId, merchantId)
+                    .set(Merchant::getLatitude, null)
+                    .set(Merchant::getLongitude, null));
+        }
         return R.ok();
+    }
+
+    private void checkLength(String value, int max, String label) {
+        if (value != null && value.length() > max) {
+            throw new BusinessException(label + "不能超过 " + max + " 个字");
+        }
     }
 
     // ---------------- 产品管理 ----------------

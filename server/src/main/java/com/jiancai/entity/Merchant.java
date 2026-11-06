@@ -56,4 +56,8 @@ public class Merchant {
     /** 非数据库字段：与当前定位的距离（公里） */
     @com.baomidou.mybatisplus.annotation.TableField(exist = false)
     private Double distance;
+
+    /** 非数据库字段：门店资料保存时清除坐标 */
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private Boolean clearLocation;
 }

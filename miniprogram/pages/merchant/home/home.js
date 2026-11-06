@@ -82,6 +82,10 @@ Page({
     wx.navigateTo({ url: '/pages/merchant/inquiries/inquiries' })
   },
 
+  goShopEdit: function () {
+    wx.navigateTo({ url: '/pages/merchant/shop/shop' })
+  },
+
   goShop: function () {
     const id = this.data.shop.merchantId
     if (id) {

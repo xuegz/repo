@@ -5,7 +5,9 @@ const {
   reportForward,
   reportCall,
   toggleFavorite,
-  checkFavorite
+  checkFavorite,
+  getSubscribeConfig,
+  requestSubscribe
 } = require('../../utils/request')
 
 function todayStr() {
@@ -33,6 +35,10 @@ Page({
 
   onLoad: function (options) {
     this.setData({ today: todayStr() })
+    const that = this
+    getSubscribeConfig().then(function (config) {
+      that.quoteSubscribe = config && config.enabled ? config.templateId : ''
+    })
     if (options && options.id) {
       const id = Number(options.id)
       this.loadDetail(id)
@@ -230,15 +236,21 @@ Page({
       wx.showToast({ title: '请填写联系方式', icon: 'none' })
       return
     }
+    if (this.data.inquirySubmitting) {
+      return
+    }
     const that = this
     this.setData({ inquirySubmitting: true })
-    openidRequest('/inquiry', 'POST', {
-      productId: this.data.product.id,
-      merchantId: this.data.product.merchantId,
-      quantity: f.quantity,
-      contact: f.contact,
-      remark: f.remark,
-      expectDate: f.expectDate
+    // 一次授权对应一条报价通知；未配置模板时直接提交
+    requestSubscribe(this.quoteSubscribe).then(function () {
+      return openidRequest('/inquiry', 'POST', {
+        productId: that.data.product.id,
+        merchantId: that.data.product.merchantId,
+        quantity: f.quantity,
+        contact: f.contact,
+        remark: f.remark,
+        expectDate: f.expectDate
+      })
     })
       .then(function () {
         that.setData({ inquiryShow: false, inquirySubmitting: false })

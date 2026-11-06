@@ -60,15 +60,16 @@ jiancai:
   wx:
     appid: ${WX_APPID:wxe89d8f5f1af02052}
     secret: ${WX_SECRET:}
-    # 订阅消息：模板 ID 在微信公众平台创建后填入；字段名按模板实际内容配置
+    # 订阅消息：模板「咨询回复通知」（回复人、回复时间、回复内容、咨询人、咨询内容）
     subscribe:
       quote-template-id: ${WX_SUBSCRIBE_QUOTE_TEMPLATE_ID:}
       quote-page: ${WX_SUBSCRIBE_QUOTE_PAGE:pages/inquiry/inquiry}
       # developer=开发版 trial=体验版 formal=正式版
       miniprogram-state: ${WX_SUBSCRIBE_STATE:formal}
+      # 字段名按模板实际内容配置
       fields:
-        product: thing1
-        merchant: thing2
-        amount: amount3
-        time: time4
-        remark: thing5
+        replier: name1
+        reply-time: date2
+        reply-content: thing3
+        asker: name4
+        ask-content: thing5

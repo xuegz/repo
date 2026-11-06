@@ -96,6 +96,7 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" :loading="remarkSaving" @click="saveRemark">保存备注</el-button>
+            <el-button :loading="subscribeSending" @click="sendSubscribeTest">发送订阅消息测试</el-button>
           </el-form-item>
         </el-form>
 
@@ -158,6 +159,7 @@ const exporting = ref(false)
 const drawerVisible = ref(false)
 const detailLoading = ref(false)
 const remarkSaving = ref(false)
+const subscribeSending = ref(false)
 const remark = ref('')
 const detail = reactive({
   user: {},
@@ -225,6 +227,18 @@ const saveRemark = async () => {
     load()
   } finally {
     remarkSaving.value = false
+  }
+}
+
+const sendSubscribeTest = async () => {
+  subscribeSending.value = true
+  try {
+    await request.post('/admin/user/subscribe/test', { openid: detail.user.openid })
+    ElMessage.success('测试消息已发送')
+  } catch (e) {
+    // 失败提示由请求拦截器统一弹出
+  } finally {
+    subscribeSending.value = false
   }
 }
 

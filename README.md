@@ -237,7 +237,7 @@ npm run dev
 
 ## 八、当前未实现（下一阶段可做）
 
-- **订阅消息前端授权**：后端已支持「商户报价 → 通知询价用户」，模板 ID 填入 `jiancai.wx.subscribe.quote-template-id`（或环境变量 `WX_SUBSCRIBE_QUOTE_TEMPLATE_ID`）后启用；小程序还需在提交询价时调用 `wx.requestSubscribeMessage` 获取用户授权，模板可用「询价回复通知」，字段默认 `thing1` 商品、`thing2` 商户、`amount3` 金额、`time4` 时间、`thing5` 备注，模板不同可直接改 `jiancai.wx.subscribe.fields.*`。配置接口 `GET /api/mp/subscribe/config`，平台端测试发送 `POST /api/admin/user/subscribe/test`（body：`{"openid":"..."}`）。
+- **订阅消息（等模板 ID）**：链路已完整，「商户报价 → 通知询价用户」使用微信模板库「咨询回复通知」；把模板 ID 填入 `jiancai.wx.subscribe.quote-template-id`（或环境变量 `WX_SUBSCRIBE_QUOTE_TEMPLATE_ID`）后启用。字段默认 `name1` 回复人、`date2` 回复时间、`thing3` 回复内容、`name4` 咨询人、`thing5` 咨询内容，与模板不一致时改 `jiancai.wx.subscribe.fields.*`；姓名类字段最多 10 字、thing 类最多 20 字，代码已按此截断。小程序提交询价时申请授权，另有「我的询价 → 开启提醒」入口；配置接口 `GET /api/mp/subscribe/config`，平台端测试发送 `POST /api/admin/user/subscribe/test`（body：`{"openid":"..."}`，后台用户详情页有按钮）。一次性订阅每授权一次只能推送一条。
 - **在线缴费（暂不做）**：会员收费（365 元/年）与微信支付**当前明确不实现**，所有商户入驻免费；`payment_record` 表结构保留备用，后续如需收费可直接在此基础上扩展，无需改动其他模块。
 - **省市三级联动筛选**：目前支持按市场、名称筛选商户，尚未做省/市下拉联动。
 - **厂家入驻与招商页**：按你的第 ④、⑤ 步规划扩展。

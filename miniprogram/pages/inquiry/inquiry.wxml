@@ -8,6 +8,11 @@
     <view class="cat-tab {{filter === 2 ? 'active' : ''}}" bindtap="selectFilter" data-status="2">跟进中</view>
   </scroll-view>
 
+  <view class="subscribe-tip" wx:if="{{subscribeTipShow}}">
+    <text class="subscribe-tip-text">商户报价后，微信第一时间提醒你</text>
+    <view class="subscribe-tip-btn" bindtap="enableReminder" hover-class="tap-hover">开启提醒</view>
+  </view>
+
   <view class="inquiry-card" wx:for="{{list}}" wx:key="id">
     <view class="inquiry-head">
       <view class="inquiry-product" bindtap="goProduct" data-id="{{item.productId}}">

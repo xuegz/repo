@@ -1,0 +1,36 @@
+@import "../merchant.wxss";
+
+.form-static {
+  padding: 16rpx 0;
+  color: #303133;
+  font-size: 28rpx;
+}
+
+.coord-text {
+  padding: 8rpx 0;
+  color: #303133;
+  font-size: 28rpx;
+}
+
+.coord-text.placeholder {
+  color: #909399;
+}
+
+.coord-actions {
+  display: flex;
+  margin: 12rpx 0;
+}
+
+.coord-btn {
+  padding: 10rpx 24rpx;
+  margin-right: 16rpx;
+  font-size: 26rpx;
+  color: #ff7a00;
+  border: 1rpx solid #ff7a00;
+  border-radius: 28rpx;
+}
+
+.coord-btn.ghost {
+  color: #909399;
+  border-color: #dcdfe6;
+}
