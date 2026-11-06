@@ -2,10 +2,15 @@ server:
   port: 8080
 
 spring:
-  # h2 = 内存库开箱即用（本地演示，重启数据重置）
-  # mysql = 正式环境，数据持久化（本机已安装 D:\mysql-8.0.28-winx64，账号 root/root）
+  # 默认连接本机 MySQL；本地演示可改成 h2（内存库，重启数据重置）
+  # 生产环境由服务器 config/application.yml 覆盖 datasource，密码不进仓库
   profiles:
-    active: mysql
+    active: ${SPRING_PROFILES_ACTIVE:mysql}
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/jiancai?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
   # 数据库结构由 Flyway 统一管理，MySQL 与 H2 共用 db/migration 下的同一套脚本
   # 已有库（非空）首次接入时不回放历史脚本，直接以 V2 为基线，从 V3 起继续演进
   flyway:
@@ -55,3 +60,15 @@ jiancai:
   wx:
     appid: ${WX_APPID:wxe89d8f5f1af02052}
     secret: ${WX_SECRET:}
+    # 订阅消息：模板 ID 在微信公众平台创建后填入；字段名按模板实际内容配置
+    subscribe:
+      quote-template-id: ${WX_SUBSCRIBE_QUOTE_TEMPLATE_ID:}
+      quote-page: ${WX_SUBSCRIBE_QUOTE_PAGE:pages/inquiry/inquiry}
+      # developer=开发版 trial=体验版 formal=正式版
+      miniprogram-state: ${WX_SUBSCRIBE_STATE:formal}
+      fields:
+        product: thing1
+        merchant: thing2
+        amount: amount3
+        time: time4
+        remark: thing5
