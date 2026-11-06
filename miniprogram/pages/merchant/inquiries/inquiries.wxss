@@ -1,0 +1,12 @@
+@import "../merchant.wxss";
+
+.m-quote-panel .form-item {
+  border-bottom: none;
+  padding: 10rpx 0;
+}
+.m-quote-panel .inquiry-input {
+  margin-bottom: 0;
+}
+.m-quote-panel .inquiry-textarea {
+  margin-bottom: 0;
+}

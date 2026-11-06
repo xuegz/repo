@@ -1,0 +1,35 @@
+<wxs src="../../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <view class="m-toolbar">
+    <view class="m-toolbar-title">共 {{total}} 个产品</view>
+    <view class="m-toolbar-btn" bindtap="goNew">＋ 发布新品</view>
+  </view>
+
+  <scroll-view scroll-x="true" class="cat-scroll">
+    <view wx:for="{{tabs}}" wx:key="status" class="cat-tab {{status === item.status ? 'active' : ''}}" bindtap="selectTab" data-status="{{item.status}}">
+      {{item.label}}<text wx:if="{{item.count > 0}}"> {{item.count}}</text>
+    </view>
+  </scroll-view>
+
+  <view class="m-product" wx:for="{{list}}" wx:key="id">
+    <image wx:if="{{item.cover}}" class="m-product-img" src="{{tools.thumbUrl(item.cover, 200)}}" mode="aspectFill" lazy-load />
+    <image wx:else class="m-product-img" src="/assets/placeholder/product-small.jpg" mode="aspectFill" />
+    <view class="m-product-info">
+      <view class="m-product-name">{{item.name}}<text class="m-tag {{item.statusClass}}">{{item.statusText}}</text></view>
+      <view class="m-product-meta">{{item.categoryName || '未分类'}}{{item.brand ? ' · ' + item.brand : ''}}{{item.spec ? ' · ' + item.spec : ''}}</view>
+      <view class="m-product-price">{{item.priceText}}</view>
+      <view class="m-reject" wx:if="{{item.status === 2 && item.rejectReason}}">未通过：{{item.rejectReason}}</view>
+      <view class="m-product-actions">
+        <button class="m-btn primary" bindtap="goEdit" data-id="{{item.id}}">编辑</button>
+        <button class="m-btn" wx:if="{{item.status === 1}}" bindtap="toggleShelf" data-id="{{item.id}}" data-status="3">下架</button>
+        <button class="m-btn primary" wx:if="{{item.status === 3}}" bindtap="toggleShelf" data-id="{{item.id}}" data-status="1">上架</button>
+        <button class="m-btn danger" bindtap="removeProduct" data-id="{{item.id}}">删除</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{loaded && list.length === 0}}">还没有产品，点击右上角发布第一个产品</view>
+  <view class="loading-tip" wx:if="{{loading}}">加载中…</view>
+  <view class="loading-tip" wx:if="{{loaded && list.length > 0 && finished}}">没有更多了</view>
+</view>

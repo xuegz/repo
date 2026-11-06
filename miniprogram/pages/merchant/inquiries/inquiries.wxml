@@ -1,0 +1,89 @@
+<wxs src="../../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <scroll-view scroll-x="true" class="cat-scroll inquiry-tabs">
+    <view wx:for="{{tabs}}" wx:key="status" class="cat-tab {{filter === item.status ? 'active' : ''}}" bindtap="selectFilter" data-status="{{item.status}}">
+      {{item.label}}<text wx:if="{{item.count > 0}}"> {{item.count}}</text>
+    </view>
+  </scroll-view>
+
+  <view class="m-inquiry-card" wx:for="{{list}}" wx:key="id">
+    <view class="m-inquiry-head">
+      <view class="m-inquiry-title" bindtap="goProduct" data-id="{{item.productId}}">{{item.productName || '通用询价'}}</view>
+      <text class="m-tag {{item.statusClass}}">{{item.statusText}}</text>
+    </view>
+
+    <view class="m-inquiry-meta">
+      <view wx:if="{{item.quantity}}">数量/规格：{{item.quantity}}</view>
+      <view>联系方式：{{item.contact}}</view>
+      <view wx:if="{{item.expectDate}}">期望到货：{{item.expectDate}}</view>
+      <view wx:if="{{item.remark}}">需求说明：{{item.remark}}</view>
+      <view>提交时间：{{item.timeText}}</view>
+    </view>
+
+    <view class="m-quote-box" wx:if="{{item.hasQuote}}">
+      <view wx:if="{{item.quotePriceText || item.quoteTotalText}}">
+        报价：<text wx:if="{{item.quotePriceText}}">单价 ¥{{item.quotePriceText}}</text>
+        <text wx:if="{{item.quotePriceText && item.quoteTotalText}}">　</text>
+        <text wx:if="{{item.quoteTotalText}}">总价 ¥{{item.quoteTotalText}}</text>
+      </view>
+      <view wx:if="{{item.quoteValidUntil}}">{{item.quoteExpired ? '报价已过期（' + item.quoteValidUntil + '）' : '有效期至 ' + item.quoteValidUntil}}</view>
+      <view wx:if="{{item.quoteRemark}}">说明：{{item.quoteRemark}}</view>
+      <view wx:if="{{item.quoteTimeText}}">报价时间：{{item.quoteTimeText}}</view>
+    </view>
+
+    <view class="m-product-actions">
+      <button class="m-btn primary" bindtap="openQuote" data-index="{{index}}">报价</button>
+      <button class="m-btn primary" bindtap="contactLead" data-contact="{{item.contact}}">联系客户</button>
+    </view>
+    <view class="m-product-actions">
+      <button class="m-btn" wx:if="{{item.productId}}" bindtap="goProduct" data-id="{{item.productId}}">查看产品</button>
+      <button class="m-btn" wx:if="{{item.status !== 2}}" bindtap="handleLead" data-id="{{item.id}}">标记跟进</button>
+      <button class="m-btn danger" bindtap="removeLead" data-id="{{item.id}}">删除</button>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{loaded && list.length === 0}}">暂无询价线索，产品被客户询价后会在这里显示</view>
+  <view class="loading-tip" wx:if="{{loading}}">加载中…</view>
+  <view class="loading-tip" wx:if="{{loaded && list.length > 0 && finished}}">没有更多了</view>
+</view>
+
+<view class="mask" wx:if="{{showQuote}}" bindtap="closeQuote">
+  <view class="m-quote-panel" catchtap="noop">
+    <view class="panel-title">给客户报价</view>
+    <view class="m-inquiry-meta" style="margin-top: 0; margin-bottom: 12rpx">
+      <view>产品：{{quoting.productName || '通用询价'}}</view>
+      <view wx:if="{{quoting.quantity}}">需求：{{quoting.quantity}}</view>
+      <view wx:if="{{quoting.remark}}">说明：{{quoting.remark}}</view>
+    </view>
+
+    <view class="m-quote-grid">
+      <view class="form-item">
+        <view class="form-label">单价（元）</view>
+        <input class="inquiry-input" type="digit" placeholder="选填" value="{{quoteForm.quotePrice}}" data-field="quotePrice" bindinput="onQuoteInput" />
+      </view>
+      <view class="form-item">
+        <view class="form-label">总价（元）</view>
+        <input class="inquiry-input" type="digit" placeholder="选填" value="{{quoteForm.quoteTotal}}" data-field="quoteTotal" bindinput="onQuoteInput" />
+      </view>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">报价有效期</view>
+      <picker mode="date" start="{{minDate}}" value="{{quoteForm.quoteValidUntil}}" bindchange="onValidUntilChange">
+        <view class="m-date {{quoteForm.quoteValidUntil ? '' : 'placeholder'}}">{{quoteForm.quoteValidUntil || '选择日期（选填）'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">报价说明</view>
+      <textarea class="inquiry-textarea" placeholder="含税、运费、供货周期等（选填）" value="{{quoteForm.quoteRemark}}" data-field="quoteRemark" bindinput="onQuoteInput" maxlength="200" />
+    </view>
+
+    <view class="m-form-tip">提交后客户可在小程序内看到报价，并会收到订阅消息提醒。</view>
+    <view class="m-quote-actions">
+      <button class="m-btn" bindtap="closeQuote">取消</button>
+      <button class="m-btn primary" bindtap="submitQuote" loading="{{submitting}}">发送报价</button>
+    </view>
+  </view>
+</view>

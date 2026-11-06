@@ -1,0 +1,66 @@
+<wxs src="../../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <view class="loading-tip" wx:if="{{loading}}">加载中…</view>
+
+  <view class="card" wx:else>
+    <view class="form-item">
+      <view class="form-label">产品名称 <text class="req">*</text></view>
+      <input class="form-input" placeholder="如：连体坐便器" value="{{form.name}}" data-field="name" bindinput="onInput" maxlength="60" />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">所属品类 <text class="req">*</text></view>
+      <picker mode="selector" range="{{categoryLabels}}" value="{{categoryIndex}}" bindchange="onCategoryChange">
+        <view class="picker-view {{selectedCategory ? '' : 'placeholder'}}">{{selectedCategory || '请选择品类'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-row">
+      <view class="form-item half">
+        <view class="form-label">品牌</view>
+        <input class="form-input" placeholder="如：箭牌" value="{{form.brand}}" data-field="brand" bindinput="onInput" maxlength="30" />
+      </view>
+      <view class="form-item half">
+        <view class="form-label">产品类型</view>
+        <input class="form-input" placeholder="如：马桶" value="{{form.typeName}}" data-field="typeName" bindinput="onInput" maxlength="30" />
+      </view>
+    </view>
+
+    <view class="form-row">
+      <view class="form-item half">
+        <view class="form-label">规格型号</view>
+        <input class="form-input" placeholder="如：305mm 坑距" value="{{form.spec}}" data-field="spec" bindinput="onInput" maxlength="60" />
+      </view>
+      <view class="form-item half">
+        <view class="form-label">计价单位</view>
+        <input class="form-input" placeholder="件 / 套 / 米" value="{{form.unit}}" data-field="unit" bindinput="onInput" maxlength="10" />
+      </view>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">产品价格（元）</view>
+      <input class="form-input" type="digit" placeholder="留空或填 0 表示面议" value="{{form.price}}" data-field="price" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">产品图片</view>
+      <view class="m-img-grid">
+        <view class="m-img-box" wx:for="{{form.images}}" wx:key="*this">
+          <image src="{{tools.thumbUrl(item, 300)}}" mode="aspectFill" />
+          <view class="m-img-del" bindtap="removeImage" data-index="{{index}}">×</view>
+        </view>
+        <view class="m-img-add" wx:if="{{form.images.length < 9}}" bindtap="chooseImages">＋</view>
+      </view>
+      <view class="m-form-tip">最多 9 张，第一张作为列表封面；建议使用清晰实拍图。</view>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">产品描述</view>
+      <textarea class="form-textarea" placeholder="材质、规格、适用范围、供货能力等" value="{{form.description}}" data-field="description" bindinput="onInput" maxlength="500" />
+    </view>
+
+    <button class="submit-btn" bindtap="submit" loading="{{submitting}}">{{isEdit ? '保存修改' : '提交审核'}}</button>
+    <view class="m-form-tip">新品与未通过修改后的产品需平台审核，通过后自动上架。</view>
+  </view>
+</view>

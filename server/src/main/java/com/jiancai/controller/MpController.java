@@ -20,10 +20,12 @@ import com.jiancai.mapper.ViewRecordMapper;
 import com.jiancai.service.CategoryService;
 import com.jiancai.service.MarketService;
 import com.jiancai.service.MerchantService;
+import com.jiancai.service.MpUserService;
 import com.jiancai.service.ProductService;
 import com.jiancai.service.SiteService;
 import com.jiancai.service.StatService;
 import com.jiancai.service.WxLoginService;
+import com.jiancai.service.WxSubscribeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -75,6 +77,12 @@ public class MpController {
     @Autowired
     private WxLoginService wxLoginService;
 
+    @Autowired
+    private MpUserService mpUserService;
+
+    @Autowired
+    private WxSubscribeService wxSubscribeService;
+
     /** 微信登录：小程序 wx.login 的 code 换 openid */
     @PostMapping("/login")
     public R<Map<String, Object>> login(@RequestBody Map<String, Object> body) {
@@ -85,7 +93,18 @@ public class MpController {
         if (code.length() > 128) {
             throw new BusinessException("微信登录凭证不合法");
         }
-        return R.ok(wxLoginService.code2Session(code));
+        Map<String, Object> session = wxLoginService.code2Session(code);
+        Object openid = session == null ? null : session.get("openid");
+        if (openid != null) {
+            mpUserService.touchLogin(openid.toString());
+        }
+        return R.ok(session);
+    }
+
+    /** 订阅消息配置：前端据此调用 wx.requestSubscribeMessage 获取授权 */
+    @GetMapping("/subscribe/config")
+    public R<Map<String, Object>> subscribeConfig() {
+        return R.ok(wxSubscribeService.publicConfig());
     }
 
     /** 首页聚合：轮播 + 广告位 + 品类 + 热门市场 + 推荐产品 */

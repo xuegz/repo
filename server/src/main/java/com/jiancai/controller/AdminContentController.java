@@ -95,4 +95,10 @@ public class AdminContentController {
     public R<Map<String, Object>> overview() {
         return R.ok(statService.overview());
     }
+
+    /** 最近 N 天趋势：浏览/转发/电话/询价/新增用户/新增商户 */
+    @GetMapping("/stat/trend")
+    public R<List<Map<String, Object>>> trend(@RequestParam(defaultValue = "7") int days) {
+        return R.ok(statService.trend(days));
+    }
 }

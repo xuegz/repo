@@ -56,6 +56,8 @@ const realName = localStorage.getItem('realName') || '未登录'
 const adminMenus = [
   { path: '/dashboard', title: '数据总览', icon: 'DataLine' },
   { path: '/merchant', title: '商户管理', icon: 'Shop' },
+  { path: '/user', title: '用户管理', icon: 'User' },
+  { path: '/inquiry', title: '询价管理', icon: 'ChatDotRound' },
   { path: '/market', title: '市场管理', icon: 'OfficeBuilding' },
   { path: '/product', title: '产品管理', icon: 'Goods' },
   { path: '/category', title: '品类管理', icon: 'Menu' },

@@ -1,15 +1,43 @@
-const { openidRequest, ensureLogin } = require('../../utils/request')
+const { openidRequest, ensureLogin, uploadImage } = require('../../utils/request')
+const merchant = require('../../utils/merchant')
 
 Page({
   data: {
     history: [],
     servicePhone: '400-000-0000',
-    loginState: 'loading'
+    loginState: 'loading',
+    nickname: '',
+    avatar: '',
+    merchantBound: false,
+    merchantShop: {}
   },
 
   onShow: function () {
     this.loadLogin()
     this.loadHistory()
+    this.loadMerchant()
+  },
+
+  loadMerchant: function () {
+    const that = this
+    merchant.refreshSession()
+      .then(function (data) {
+        const bound = !!(data && data.bound)
+        that.setData({
+          merchantBound: bound,
+          merchantShop: bound ? data : {}
+        })
+      })
+      .catch(function () {
+        that.setData({ merchantBound: false, merchantShop: {} })
+      })
+  },
+
+  goMerchant: function () {
+    const url = this.data.merchantBound
+      ? '/pages/merchant/home/home'
+      : '/pages/merchant/login/login'
+    wx.navigateTo({ url: url })
   },
 
   loadLogin: function () {
@@ -17,10 +45,56 @@ Page({
     ensureLogin()
       .then(function () {
         that.setData({ loginState: 'ok' })
+        that.loadProfile()
       })
       .catch(function () {
         that.setData({ loginState: 'fail' })
       })
+  },
+
+  loadProfile: function () {
+    const that = this
+    openidRequest('/profile', 'GET')
+      .then(function (data) {
+        if (!data) return
+        that.setData({
+          nickname: data.nickname || '',
+          avatar: data.avatar || ''
+        })
+      })
+      .catch(function () {})
+  },
+
+  onChooseAvatar: function (e) {
+    const tempPath = e.detail.avatarUrl
+    if (!tempPath) return
+    const that = this
+    wx.showLoading({ title: '上传中', mask: true })
+    uploadImage(tempPath)
+      .then(function (url) {
+        that.setData({ avatar: url })
+        wx.hideLoading()
+        that.saveProfile({ avatar: url })
+      })
+      .catch(function (err) {
+        wx.hideLoading()
+        wx.showToast({ title: (err && err.message) || '头像上传失败', icon: 'none' })
+      })
+  },
+
+  onNicknameBlur: function (e) {
+    const nickname = (e.detail.value || '').trim()
+    if (nickname === this.data.nickname) return
+    this.setData({ nickname: nickname })
+    this.saveProfile({ nickname: nickname })
+  },
+
+  saveProfile: function (data) {
+    openidRequest('/profile', 'POST', data)
+      .then(function () {
+        wx.showToast({ title: '已保存', icon: 'success' })
+      })
+      .catch(function () {})
   },
 
   doLogin: function () {

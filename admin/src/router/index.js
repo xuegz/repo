@@ -16,6 +16,8 @@ const routes = [
       // 平台端
       { path: 'dashboard', component: () => import('@/views/Dashboard.vue'), meta: { title: '数据总览', roles: [1] } },
       { path: 'merchant', component: () => import('@/views/MerchantList.vue'), meta: { title: '商户管理', roles: [1] } },
+      { path: 'user', component: () => import('@/views/UserList.vue'), meta: { title: '用户管理', roles: [1] } },
+      { path: 'inquiry', component: () => import('@/views/InquiryList.vue'), meta: { title: '询价管理', roles: [1] } },
       { path: 'market', component: () => import('@/views/MarketList.vue'), meta: { title: '市场管理', roles: [1] } },
       { path: 'product', component: () => import('@/views/ProductAudit.vue'), meta: { title: '产品管理', roles: [1] } },
       { path: 'category', component: () => import('@/views/CategoryList.vue'), meta: { title: '品类管理', roles: [1] } },

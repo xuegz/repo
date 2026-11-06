@@ -40,8 +40,9 @@
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="150" :formatter="formatTime" />
-      <el-table-column label="操作" width="184" fixed="right">
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
+          <el-button type="primary" link @click="openDetail(row)">详情</el-button>
           <el-button v-if="row.status === 0" type="success" link @click="audit(row, 1)">通过</el-button>
           <el-button v-if="row.status === 0" type="danger" link @click="audit(row, 2)">拒绝</el-button>
           <el-button type="primary" link @click="openEdit(row)">编辑</el-button>
@@ -109,11 +110,74 @@
         <el-button type="primary" @click="save">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-drawer v-model="detailVisible" :title="`商户详情 - ${detail.merchant?.name || ''}`" size="760px">
+      <div v-loading="detailLoading">
+        <el-descriptions :column="2" border size="small">
+          <el-descriptions-item label="状态">
+            <el-tag :type="statusType(detail.merchant?.status)">{{ statusText(detail.merchant?.status) }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="所属市场">{{ detail.merchant?.market || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="联系人">{{ detail.merchant?.contactName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="电话">{{ detail.merchant?.phone || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="地址" :span="2">
+            {{ [detail.merchant?.province, detail.merchant?.city, detail.merchant?.address].filter(Boolean).join(' ') || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="登录账号">{{ detail.account?.username || '未开通' }}</el-descriptions-item>
+          <el-descriptions-item label="账号状态">
+            <el-tag v-if="detail.account" :type="detail.account.status === 1 ? 'success' : 'danger'">
+              {{ detail.account.status === 1 ? '正常' : '禁用' }}
+            </el-tag>
+            <span v-else>-</span>
+          </el-descriptions-item>
+          <el-descriptions-item label="到期时间">{{ formatDate(detail.stats?.expireTime) }}</el-descriptions-item>
+          <el-descriptions-item label="入驻时间">{{ formatTime(null, null, detail.merchant?.createTime) }}</el-descriptions-item>
+        </el-descriptions>
+
+        <el-row :gutter="12" class="detail-stats">
+          <el-col v-for="item in detailCards" :key="item.label" :span="6">
+            <el-card shadow="never" class="mini-card">
+              <div class="mini-label">{{ item.label }}</div>
+              <div class="mini-value">{{ item.value }}</div>
+            </el-card>
+          </el-col>
+        </el-row>
+
+        <el-tabs>
+          <el-tab-pane label="热门产品">
+            <el-table :data="detail.hotProducts" size="small" border>
+              <el-table-column prop="name" label="产品" min-width="180" show-overflow-tooltip />
+              <el-table-column prop="price" label="价格" width="100" />
+              <el-table-column prop="views" label="浏览" width="80" />
+              <el-table-column prop="calls" label="电话" width="80" />
+            </el-table>
+          </el-tab-pane>
+          <el-tab-pane label="最近询价">
+            <el-table :data="detail.recentInquiries" size="small" border>
+              <el-table-column prop="productName" label="商品" min-width="150" />
+              <el-table-column prop="contact" label="联系方式" width="120" />
+              <el-table-column label="状态" width="80">
+                <template #default="{ row }">{{ inquiryStatus(row.status) }}</template>
+              </el-table-column>
+              <el-table-column prop="createTime" label="时间" width="160" :formatter="formatTime" />
+            </el-table>
+          </el-tab-pane>
+          <el-tab-pane label="最近动态">
+            <el-table :data="detail.recentRecords" size="small" border>
+              <el-table-column prop="action" label="行为" width="90" />
+              <el-table-column prop="targetName" label="对象" min-width="180" />
+              <el-table-column prop="visitor" label="访客" width="120" />
+              <el-table-column prop="createTime" label="时间" width="160" :formatter="formatTime" />
+            </el-table>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </el-drawer>
   </el-card>
 </template>
 
 <script setup>
-import { h, onMounted, reactive, ref } from 'vue'
+import { computed, h, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/api/request'
 import { categorySelectOptions } from '@/utils/category'
@@ -126,10 +190,45 @@ const categories = ref([])
 const markets = ref([])
 const dialogVisible = ref(false)
 const form = ref({})
+const detailVisible = ref(false)
+const detailLoading = ref(false)
+const detail = reactive({
+  merchant: {},
+  stats: {},
+  inquiryCounts: {},
+  account: null,
+  hotProducts: [],
+  recentInquiries: [],
+  recentRecords: []
+})
+
+const detailCards = computed(() => [
+  { label: '产品总数', value: detail.stats?.productTotal ?? 0 },
+  { label: '浏览总量', value: detail.stats?.viewTotal ?? 0 },
+  { label: '电话联系', value: detail.stats?.callTotal ?? 0 },
+  { label: '询价线索', value: detail.inquiryCounts?.total ?? 0 },
+  { label: '待报价', value: detail.inquiryCounts?.pending ?? 0 },
+  { label: '已报价', value: detail.inquiryCounts?.quoted ?? 0 },
+  { label: '跟进中', value: detail.inquiryCounts?.follow ?? 0 },
+  { label: '转发总量', value: detail.stats?.forwardTotal ?? 0 }
+])
 
 const statusText = (s) => ({ 0: '待审核', 1: '已通过', 2: '已拒绝' }[s] || '未知')
 const statusType = (s) => ({ 0: 'warning', 1: 'success', 2: 'danger' }[s] || 'info')
 const formatTime = (row, column, value) => (value || '').replace('T', ' ').slice(0, 16)
+const formatDate = (value) => (value ? String(value).replace('T', ' ').slice(0, 10) : '-')
+const inquiryStatus = (status) => ({ 0: '待报价', 1: '已报价', 2: '跟进中' }[status] || '未知')
+
+const openDetail = async (row) => {
+  detailVisible.value = true
+  detailLoading.value = true
+  try {
+    const res = await request.get(`/admin/merchant/detail/${row.id}`)
+    Object.assign(detail, res.data)
+  } finally {
+    detailLoading.value = false
+  }
+}
 
 const load = async () => {
   loading.value = true
@@ -227,5 +326,23 @@ onMounted(() => {
   color: #909399;
   font-size: 12px;
   line-height: 1.4;
+}
+.detail-stats {
+  margin: 16px 0 4px;
+}
+.mini-card {
+  text-align: center;
+  margin-bottom: 12px;
+  background: #fafbfc;
+}
+.mini-label {
+  color: #909399;
+  font-size: 12px;
+}
+.mini-value {
+  margin-top: 6px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #409eff;
 }
 </style>

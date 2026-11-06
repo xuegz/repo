@@ -3,14 +3,28 @@
 <view class="page">
   <view class="card mine-header">
     <view class="mine-user">
-      <view class="mine-avatar">建</view>
+      <view class="mine-avatar-wrap">
+        <image wx:if="{{avatar}}" class="mine-avatar-img" src="{{tools.thumbUrl(avatar, 120)}}" mode="aspectFill" />
+        <view wx:else class="mine-avatar">建</view>
+        <view wx:if="{{loginState === 'ok'}}" class="mine-avatar-edit">+</view>
+        <button wx:if="{{loginState === 'ok'}}" class="mine-avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar"></button>
+      </view>
       <view class="mine-user-info">
-        <view class="mine-title">{{loginState === 'ok' ? '微信用户' : (loginState === 'loading' ? '登录中…' : '未登录')}}</view>
+        <input wx:if="{{loginState === 'ok'}}" class="mine-name-input" type="nickname" value="{{nickname}}" placeholder="点击设置昵称" placeholder-class="mine-name-placeholder" maxlength="20" bindblur="onNicknameBlur" bindconfirm="onNicknameBlur" />
+        <view wx:else class="mine-title">{{loginState === 'loading' ? '登录中…' : '未登录'}}</view>
         <view class="mine-sub">{{loginState === 'ok' ? '已通过微信登录，数据自动同步' : '登录后同步浏览、收藏与询价'}}</view>
       </view>
-      <view wx:if="{{loginState === 'ok'}}" class="mine-badge">已登录</view>
-      <view wx:else class="mine-login" bindtap="doLogin">{{loginState === 'loading' ? '登录中' : '微信登录'}}</view>
+      <view wx:if="{{loginState !== 'ok'}}" class="mine-login" bindtap="doLogin">{{loginState === 'loading' ? '登录中' : '微信登录'}}</view>
     </view>
+  </view>
+
+  <view class="card merchant-entry" bindtap="goMerchant">
+    <view class="merchant-entry-icon">{{merchantBound ? '店' : '商'}}</view>
+    <view class="merchant-entry-info">
+      <view class="merchant-entry-title">{{merchantBound ? merchantShop.shopName : '商家中心'}}</view>
+      <view class="merchant-entry-sub">{{merchantBound ? '发布产品 · 处理询价 · 经营数据' : '商户账号绑定后，可在小程序管理店铺'}}</view>
+    </view>
+    <view class="merchant-entry-btn">{{merchantBound ? '进入' : '绑定'}}</view>
   </view>
 
   <view class="card">

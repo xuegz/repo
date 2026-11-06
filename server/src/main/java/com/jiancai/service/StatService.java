@@ -1,24 +1,32 @@
 package com.jiancai.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.jiancai.entity.CallRecord;
 import com.jiancai.entity.ForwardRecord;
+import com.jiancai.entity.Inquiry;
 import com.jiancai.entity.Merchant;
+import com.jiancai.entity.MpUser;
 import com.jiancai.entity.Product;
 import com.jiancai.entity.ViewRecord;
 import com.jiancai.mapper.CallRecordMapper;
 import com.jiancai.mapper.ForwardRecordMapper;
+import com.jiancai.mapper.InquiryMapper;
 import com.jiancai.mapper.MerchantMapper;
+import com.jiancai.mapper.MpUserMapper;
 import com.jiancai.mapper.ProductMapper;
 import com.jiancai.mapper.ViewRecordMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +55,12 @@ public class StatService {
 
     @Autowired
     private MerchantMapper merchantMapper;
+
+    @Autowired
+    private MpUserMapper mpUserMapper;
+
+    @Autowired
+    private InquiryMapper inquiryMapper;
 
     /** 记录浏览 */
     public void recordView(Integer targetType, Long targetId, String openid) {
@@ -122,6 +136,9 @@ public class StatService {
         map.put("merchantTotal", merchantMapper.selectCount(null));
         map.put("merchantPending", merchantMapper.selectCount(Wrappers.<Merchant>lambdaQuery()
                 .eq(Merchant::getStatus, 0)));
+        map.put("userTotal", mpUserMapper.selectCount(null));
+        map.put("userToday", mpUserMapper.selectCount(Wrappers.<MpUser>lambdaQuery()
+                .ge(MpUser::getCreateTime, LocalDate.now().atStartOfDay())));
         map.put("productTotal", productMapper.selectCount(null));
         map.put("productPending", productMapper.selectCount(Wrappers.<Product>lambdaQuery()
                 .eq(Product::getStatus, 0)));
@@ -214,7 +231,92 @@ public class StatService {
                 .last("limit 10"));
     }
 
+    /**
+     * 平台趋势：最近 N 天每天的新增浏览/转发/电话/询价/用户/商户
+     * days 限制在 7~90，前端只暴露 7 / 30
+     */
+    public List<Map<String, Object>> trend(int days) {
+        int span = Math.max(7, Math.min(days, 90));
+        LocalDate start = LocalDate.now().minusDays(span - 1L);
+        LocalDateTime from = start.atStartOfDay();
+
+        Map<LocalDate, Long> views = countByDay(viewRecordMapper.selectMaps(new QueryWrapper<ViewRecord>()
+                .select("DATE(create_time) AS d", "COUNT(*) AS c")
+                .ge("create_time", from)
+                .groupBy("DATE(create_time)")));
+        Map<LocalDate, Long> forwards = countByDay(forwardRecordMapper.selectMaps(new QueryWrapper<ForwardRecord>()
+                .select("DATE(create_time) AS d", "COUNT(*) AS c")
+                .ge("create_time", from)
+                .groupBy("DATE(create_time)")));
+        Map<LocalDate, Long> calls = countByDay(callRecordMapper.selectMaps(new QueryWrapper<CallRecord>()
+                .select("DATE(create_time) AS d", "COUNT(*) AS c")
+                .ge("create_time", from)
+                .groupBy("DATE(create_time)")));
+        Map<LocalDate, Long> inquiries = countByDay(inquiryMapper.selectMaps(new QueryWrapper<Inquiry>()
+                .select("DATE(create_time) AS d", "COUNT(*) AS c")
+                .ge("create_time", from)
+                .groupBy("DATE(create_time)")));
+        Map<LocalDate, Long> users = countByDay(mpUserMapper.selectMaps(new QueryWrapper<MpUser>()
+                .select("DATE(create_time) AS d", "COUNT(*) AS c")
+                .ge("create_time", from)
+                .groupBy("DATE(create_time)")));
+        Map<LocalDate, Long> merchants = countByDay(merchantMapper.selectMaps(new QueryWrapper<Merchant>()
+                .select("DATE(create_time) AS d", "COUNT(*) AS c")
+                .ge("create_time", from)
+                .groupBy("DATE(create_time)")));
+
+        List<Map<String, Object>> list = new ArrayList<>(span);
+        for (int i = 0; i < span; i++) {
+            LocalDate date = start.plusDays(i);
+            Map<String, Object> row = new LinkedHashMap<>(8);
+            row.put("date", date.toString());
+            row.put("views", views.getOrDefault(date, 0L));
+            row.put("forwards", forwards.getOrDefault(date, 0L));
+            row.put("calls", calls.getOrDefault(date, 0L));
+            row.put("inquiries", inquiries.getOrDefault(date, 0L));
+            row.put("newUsers", users.getOrDefault(date, 0L));
+            row.put("newMerchants", merchants.getOrDefault(date, 0L));
+            list.add(row);
+        }
+        return list;
+    }
+
     // ---------------- 内部工具 ----------------
+
+    private Map<LocalDate, Long> countByDay(List<Map<String, Object>> rows) {
+        Map<LocalDate, Long> result = new HashMap<>();
+        for (Map<String, Object> row : rows) {
+            Object dayValue = row.containsKey("d") ? row.get("d") : row.get("D");
+            Object countValue = row.containsKey("c") ? row.get("c") : row.get("C");
+            LocalDate day = toLocalDate(dayValue);
+            if (day != null && countValue instanceof Number number) {
+                result.put(day, number.longValue());
+            }
+        }
+        return result;
+    }
+
+    private LocalDate toLocalDate(Object value) {
+        if (value instanceof LocalDate date) {
+            return date;
+        }
+        if (value instanceof java.sql.Date date) {
+            return date.toLocalDate();
+        }
+        if (value instanceof LocalDateTime dateTime) {
+            return dateTime.toLocalDate();
+        }
+        if (value instanceof java.util.Date date) {
+            return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+        if (value != null) {
+            String text = value.toString();
+            if (text.length() >= 10) {
+                return LocalDate.parse(text.substring(0, 10));
+            }
+        }
+        return null;
+    }
 
     private List<Long> ownProductIds(Long merchantId) {
         List<Product> products = productMapper.selectList(Wrappers.<Product>lambdaQuery()

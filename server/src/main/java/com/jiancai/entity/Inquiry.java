@@ -47,4 +47,7 @@ public class Inquiry {
 
     @TableField(exist = false)
     private String merchantPhone;
+
+    @TableField(exist = false)
+    private String userNickname;
 }

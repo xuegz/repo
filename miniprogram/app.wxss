@@ -295,19 +295,66 @@ page {
   justify-content: center;
   flex-shrink: 0;
 }
+.mine-avatar-wrap {
+  position: relative;
+  flex: 0 0 96rpx;
+  width: 96rpx;
+  height: 96rpx;
+}
+.mine-avatar-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  opacity: 0;
+}
+.mine-avatar-btn::after {
+  border: none;
+}
+.mine-avatar-img {
+  display: block;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: #fff;
+}
+.mine-avatar-edit {
+  position: absolute;
+  right: -4rpx;
+  bottom: -4rpx;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: #fff;
+  border: 2rpx solid #ff7a00;
+  box-sizing: border-box;
+  color: #ff7a00;
+  font-size: 26rpx;
+  line-height: 30rpx;
+  text-align: center;
+}
 .mine-user-info {
   flex: 1;
   margin-left: 20rpx;
   overflow: hidden;
 }
-.mine-badge {
-  flex-shrink: 0;
-  margin-left: 12rpx;
-  padding: 6rpx 18rpx;
-  border-radius: 20rpx;
-  background: rgba(255, 255, 255, 0.2);
+.mine-name-input {
+  width: 100%;
+  height: 44rpx;
+  line-height: 44rpx;
+  font-size: 32rpx;
+  font-weight: bold;
   color: #fff;
-  font-size: 22rpx;
+}
+.mine-name-placeholder {
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: normal;
 }
 .mine-login {
   flex-shrink: 0;
@@ -364,6 +411,52 @@ page {
   color: #c0c4cc;
   font-size: 24rpx;
   padding: 30rpx 0;
+}
+
+/* 我的页商家中心入口 */
+.merchant-entry {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+}
+.merchant-entry-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #ff7a00, #ff9a3c);
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.merchant-entry-info {
+  flex: 1;
+  margin-left: 18rpx;
+  overflow: hidden;
+}
+.merchant-entry-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.merchant-entry-sub {
+  font-size: 23rpx;
+  color: #909399;
+  margin-top: 6rpx;
+}
+.merchant-entry-btn {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  padding: 8rpx 24rpx;
+  border-radius: 24rpx;
+  background: #fff4e8;
+  color: #ff7a00;
+  font-size: 24rpx;
 }
 
 /* 首页快捷入口 */

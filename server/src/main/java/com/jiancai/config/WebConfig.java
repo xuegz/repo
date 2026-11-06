@@ -24,8 +24,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
-                // 仅这些前缀需要登录，小程序接口 /api/mp/** 与登录接口放行
-                .addPathPatterns("/api/admin/**", "/api/merchant/**", "/api/account/**");
+                // 仅这些前缀需要登录，小程序接口 /api/mp/** 与登录接口放行；解绑需校验 JWT
+                .addPathPatterns("/api/admin/**", "/api/merchant/**", "/api/account/**",
+                        "/api/mp/merchant/unbind");
     }
 
     @Override

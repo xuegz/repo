@@ -16,6 +16,7 @@ import com.jiancai.service.MerchantService;
 import com.jiancai.service.ProductCsvService;
 import com.jiancai.service.ProductService;
 import com.jiancai.service.StatService;
+import com.jiancai.service.WxSubscribeService;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -60,6 +61,9 @@ public class MerchantController {
 
     @Autowired
     private ProductCsvService productCsvService;
+
+    @Autowired
+    private WxSubscribeService wxSubscribeService;
 
     private Long currentMerchantId() {
         Long merchantId = UserContext.getMerchantId();
@@ -113,8 +117,26 @@ public class MerchantController {
                 .collect(Collectors.groupingBy(Product::getStatus, Collectors.counting())));
     }
 
+    /** 单个产品详情（小程序编辑页使用，仅限本商户） */
+    @GetMapping("/product/detail/{id}")
+    public R<Product> productDetail(@PathVariable Long id) {
+        Product product = checkOwner(id, currentMerchantId());
+        product.setImageList(ProductService.splitImages(product.getImages()));
+        return R.ok(product);
+    }
+
     @PostMapping("/product/save")
     public R<Void> productSave(@RequestBody Product product) {
+        if (product.getName() == null || product.getName().isBlank()) {
+            throw new BusinessException("请填写产品名称");
+        }
+        if (product.getCategoryId() == null) {
+            throw new BusinessException("请选择产品品类");
+        }
+        if (product.getPrice() != null && product.getPrice().signum() < 0) {
+            throw new BusinessException("产品价格不能为负数");
+        }
+        product.setName(product.getName().trim());
         Long merchantId = currentMerchantId();
         if (product.getId() == null) {
             // 新增：进入待审核
@@ -269,6 +291,7 @@ public class MerchantController {
         inquiry.setQuoteTime(LocalDateTime.now());
         inquiry.setStatus(1);
         inquiryMapper.updateById(inquiry);
+        wxSubscribeService.sendQuoteNotice(inquiry);
         return R.ok();
     }
 

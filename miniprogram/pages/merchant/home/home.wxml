@@ -1,0 +1,82 @@
+<wxs src="../../../utils/tools.wxs" module="tools" />
+
+<view class="page" wx:if="{{!loading}}">
+  <view class="m-hero">
+    <view class="m-hero-row">
+      <view class="m-logo">
+        <image wx:if="{{shop.shopLogo}}" src="{{tools.thumbUrl(shop.shopLogo, 120)}}" mode="aspectFill" />
+        <text wx:else>{{tools.firstChar(shop.shopName)}}</text>
+      </view>
+      <view class="m-hero-info">
+        <view class="m-shop-name">{{shop.shopName}}</view>
+        <view class="m-shop-sub">{{shop.realName ? shop.realName + ' · ' : ''}}已绑定当前微信</view>
+      </view>
+    </view>
+    <view class="m-stats">
+      <view class="m-stat" bindtap="goProducts" data-status="1">
+        <view class="m-stat-num">{{stats.onSale}}</view>
+        <view class="m-stat-label">在售产品</view>
+      </view>
+      <view class="m-stat" bindtap="goProducts" data-status="0">
+        <view class="m-stat-num">{{stats.pending}}</view>
+        <view class="m-stat-label">待审核</view>
+      </view>
+      <view class="m-stat">
+        <view class="m-stat-num">{{stats.views}}</view>
+        <view class="m-stat-label">累计浏览</view>
+      </view>
+      <view class="m-stat" bindtap="goInquiries">
+        <view class="m-stat-num">{{stats.leads}}</view>
+        <view class="m-stat-label">待报价</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="m-entry" bindtap="goEdit">
+      <view class="m-entry-icon">＋</view>
+      <view class="m-entry-info">
+        <view class="m-entry-title">发布产品</view>
+        <view class="m-entry-sub">上传图片、填写价格，提交后由平台审核</view>
+      </view>
+      <view class="m-entry-arrow">›</view>
+    </view>
+    <view class="m-entry" bindtap="goProducts" data-status="-1">
+      <view class="m-entry-icon">品</view>
+      <view class="m-entry-info">
+        <view class="m-entry-title">产品管理</view>
+        <view class="m-entry-sub">编辑、上下架与删除我的产品</view>
+      </view>
+      <view class="m-entry-arrow">›</view>
+    </view>
+    <view class="m-entry" bindtap="goInquiries">
+      <view class="m-entry-icon">询</view>
+      <view class="m-entry-info">
+        <view class="m-entry-title">询价线索<text class="m-entry-badge" wx:if="{{stats.leads > 0}}">{{stats.leads}}</text></view>
+        <view class="m-entry-sub">查看客户需求并在线报价</view>
+      </view>
+      <view class="m-entry-arrow">›</view>
+    </view>
+    <view class="m-entry" bindtap="goShop">
+      <view class="m-entry-icon">店</view>
+      <view class="m-entry-info">
+        <view class="m-entry-title">我的店铺主页</view>
+        <view class="m-entry-sub">查看顾客看到的产品与门店信息</view>
+      </view>
+      <view class="m-entry-arrow">›</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="m-entry" bindtap="unbind">
+      <view class="m-entry-icon">解</view>
+      <view class="m-entry-info">
+        <view class="m-entry-title">解绑当前微信</view>
+        <view class="m-entry-sub">换微信管理店铺时使用，数据不受影响</view>
+      </view>
+      <view class="m-entry-arrow">›</view>
+    </view>
+  </view>
+
+  <view class="m-form-tip" style="text-align: center">商户身份仅对当前微信生效，请勿在公用设备上绑定</view>
+</view>

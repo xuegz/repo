@@ -12,6 +12,18 @@
     "pages/favorites/favorites",
     "pages/mine/mine"
   ],
+  "subPackages": [
+    {
+      "root": "pages/merchant",
+      "pages": [
+        "login/login",
+        "home/home",
+        "products/products",
+        "edit/edit",
+        "inquiries/inquiries"
+      ]
+    }
+  ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#1f2937",

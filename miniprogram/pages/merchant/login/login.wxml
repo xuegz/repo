@@ -1,0 +1,40 @@
+<view class="page">
+  <view class="m-login-hero">
+    <view class="m-login-title">{{shopName || '商家中心'}}</view>
+    <view class="m-login-sub" wx:if="{{mode === 'bind'}}">用入驻手机号绑定当前微信，绑定后即可在小程序内发布产品、处理询价。</view>
+    <view class="m-login-sub" wx:else>为保障账号安全，请先修改初始密码（初始密码为 123456）。</view>
+  </view>
+
+  <view class="card" wx:if="{{mode === 'bind'}}">
+    <view class="form-item">
+      <view class="form-label">商户账号</view>
+      <input class="form-input" placeholder="入驻时填写的手机号" value="{{username}}" data-field="username" bindinput="onInput" maxlength="20" />
+    </view>
+    <view class="form-item">
+      <view class="form-label">密码</view>
+      <input class="form-input" password placeholder="初始密码，默认 123456" value="{{password}}" data-field="password" bindinput="onInput" maxlength="32" />
+    </view>
+    <button class="submit-btn" bindtap="submitBind" loading="{{submitting}}">绑定商户账号</button>
+    <view class="m-form-tip">绑定后当前微信会记住商户身份，同一商户可由多个微信分别绑定。忘记密码请联系平台重置。</view>
+  </view>
+
+  <view class="card" wx:else>
+    <view class="form-item">
+      <view class="form-label">原密码</view>
+      <input class="form-input" password placeholder="请输入当前密码" value="{{oldPassword}}" data-field="oldPassword" bindinput="onInput" maxlength="32" />
+    </view>
+    <view class="form-item">
+      <view class="form-label">新密码</view>
+      <input class="form-input" password placeholder="6-32 位，不能与原密码相同" value="{{newPassword}}" data-field="newPassword" bindinput="onInput" maxlength="32" />
+    </view>
+    <view class="form-item">
+      <view class="form-label">确认新密码</view>
+      <input class="form-input" password placeholder="再次输入新密码" value="{{confirmPassword}}" data-field="confirmPassword" bindinput="onInput" maxlength="32" />
+    </view>
+    <button class="submit-btn" bindtap="submitChange" loading="{{submitting}}">保存新密码</button>
+    <view class="m-form-tip">修改成功后，管理后台等其他端请使用新密码登录；当前微信无需重新绑定。</view>
+  </view>
+
+  <view class="m-login-links" wx:if="{{mode === 'bind'}}" bindtap="showApplyTip">还没有商户账号？去入驻</view>
+  <view class="m-login-links" bindtap="backMine">返回「我的」</view>
+</view>

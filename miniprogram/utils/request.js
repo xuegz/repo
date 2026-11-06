@@ -163,6 +163,31 @@ function checkFavorite(targetType, targetId) {
   })
 }
 
+/** 上传图片（头像等），返回可访问地址 */
+function uploadImage(filePath) {
+  return new Promise(function (resolve, reject) {
+    wx.uploadFile({
+      url: BASE_URL + '/upload',
+      filePath: filePath,
+      name: 'file',
+      success: function (res) {
+        let body = {}
+        try {
+          body = JSON.parse(res.data)
+        } catch (e) {}
+        if (body.code === 200 && body.data && body.data.url) {
+          resolve(body.data.url)
+        } else {
+          reject(new Error(body.msg || '图片上传失败'))
+        }
+      },
+      fail: function () {
+        reject(new Error('图片上传失败，请检查网络'))
+      }
+    })
+  })
+}
+
 /**
  * 检查是否有新的商户报价，未读时在 tabBar「我的」显示红点
  * 静默请求，不打扰用户；返回最新报价时间戳
@@ -212,6 +237,7 @@ module.exports = {
   request: request,
   ensureLogin: ensureLogin,
   openidRequest: openidRequest,
+  uploadImage: uploadImage,
   reportView: reportView,
   reportForward: reportForward,
   reportCall: reportCall,

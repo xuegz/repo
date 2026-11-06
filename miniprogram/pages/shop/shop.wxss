@@ -1,0 +1,61 @@
+/* 商户主页操作按钮 */
+.shop-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 20rpx;
+}
+.shop-action-primary {
+  flex: 1;
+  height: 84rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 42rpx;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 29rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.shop-action-ghost {
+  flex: 1;
+  height: 84rpx;
+  margin-left: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 42rpx;
+  background: #fff5eb;
+  border: 1rpx solid #ffd9b3;
+  color: #ff7a00;
+  font-size: 29rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.shop-action-fav {
+  width: 96rpx;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.shop-action-fav-icon {
+  font-size: 34rpx;
+  line-height: 1;
+  color: #9aa1aa;
+}
+.shop-action-fav-text {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  line-height: 1;
+  color: #9aa1aa;
+}
+.shop-action-fav.active .shop-action-fav-icon,
+.shop-action-fav.active .shop-action-fav-text {
+  color: #ff7a00;
+}
+.shop-action-hover {
+  opacity: 0.85;
+}
