@@ -48,6 +48,7 @@ public class ChatService {
     private final ChatSocketRegistry registry;
     private final WxSubscribeService wxSubscribeService;
     private final OperationLogService operationLogService;
+    private final FeedbackService feedbackService;
     private final ObjectMapper objectMapper;
 
     /** 打开（不存在则创建）与商家的会话 */
@@ -95,8 +96,9 @@ public class ChatService {
         return rows;
     }
 
-    /** afterId>0 时增量拉取，否则取最近 50 条 */
-    public List<Map<String, Object>> messages(Long conversationId, String openid, Long merchantId, Long afterId) {
+    /** afterId>0 增量拉取；beforeId>0 上翻历史；都不传时取最近 50 条 */
+    public List<Map<String, Object>> messages(Long conversationId, String openid, Long merchantId,
+                                              Long afterId, Long beforeId) {
         ChatConversation conversation = requireConversation(conversationId);
         checkAccess(conversation, openid, merchantId);
         List<ChatMessage> list;
@@ -107,12 +109,26 @@ public class ChatService {
                     .orderByAsc(ChatMessage::getId)
                     .last("LIMIT 100"));
         } else {
-            list = messageMapper.selectList(Wrappers.<ChatMessage>lambdaQuery()
-                    .eq(ChatMessage::getConversationId, conversationId)
+            var wrapper = Wrappers.<ChatMessage>lambdaQuery()
+                    .eq(ChatMessage::getConversationId, conversationId);
+            if (beforeId != null && beforeId > 0) {
+                wrapper.lt(ChatMessage::getId, beforeId);
+            }
+            list = messageMapper.selectList(wrapper
                     .orderByDesc(ChatMessage::getId)
                     .last("LIMIT 50"));
             Collections.reverse(list);
         }
+        return list.stream().map(this::messageView).collect(Collectors.toList());
+    }
+
+    /** 平台端查看举报关联会话，不做归属校验 */
+    public List<Map<String, Object>> adminMessages(Long conversationId) {
+        List<ChatMessage> list = messageMapper.selectList(Wrappers.<ChatMessage>lambdaQuery()
+                .eq(ChatMessage::getConversationId, conversationId)
+                .orderByDesc(ChatMessage::getId)
+                .last("LIMIT 100"));
+        Collections.reverse(list);
         return list.stream().map(this::messageView).collect(Collectors.toList());
     }
 
@@ -151,15 +167,15 @@ public class ChatService {
                 .set(ChatConversation::getUpdateTime, LocalDateTime.now()));
     }
 
-    /** 用户举报会话，写入操作日志供平台核查 */
+    /** 用户举报会话：写入反馈表供平台处理，同时保留操作日志 */
     public void reportConversation(String openid, Long conversationId, String reason) {
         ChatConversation conversation = requireConversation(conversationId);
         String target = requireOpenid(openid);
         checkAccess(conversation, target, null);
         String detail = reason == null || reason.isBlank() ? "用户举报会话" : reason.trim();
-        if (detail.length() > 200) {
-            detail = detail.substring(0, 200);
-        }
+        Merchant merchant = merchantMapper.selectById(conversation.getMerchantId());
+        feedbackService.report(target, conversationId, conversation.getMerchantId(),
+                merchant == null ? null : merchant.getName(), detail);
         operationLogService.record("chat_report", "conversation", conversationId, detail);
     }
 

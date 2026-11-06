@@ -27,8 +27,9 @@ public class MerchantChatController {
 
     @GetMapping("/messages")
     public R<List<Map<String, Object>>> messages(@RequestParam Long conversationId,
-                                                 @RequestParam(required = false) Long afterId) {
-        return R.ok(chatService.messages(conversationId, null, UserContext.getMerchantId(), afterId));
+                                                 @RequestParam(required = false) Long afterId,
+                                                 @RequestParam(required = false) Long beforeId) {
+        return R.ok(chatService.messages(conversationId, null, UserContext.getMerchantId(), afterId, beforeId));
     }
 
     @PostMapping("/send")

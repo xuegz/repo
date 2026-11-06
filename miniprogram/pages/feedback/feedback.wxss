@@ -1,0 +1,99 @@
+.feedback-header {
+  background: linear-gradient(135deg, #1f2937, #ff7a00);
+}
+.feedback-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #fff;
+}
+.feedback-sub {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 10rpx;
+}
+.category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 4rpx;
+}
+.chip {
+  padding: 10rpx 26rpx;
+  margin: 0 14rpx 14rpx 0;
+  border-radius: 30rpx;
+  background: #f2f4f7;
+  color: #606266;
+  font-size: 25rpx;
+}
+.chip.active {
+  background: #fff4e8;
+  color: #ff7a00;
+  border: 1rpx solid #ffd9b3;
+}
+.feedback-textarea {
+  height: 220rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 10rpx;
+  padding: 16rpx 20rpx;
+  box-sizing: border-box;
+}
+.counter {
+  text-align: right;
+  font-size: 22rpx;
+  color: #c0c4cc;
+  margin-top: 8rpx;
+}
+.record {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f2f5;
+}
+.record:last-child {
+  border-bottom: none;
+}
+.record-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.record-category {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #303133;
+}
+.record-status {
+  padding: 4rpx 14rpx;
+  border-radius: 18rpx;
+  background: #fff4e8;
+  color: #ff7a00;
+  font-size: 21rpx;
+}
+.record-status.done {
+  background: #e8f7ee;
+  color: #18a058;
+}
+.record-content {
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  color: #606266;
+  line-height: 1.6;
+  word-break: break-all;
+}
+.record-time {
+  margin-top: 8rpx;
+  font-size: 21rpx;
+  color: #c0c4cc;
+}
+.record-reply {
+  margin-top: 12rpx;
+  padding: 14rpx 18rpx;
+  background: #fffaf4;
+  border: 1rpx solid #ffe2c2;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  color: #606266;
+  line-height: 1.6;
+  word-break: break-all;
+}
+.record-reply-label {
+  color: #d46b08;
+  font-weight: bold;
+}

@@ -68,7 +68,8 @@ import request from '@/api/request'
 const actionOptions = [
   { value: 'merchant_audit', label: '商户审核' },
   { value: 'merchant_reset_password', label: '重置密码' },
-  { value: 'product_audit', label: '产品审核' }
+  { value: 'product_audit', label: '产品审核' },
+  { value: 'feedback_handle', label: '反馈处理' }
 ]
 const query = reactive({ pageNum: 1, pageSize: 10, action: '', username: '' })
 const dateRange = ref([])

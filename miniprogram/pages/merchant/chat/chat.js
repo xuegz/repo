@@ -36,7 +36,9 @@ Page({
     scrollInto: '',
     sending: false,
     loading: true,
-    empty: false
+    empty: false,
+    hasMore: false,
+    loadingEarlier: false
   },
 
   onLoad: function (options) {
@@ -46,6 +48,8 @@ Page({
     this.reconnectTimer = null
     this.pollTimer = null
     this.lastId = 0
+    this.firstId = 0
+    this.nearBottom = true
     this.unloaded = false
     if (!merchant.token()) {
       merchant.toLogin()
@@ -70,6 +74,10 @@ Page({
     }
   },
 
+  onReady: function () {
+    this.measureViewport()
+  },
+
   onHide: function () {
     this.closeWs()
     this.stopPolling()
@@ -86,15 +94,63 @@ Page({
     merchant.merchantRequest('/chat/messages', 'GET', { conversationId: this.data.conversationId })
       .then(function (rows) {
         const list = decorate(rows || [])
-        that.setData({ messages: list, loading: false, empty: list.length === 0 })
+        that.setData({
+          messages: list,
+          loading: false,
+          empty: list.length === 0,
+          hasMore: list.length >= 50
+        })
         if (list.length) {
           that.lastId = list[list.length - 1].id
+          that.firstId = list[0].id
           that.scrollToBottom()
         }
       })
       .catch(function () {
         that.setData({ loading: false })
       })
+  },
+
+  loadEarlier: function () {
+    if (this.data.loadingEarlier || !this.data.hasMore || !this.data.conversationId) return
+    const anchor = this.firstId
+    if (!anchor) return
+    const that = this
+    this.setData({ loadingEarlier: true })
+    return merchant.merchantRequest('/chat/messages', 'GET', {
+      conversationId: this.data.conversationId,
+      beforeId: anchor
+    }).then(function (rows) {
+      const older = decorate(rows || [])
+      const exists = {}
+      const current = that.data.messages.slice()
+      current.forEach(function (item) { exists[item.id] = true })
+      const added = older.filter(function (item) { return !exists[item.id] })
+      const merged = added.concat(current)
+      that.firstId = merged.length ? merged[0].id : anchor
+      that.setData({
+        messages: merged,
+        loadingEarlier: false,
+        hasMore: older.length >= 50,
+        scrollInto: 'msg-' + anchor
+      })
+    }).catch(function () {
+      that.setData({ loadingEarlier: false })
+    })
+  },
+
+  onScroll: function (e) {
+    const detail = e.detail || {}
+    if (this.viewportHeight && detail.scrollHeight) {
+      this.nearBottom = detail.scrollTop + this.viewportHeight >= detail.scrollHeight - 80
+    }
+  },
+
+  measureViewport: function () {
+    const that = this
+    wx.createSelectorQuery().select('.chat-scroll').boundingClientRect(function (rect) {
+      if (rect) that.viewportHeight = rect.height
+    }).exec()
   },
 
   pullNew: function () {
@@ -135,7 +191,11 @@ Page({
     const merged = list.concat(added).sort(function (a, b) { return a.id - b.id })
     this.setData({ messages: merged, empty: false })
     this.lastId = merged[merged.length - 1].id
-    this.scrollToBottom()
+    // 商户正在上翻历史时不强行拉回底部
+    const selfSent = added.some(function (item) { return item.sender === 'merchant' })
+    if (this.nearBottom !== false || selfSent) {
+      this.scrollToBottom()
+    }
   },
 
   scrollToBottom: function () {

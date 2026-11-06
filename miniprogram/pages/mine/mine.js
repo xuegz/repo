@@ -132,6 +132,10 @@ Page({
     wx.navigateTo({ url: '/pages/favorites/favorites' })
   },
 
+  goFeedback: function () {
+    wx.navigateTo({ url: '/pages/feedback/feedback' })
+  },
+
   callService: function () {
     wx.makePhoneCall({
       phoneNumber: this.data.servicePhone,

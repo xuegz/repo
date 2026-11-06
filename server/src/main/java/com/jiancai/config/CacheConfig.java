@@ -21,13 +21,19 @@ public class CacheConfig {
     public static final String BANNER = "mpBanner";
     public static final String AD = "mpAd";
     public static final String NOTICE = "mpNotice";
+    public static final String MARKET = "mpMarket";
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager manager = new CaffeineCacheManager(CATEGORY, BANNER, AD, NOTICE);
+        CaffeineCacheManager manager = new CaffeineCacheManager();
         manager.setCaffeine(Caffeine.newBuilder()
                 .maximumSize(200)
                 .expireAfterWrite(Duration.ofMinutes(30)));
+        // 市场列表带商户数量，变化相对频繁，单独用 2 分钟短缓存
+        manager.registerCustomCache(MARKET, Caffeine.newBuilder()
+                .maximumSize(10)
+                .expireAfterWrite(Duration.ofMinutes(2))
+                .build());
         return manager;
     }
 }

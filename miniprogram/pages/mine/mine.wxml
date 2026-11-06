@@ -63,6 +63,10 @@
   </view>
 
   <view class="card">
+    <view class="menu-item" bindtap="goFeedback">
+      <text>意见反馈</text>
+      <text class="menu-right">提交建议 / 问题 ›</text>
+    </view>
     <view class="menu-item" bindtap="callService">
       <text>联系客服</text>
       <text class="menu-right">{{servicePhone}}</text>

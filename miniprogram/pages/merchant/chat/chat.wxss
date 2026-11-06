@@ -22,6 +22,17 @@ page {
   padding-top: 40rpx;
 }
 
+.chat-earlier {
+  text-align: center;
+  font-size: 24rpx;
+  color: #ff7a00;
+  padding: 8rpx 0 24rpx;
+}
+
+.chat-earlier-loading {
+  color: #c0c4cc;
+}
+
 .chat-empty {
   padding: 120rpx 40rpx 0;
   text-align: center;

@@ -12,7 +12,8 @@
     "pages/favorites/favorites",
     "pages/message/message",
     "pages/chat/chat",
-    "pages/mine/mine"
+    "pages/mine/mine",
+    "pages/feedback/feedback"
   ],
   "subPackages": [
     {

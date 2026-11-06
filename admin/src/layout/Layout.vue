@@ -62,6 +62,7 @@ const adminMenus = [
   { path: '/product', title: '产品管理', icon: 'Goods' },
   { path: '/category', title: '品类管理', icon: 'Menu' },
   { path: '/content', title: '内容管理', icon: 'Picture' },
+  { path: '/feedback', title: '反馈处理', icon: 'ChatLineSquare' },
   { path: '/log', title: '操作日志', icon: 'Document' }
 ]
 

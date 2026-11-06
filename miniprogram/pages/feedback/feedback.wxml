@@ -1,0 +1,41 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <view class="card feedback-header">
+    <view class="feedback-title">意见反馈</view>
+    <view class="feedback-sub">使用中遇到问题或有改进建议，都可以告诉我们</view>
+  </view>
+
+  <view class="card">
+    <view class="form-label">反馈类型</view>
+    <view class="category-chips">
+      <view wx:for="{{categories}}" wx:key="*this" class="chip {{category === item ? 'active' : ''}}" data-name="{{item}}" bindtap="onCategory">{{item}}</view>
+    </view>
+    <view class="form-item">
+      <view class="form-label">反馈内容 <text class="req">*</text></view>
+      <textarea class="form-textarea feedback-textarea" maxlength="1000" placeholder="请描述你遇到的问题或建议，至少 5 个字" value="{{content}}" bindinput="onContent" />
+      <view class="counter">{{content.length}}/1000</view>
+    </view>
+    <view class="form-item">
+      <view class="form-label">联系方式（选填）</view>
+      <input class="form-input" maxlength="64" placeholder="手机号 / 微信号，便于我们回复" value="{{contact}}" bindinput="onContact" />
+    </view>
+    <button class="submit-btn" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">提交反馈</button>
+  </view>
+
+  <view class="card">
+    <view class="section-title" style="margin: 0 0 10rpx">我的反馈</view>
+    <view class="empty" wx:if="{{records.length === 0}}">还没有提交过反馈</view>
+    <view class="record" wx:for="{{records}}" wx:key="id">
+      <view class="record-head">
+        <text class="record-category">{{item.category || '意见反馈'}}</text>
+        <text class="record-status {{item.status === 1 ? 'done' : ''}}">{{item.status === 1 ? '已处理' : '待处理'}}</text>
+      </view>
+      <view class="record-content">{{item.content}}</view>
+      <view class="record-time">{{tools.dateText(item.createTime)}}</view>
+      <view class="record-reply" wx:if="{{item.reply}}">
+        <text class="record-reply-label">平台回复：</text>{{item.reply}}
+      </view>
+    </view>
+  </view>
+</view>

@@ -13,7 +13,10 @@ let tokenCache = ''
 let loginPromise = null
 let lastLoginToastAt = 0
 
-/** 聊天接口的登录凭证（与 openid 一并由 /login 下发） */
+/**
+ * 聊天接口的登录凭证（与 openid 一并由 /login 下发）
+ * 同样用于需要身份校验的意见反馈接口
+ */
 function getChatToken() {
   if (tokenCache) {
     return tokenCache
@@ -35,8 +38,8 @@ function request(url, method = 'GET', data = {}) {
   // url 以 http 开头时视为完整地址，便于调用非 /api/mp 前缀的接口
   const target = url.indexOf('http') === 0 ? url : BASE_URL + url
   const header = { 'content-type': 'application/json' }
-  const isChat = url.indexOf('/chat/') >= 0
-  if (isChat && getChatToken()) {
+  const needsAuth = url.indexOf('/chat/') >= 0 || url.indexOf('/feedback') >= 0
+  if (needsAuth && getChatToken()) {
     header.Authorization = 'Bearer ' + getChatToken()
   }
   return new Promise((resolve, reject) => {
@@ -50,7 +53,7 @@ function request(url, method = 'GET', data = {}) {
         if (body.code === 200) {
           resolve(body.data)
         } else {
-          if (isChat && body.code === 401) {
+          if (needsAuth && body.code === 401) {
             clearLogin()
           }
           wx.showToast({ title: body.msg || '请求失败', icon: 'none' })

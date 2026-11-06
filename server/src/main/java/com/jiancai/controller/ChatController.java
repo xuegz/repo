@@ -3,6 +3,7 @@ package com.jiancai.controller;
 import com.jiancai.common.BusinessException;
 import com.jiancai.common.R;
 import com.jiancai.security.JwtUtil;
+import com.jiancai.security.MpAuth;
 import com.jiancai.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -39,8 +40,9 @@ public class ChatController {
     public R<List<Map<String, Object>>> messages(@RequestHeader(value = "Authorization", required = false) String auth,
                                                  @RequestParam(required = false) String openid,
                                                  @RequestParam Long conversationId,
-                                                 @RequestParam(required = false) Long afterId) {
-        return R.ok(chatService.messages(conversationId, authOpenid(auth, openid), null, afterId));
+                                                 @RequestParam(required = false) Long afterId,
+                                                 @RequestParam(required = false) Long beforeId) {
+        return R.ok(chatService.messages(conversationId, authOpenid(auth, openid), null, afterId, beforeId));
     }
 
     @PostMapping("/send")
@@ -77,20 +79,7 @@ public class ChatController {
 
     /** 校验用户 token，openid 仅用于前端兼容，必须与 token 一致 */
     private String authOpenid(String authorization, String claimed) {
-        String token = authorization == null ? "" : authorization.trim();
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7).trim();
-        }
-        String openid;
-        try {
-            openid = jwtUtil.parseUserOpenid(token);
-        } catch (Exception e) {
-            throw new BusinessException(401, "登录已过期，请重新进入小程序");
-        }
-        if (claimed != null && !claimed.isBlank() && !claimed.equals(openid)) {
-            throw new BusinessException(403, "身份不匹配");
-        }
-        return openid;
+        return MpAuth.requireOpenid(jwtUtil, authorization, claimed);
     }
 
     private static String text(Object value) {

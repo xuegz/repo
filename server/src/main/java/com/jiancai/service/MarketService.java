@@ -3,13 +3,18 @@ package com.jiancai.service;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jiancai.common.BusinessException;
+import com.jiancai.config.CacheConfig;
 import com.jiancai.entity.Market;
 import com.jiancai.entity.Merchant;
 import com.jiancai.entity.Product;
 import com.jiancai.mapper.MarketMapper;
 import com.jiancai.mapper.MerchantMapper;
 import com.jiancai.mapper.ProductMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,20 +35,42 @@ public class MarketService extends ServiceImpl<MarketMapper, Market> {
     @Autowired
     private ProductMapper productMapper;
 
+    /** 自身代理：走 @Cacheable，避免同类内调用绕过缓存 */
+    @Autowired
+    @Lazy
+    private MarketService self;
+
     /** 小程序端可用市场：按排序值倒序，可附加距离与数量 */
     public List<Market> listEnabled(Double lat, Double lng, String sort, Integer limit) {
-        List<Market> list = list(Wrappers.<Market>lambdaQuery()
-                .eq(Market::getStatus, 1)
-                .orderByDesc(Market::getSort)
-                .orderByAsc(Market::getId));
-        for (Market market : list) {
-            fillInfo(market, lat, lng);
+        List<Market> base = self.listEnabledBase();
+        List<Market> list = new ArrayList<>(base.size());
+        for (Market source : base) {
+            Market copy = new Market();
+            BeanUtils.copyProperties(source, copy);
+            if (lat != null && lng != null && copy.getLatitude() != null && copy.getLongitude() != null) {
+                copy.setDistance(distanceKm(lat, lng,
+                        copy.getLatitude().doubleValue(), copy.getLongitude().doubleValue()));
+            }
+            list.add(copy);
         }
         if ("distance".equals(sort) && lat != null && lng != null) {
             list.sort(Comparator.comparing(m -> m.getDistance() == null ? Double.MAX_VALUE : m.getDistance()));
         }
         if (limit != null && limit > 0 && list.size() > limit) {
             return new ArrayList<>(list.subList(0, limit));
+        }
+        return list;
+    }
+
+    /** 缓存基础列表（含商户数），距离在返回前按请求坐标单独计算 */
+    @Cacheable(cacheNames = CacheConfig.MARKET, key = "'enabled'")
+    public List<Market> listEnabledBase() {
+        List<Market> list = list(Wrappers.<Market>lambdaQuery()
+                .eq(Market::getStatus, 1)
+                .orderByDesc(Market::getSort)
+                .orderByAsc(Market::getId));
+        for (Market market : list) {
+            fillInfo(market, null, null);
         }
         return list;
     }
@@ -98,6 +125,7 @@ public class MarketService extends ServiceImpl<MarketMapper, Market> {
         return data;
     }
 
+    @CacheEvict(cacheNames = CacheConfig.MARKET, allEntries = true)
     public void saveMarket(Market market) {
         if (market.getName() == null || market.getName().isBlank()) {
             throw new BusinessException("请填写市场名称");
@@ -128,6 +156,7 @@ public class MarketService extends ServiceImpl<MarketMapper, Market> {
                 .set(Merchant::getMarket, market.getName()));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.MARKET, allEntries = true)
     public void removeMarket(Long id) {
         Market market = getById(id);
         if (market == null) {

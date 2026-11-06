@@ -1,6 +1,10 @@
 <wxs src="../../../utils/tools.wxs" module="tools" />
 <view class="chat-page">
-  <scroll-view class="chat-scroll" scroll-y scroll-into-view="{{scrollInto}}" scroll-with-animation>
+  <scroll-view class="chat-scroll" scroll-y scroll-into-view="{{scrollInto}}" scroll-with-animation bindscroll="onScroll">
+    <view wx:if="{{hasMore}}" class="chat-earlier {{loadingEarlier ? 'chat-earlier-loading' : ''}}" bindtap="loadEarlier">
+      {{loadingEarlier ? '加载中…' : '查看更早消息'}}
+    </view>
+
     <view wx:if="{{loading}}" class="chat-tip">加载中…</view>
 
     <view wx:elif="{{empty}}" class="chat-empty">
