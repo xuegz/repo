@@ -130,14 +130,18 @@
 }
 
 .msg-empty-btn {
-  display: inline-block;
-  min-width: 240rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 240rpx;
   height: 72rpx;
-  line-height: 72rpx;
+  padding: 0;
+  margin: 0 auto;
   border-radius: 36rpx;
   background: #ff7a00;
   color: #fff;
   font-size: 28rpx;
+  line-height: 1;
 }
 
 .msg-tip {

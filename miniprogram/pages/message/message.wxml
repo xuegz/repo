@@ -1,3 +1,4 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
 <view class="msg-page">
   <view wx:if="{{loading}}" class="msg-empty">加载中…</view>
 
@@ -10,7 +11,7 @@
 
   <view wx:else class="msg-list">
     <view class="msg-item" wx:for="{{list}}" wx:key="conversationId" data-item="{{item}}" bindtap="openChat" hover-class="msg-item-hover" hover-stay-time="60">
-      <image wx:if="{{item.merchantLogo}}" class="msg-avatar-img" src="{{item.merchantLogo}}" mode="aspectFill" />
+      <image wx:if="{{item.merchantLogo}}" class="msg-avatar-img" src="{{tools.thumbUrl(item.merchantLogo, 160)}}" mode="aspectFill" />
       <view wx:else class="msg-avatar">{{item.initial}}</view>
       <view class="msg-main">
         <view class="msg-row">

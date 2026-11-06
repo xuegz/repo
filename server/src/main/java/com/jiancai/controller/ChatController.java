@@ -2,6 +2,7 @@ package com.jiancai.controller;
 
 import com.jiancai.common.BusinessException;
 import com.jiancai.common.R;
+import com.jiancai.security.JwtUtil;
 import com.jiancai.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,49 +19,78 @@ import java.util.Map;
 public class ChatController {
 
     private final ChatService chatService;
+    private final JwtUtil jwtUtil;
 
     /** 打开与某商户的会话（不存在时创建） */
     @PostMapping("/open")
-    public R<Map<String, Object>> open(@RequestBody Map<String, Object> body) {
-        return R.ok(chatService.openConversation(text(body.get("openid")), toLong(body.get("merchantId"))));
+    public R<Map<String, Object>> open(@RequestHeader(value = "Authorization", required = false) String auth,
+                                       @RequestBody Map<String, Object> body) {
+        return R.ok(chatService.openConversation(authOpenid(auth, text(body.get("openid"))),
+                toLong(body.get("merchantId"))));
     }
 
     @GetMapping("/list")
-    public R<List<Map<String, Object>>> list(@RequestParam String openid) {
-        return R.ok(chatService.listForUser(openid));
+    public R<List<Map<String, Object>>> list(@RequestHeader(value = "Authorization", required = false) String auth,
+                                             @RequestParam(required = false) String openid) {
+        return R.ok(chatService.listForUser(authOpenid(auth, openid)));
     }
 
     @GetMapping("/messages")
-    public R<List<Map<String, Object>>> messages(@RequestParam String openid,
+    public R<List<Map<String, Object>>> messages(@RequestHeader(value = "Authorization", required = false) String auth,
+                                                 @RequestParam(required = false) String openid,
                                                  @RequestParam Long conversationId,
                                                  @RequestParam(required = false) Long afterId) {
-        return R.ok(chatService.messages(conversationId, openid, null, afterId));
+        return R.ok(chatService.messages(conversationId, authOpenid(auth, openid), null, afterId));
     }
 
     @PostMapping("/send")
-    public R<Map<String, Object>> send(@RequestBody Map<String, Object> body) {
-        return R.ok(chatService.sendAsUser(text(body.get("openid")), toLong(body.get("conversationId")),
-                text(body.get("type")), text(body.get("content")), toLong(body.get("productId"))));
+    public R<Map<String, Object>> send(@RequestHeader(value = "Authorization", required = false) String auth,
+                                       @RequestBody Map<String, Object> body) {
+        return R.ok(chatService.sendAsUser(authOpenid(auth, text(body.get("openid"))),
+                toLong(body.get("conversationId")), text(body.get("type")), text(body.get("content")),
+                toLong(body.get("productId"))));
     }
 
     @PostMapping("/read")
-    public R<Void> read(@RequestBody Map<String, Object> body) {
-        chatService.markReadAsUser(text(body.get("openid")), toLong(body.get("conversationId")));
+    public R<Void> read(@RequestHeader(value = "Authorization", required = false) String auth,
+                        @RequestBody Map<String, Object> body) {
+        chatService.markReadAsUser(authOpenid(auth, text(body.get("openid"))),
+                toLong(body.get("conversationId")));
         return R.ok();
     }
 
     /** 举报会话：写入操作日志供平台核查 */
     @PostMapping("/report")
-    public R<Void> report(@RequestBody Map<String, Object> body) {
-        chatService.reportConversation(text(body.get("openid")), toLong(body.get("conversationId")),
-                text(body.get("reason")));
+    public R<Void> report(@RequestHeader(value = "Authorization", required = false) String auth,
+                          @RequestBody Map<String, Object> body) {
+        chatService.reportConversation(authOpenid(auth, text(body.get("openid"))),
+                toLong(body.get("conversationId")), text(body.get("reason")));
         return R.ok();
     }
 
     /** 消息 tab 未读红点用的汇总数 */
     @GetMapping("/unread")
-    public R<Integer> unread(@RequestParam String openid) {
-        return R.ok(chatService.unreadForUser(openid));
+    public R<Integer> unread(@RequestHeader(value = "Authorization", required = false) String auth,
+                             @RequestParam(required = false) String openid) {
+        return R.ok(chatService.unreadForUser(authOpenid(auth, openid)));
+    }
+
+    /** 校验用户 token，openid 仅用于前端兼容，必须与 token 一致 */
+    private String authOpenid(String authorization, String claimed) {
+        String token = authorization == null ? "" : authorization.trim();
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7).trim();
+        }
+        String openid;
+        try {
+            openid = jwtUtil.parseUserOpenid(token);
+        } catch (Exception e) {
+            throw new BusinessException(401, "登录已过期，请重新进入小程序");
+        }
+        if (claimed != null && !claimed.isBlank() && !claimed.equals(openid)) {
+            throw new BusinessException(403, "身份不匹配");
+        }
+        return openid;
     }
 
     private static String text(Object value) {

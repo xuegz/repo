@@ -23,6 +23,9 @@ public class JwtUtil {
     @Value("${jiancai.jwt.expire-hours}")
     private long expireHours;
 
+    @Value("${jiancai.jwt.user-expire-hours:720}")
+    private long userExpireHours;
+
     private SecretKey getKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
@@ -39,6 +42,41 @@ public class JwtUtil {
                 .expiration(new Date(now + expireHours * 3600_000))
                 .signWith(getKey())
                 .compact();
+    }
+
+    /** 小程序用户 token：只承载 openid，用于聊天接口与长连接 */
+    public String generateUserToken(String openid) {
+        long now = System.currentTimeMillis();
+        return Jwts.builder()
+                .subject(openid)
+                .claim("type", "mp")
+                .claim("openid", openid)
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + userExpireHours * 3600_000))
+                .signWith(getKey())
+                .compact();
+    }
+
+    /** 校验小程序用户 token 并返回 openid */
+    public String parseUserOpenid(String token) {
+        if (token == null || token.isBlank()) {
+            throw new JwtException("缺少登录凭证");
+        }
+        Claims claims;
+        try {
+            claims = Jwts.parser().verifyWith(getKey()).build()
+                    .parseSignedClaims(token.trim()).getPayload();
+        } catch (JwtException e) {
+            throw new JwtException("登录已过期");
+        }
+        if (!"mp".equals(claims.get("type"))) {
+            throw new JwtException("凭证类型不正确");
+        }
+        Object openid = claims.get("openid");
+        if (openid == null || openid.toString().isBlank()) {
+            throw new JwtException("凭证无效");
+        }
+        return openid.toString();
     }
 
     /** 解析 token，失败时抛 JwtException */

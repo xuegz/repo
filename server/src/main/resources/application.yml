@@ -40,6 +40,8 @@ jiancai:
     # 生产环境请替换为随机字符串
     secret: jiancai-platform-secret-key-please-change-me-2026
     expire-hours: 24
+    # 小程序用户聊天 token 有效期（小时）
+    user-expire-hours: ${JWT_USER_EXPIRE_HOURS:720}
   upload:
     # 图片上传目录（Windows 示例），未配置 OSS 时的本地回退目录
     path: D:/jiancai-upload/

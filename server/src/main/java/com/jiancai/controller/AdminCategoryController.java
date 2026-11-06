@@ -3,11 +3,13 @@ package com.jiancai.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.jiancai.common.BusinessException;
 import com.jiancai.common.R;
+import com.jiancai.config.CacheConfig;
 import com.jiancai.entity.Category;
 import com.jiancai.entity.Product;
 import com.jiancai.service.CategoryService;
 import com.jiancai.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +35,7 @@ public class AdminCategoryController {
     }
 
     @PostMapping("/save")
+    @CacheEvict(cacheNames = CacheConfig.CATEGORY, allEntries = true)
     public R<Void> save(@RequestBody Category category) {
         if (category.getName() == null || category.getName().isBlank()) {
             throw new BusinessException("请填写品类名称");
@@ -74,6 +77,7 @@ public class AdminCategoryController {
     }
 
     @PostMapping("/remove/{id}")
+    @CacheEvict(cacheNames = CacheConfig.CATEGORY, allEntries = true)
     public R<Void> remove(@PathVariable Long id) {
         long children = categoryService.count(
                 Wrappers.<Category>lambdaQuery().eq(Category::getParentId, id));

@@ -44,7 +44,7 @@ Page({
   },
 
   onShareAppMessage: function () {
-    return { title: '建材商户平台', path: '/pages/index/index' }
+    return { title: '材路通', path: '/pages/index/index' }
   },
 
   startTimer: function () {

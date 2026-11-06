@@ -5,10 +5,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jiancai.common.BusinessException;
-import com.jiancai.entity.Category;
 import com.jiancai.entity.Merchant;
 import com.jiancai.entity.Product;
-import com.jiancai.mapper.CategoryMapper;
 import com.jiancai.mapper.MerchantMapper;
 import com.jiancai.mapper.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +25,6 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ProductService extends ServiceImpl<ProductMapper, Product> {
-
-    @Autowired
-    private CategoryMapper categoryMapper;
 
     @Autowired
     private MerchantMapper merchantMapper;
@@ -80,8 +75,7 @@ public class ProductService extends ServiceImpl<ProductMapper, Product> {
         if (list == null || list.isEmpty()) {
             return;
         }
-        Map<Long, String> catMap = categoryMapper.selectList(null).stream()
-                .collect(Collectors.toMap(Category::getId, Category::getName, (a, b) -> a));
+        Map<Long, String> catMap = categoryService.nameMap();
         Map<Long, Merchant> merchantMap = merchantMapper.selectList(null).stream()
                 .collect(Collectors.toMap(Merchant::getId, m -> m, (a, b) -> a));
 

@@ -472,13 +472,13 @@ page {
 /* 首页快捷入口 */
 .entry-row {
   display: flex;
-  margin-top: 20rpx;
+  margin-top: 16rpx;
 }
 .entry-card {
   flex: 1;
   background: #fff;
-  border-radius: 12rpx;
-  padding: 24rpx;
+  border-radius: 10rpx;
+  padding: 18rpx 20rpx;
   margin-right: 16rpx;
 }
 .entry-card:last-child {
@@ -493,13 +493,13 @@ page {
   color: rgba(255, 255, 255, 0.85);
 }
 .entry-title {
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: bold;
 }
 .entry-sub {
-  font-size: 22rpx;
+  font-size: 21rpx;
   color: #909399;
-  margin-top: 6rpx;
+  margin-top: 4rpx;
 }
 
 /* 商户卡片 */

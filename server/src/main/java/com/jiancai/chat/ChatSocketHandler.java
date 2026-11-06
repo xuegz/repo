@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 聊天长连接：/ws/chat?role=user&openid=xxx 或 /ws/chat?role=merchant&token=xxx
- * 只负责接收推送，发消息仍走 REST 接口
+ * 聊天长连接：/ws/chat?role=user（Authorization: Bearer 用户 token）
+ * 或 /ws/chat?role=merchant&token=商户 token；只负责接收推送，发消息仍走 REST 接口
  */
 @Slf4j
 @Component
@@ -51,8 +51,21 @@ public class ChatSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        String openid = first(params, "openid");
-        if (openid.isEmpty() || openid.length() > 64
+        String token = first(params, "token");
+        if (token.isEmpty()) {
+            String auth = session.getHandshakeHeaders().getFirst("Authorization");
+            if (auth != null && auth.trim().startsWith("Bearer ")) {
+                token = auth.trim().substring(7).trim();
+            }
+        }
+        String openid;
+        try {
+            openid = jwtUtil.parseUserOpenid(token);
+        } catch (Exception e) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("登录已过期"));
+            return;
+        }
+        if (openid.length() > 64
                 || mpUserMapper.selectCount(Wrappers.<MpUser>lambdaQuery().eq(MpUser::getOpenid, openid)) == 0) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("用户不存在"));
             return;

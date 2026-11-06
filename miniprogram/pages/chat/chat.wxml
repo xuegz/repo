@@ -1,3 +1,4 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
 <view class="chat-page">
   <scroll-view class="chat-scroll" scroll-y scroll-into-view="{{scrollInto}}" scroll-with-animation>
     <view wx:if="{{loading}}" class="chat-tip">加载中…</view>
@@ -16,7 +17,7 @@
              data-url="{{item.content}}" data-sender="{{item.sender}}" bindtap="previewImage" bindlongpress="onBubbleLongPress" />
 
       <view wx:elif="{{item.type === 'product'}}" class="chat-product" data-id="{{item.product.id}}" bindtap="openProduct">
-        <image wx:if="{{item.product.image}}" class="chat-product-img" src="{{item.product.image}}" mode="aspectFill" />
+        <image wx:if="{{item.product.image}}" class="chat-product-img" src="{{tools.thumbUrl(item.product.image, 200)}}" mode="aspectFill" />
         <view class="chat-product-info">
           <view class="chat-product-name">{{item.product.name}}</view>
           <view class="chat-product-price" wx:if="{{item.product.price > 0}}">¥{{item.product.price}}<text wx:if="{{item.product.unit}}">/{{item.product.unit}}</text></view>

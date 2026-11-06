@@ -6,25 +6,53 @@
 const HOST = 'http://47.111.99.105'
 const BASE_URL = HOST + '/api/mp'
 const OPENID_FLAG = 'openidReal'
+const TOKEN_KEY = 'chatToken'
 
 let openidCache = ''
+let tokenCache = ''
 let loginPromise = null
 let lastLoginToastAt = 0
+
+/** 聊天接口的登录凭证（与 openid 一并由 /login 下发） */
+function getChatToken() {
+  if (tokenCache) {
+    return tokenCache
+  }
+  tokenCache = wx.getStorageSync(TOKEN_KEY) || ''
+  return tokenCache
+}
+
+function clearLogin() {
+  openidCache = ''
+  tokenCache = ''
+  loginPromise = null
+  wx.removeStorageSync('openid')
+  wx.removeStorageSync(OPENID_FLAG)
+  wx.removeStorageSync(TOKEN_KEY)
+}
 
 function request(url, method = 'GET', data = {}) {
   // url 以 http 开头时视为完整地址，便于调用非 /api/mp 前缀的接口
   const target = url.indexOf('http') === 0 ? url : BASE_URL + url
+  const header = { 'content-type': 'application/json' }
+  const isChat = url.indexOf('/chat/') >= 0
+  if (isChat && getChatToken()) {
+    header.Authorization = 'Bearer ' + getChatToken()
+  }
   return new Promise((resolve, reject) => {
     wx.request({
       url: target,
       method: method,
       data: data,
-      header: { 'content-type': 'application/json' },
+      header: header,
       success: function (res) {
         const body = res.data || {}
         if (body.code === 200) {
           resolve(body.data)
         } else {
+          if (isChat && body.code === 401) {
+            clearLogin()
+          }
           wx.showToast({ title: body.msg || '请求失败', icon: 'none' })
           reject(body)
         }
@@ -45,10 +73,11 @@ function cachedOpenid() {
   const stored = wx.getStorageSync('openid') || ''
   if (stored && wx.getStorageSync(OPENID_FLAG) === '1') {
     openidCache = stored
+    getChatToken()
     return openidCache
   }
   if (stored) {
-    wx.removeStorageSync('openid')
+    clearLogin()
   }
   return ''
 }
@@ -68,8 +97,11 @@ function wxLogin() {
           header: { 'content-type': 'application/json' },
           success: function (r) {
             const body = r.data || {}
-            if (body.code === 200 && body.data && body.data.openid) {
-              resolve(body.data.openid)
+            // 新版返回 { openid, token }，兼容旧版直接返回 openid 字符串
+            if (body.code === 200 && typeof body.data === 'string' && body.data) {
+              resolve({ openid: body.data, token: '' })
+            } else if (body.code === 200 && body.data && body.data.openid) {
+              resolve(body.data)
             } else {
               reject(new Error(body.msg || '微信登录失败，请稍后重试'))
             }
@@ -96,11 +128,15 @@ function ensureLogin() {
     return loginPromise
   }
   loginPromise = wxLogin()
-    .then(function (openid) {
-      openidCache = openid
-      wx.setStorageSync('openid', openid)
+    .then(function (session) {
+      openidCache = session.openid
+      tokenCache = session.token || ''
+      wx.setStorageSync('openid', openidCache)
       wx.setStorageSync(OPENID_FLAG, '1')
-      return openid
+      if (tokenCache) {
+        wx.setStorageSync(TOKEN_KEY, tokenCache)
+      }
+      return openidCache
     })
     .catch(function (err) {
       loginPromise = null
@@ -290,10 +326,14 @@ function checkChatNotice() {
   return ensureLogin()
     .then(function (openid) {
       return new Promise(function (resolve) {
+        const token = getChatToken()
         wx.request({
           url: BASE_URL + '/chat/unread',
           method: 'GET',
           data: { openid: openid },
+          header: token
+            ? { 'content-type': 'application/json', Authorization: 'Bearer ' + token }
+            : { 'content-type': 'application/json' },
           success: function (res) {
             const body = res.data || {}
             const count = body.code === 200 ? Number(body.data || 0) : 0
@@ -323,6 +363,8 @@ module.exports = {
   HOST: HOST,
   request: request,
   ensureLogin: ensureLogin,
+  getChatToken: getChatToken,
+  clearLogin: clearLogin,
   openidRequest: openidRequest,
   uploadImage: uploadImage,
   reportView: reportView,

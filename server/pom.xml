@@ -38,6 +38,16 @@
       <artifactId>spring-boot-starter-websocket</artifactId>
     </dependency>
 
+    <!-- 进程内缓存：配置类数据（品类/轮播/广告/公告）读多写少 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
+
     <!-- MyBatis-Plus（Spring Boot 3 专用 starter） -->
     <dependency>
       <groupId>com.baomidou</groupId>

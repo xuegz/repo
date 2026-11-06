@@ -15,8 +15,8 @@ import com.jiancai.entity.Product;
 import com.jiancai.entity.ViewRecord;
 import com.jiancai.mapper.FavoriteMapper;
 import com.jiancai.mapper.InquiryMapper;
-import com.jiancai.mapper.NoticeMapper;
 import com.jiancai.mapper.ViewRecordMapper;
+import com.jiancai.security.JwtUtil;
 import com.jiancai.service.CategoryService;
 import com.jiancai.service.MarketService;
 import com.jiancai.service.MerchantService;
@@ -72,9 +72,6 @@ public class MpController {
     private FavoriteMapper favoriteMapper;
 
     @Autowired
-    private NoticeMapper noticeMapper;
-
-    @Autowired
     private WxLoginService wxLoginService;
 
     @Autowired
@@ -82,6 +79,9 @@ public class MpController {
 
     @Autowired
     private WxSubscribeService wxSubscribeService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     /** 微信登录：小程序 wx.login 的 code 换 openid */
     @PostMapping("/login")
@@ -95,10 +95,19 @@ public class MpController {
         }
         Map<String, Object> session = wxLoginService.code2Session(code);
         Object openid = session == null ? null : session.get("openid");
-        if (openid != null) {
-            mpUserService.touchLogin(openid.toString());
+        if (openid == null) {
+            throw new BusinessException("微信登录失败，请重试");
         }
-        return R.ok(session);
+        String value = openid.toString();
+        mpUserService.touchLogin(value);
+        Map<String, Object> result = new HashMap<>(4);
+        result.put("openid", value);
+        result.put("token", jwtUtil.generateUserToken(value));
+        Object unionid = session.get("unionid");
+        if (unionid != null) {
+            result.put("unionid", unionid);
+        }
+        return R.ok(result);
     }
 
     /** 订阅消息配置：前端据此调用 wx.requestSubscribeMessage 获取授权 */
@@ -372,11 +381,7 @@ public class MpController {
     /** 市场公告（启用中，取前 5 条） */
     @GetMapping("/notices")
     public R<List<Notice>> notices() {
-        return R.ok(noticeMapper.selectList(Wrappers.<Notice>lambdaQuery()
-                .eq(Notice::getStatus, 1)
-                .orderByDesc(Notice::getSort)
-                .orderByDesc(Notice::getCreateTime)
-                .last("limit 5")));
+        return R.ok(siteService.listEnabledNotice());
     }
 
     /** 提交询价线索：客户留资，商户端跟进 */

@@ -1,6 +1,7 @@
 package com.jiancai.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jiancai.chat.ChatSocketRegistry;
 import com.jiancai.common.BusinessException;
@@ -223,6 +224,16 @@ public class ChatService {
                 preview = stored;
         }
 
+        // 同一会话里同一商品只自动发一次，反复进入详情直接复用已有卡片
+        if ("product".equals(contentType) && senderType == 1) {
+            ChatMessage duplicate = findProductCard(conversation.getId(), productId);
+            if (duplicate != null) {
+                Map<String, Object> view = messageView(duplicate);
+                view.put("duplicate", true);
+                return view;
+            }
+        }
+
         LocalDateTime now = LocalDateTime.now();
         ChatMessage message = new ChatMessage();
         message.setConversationId(conversation.getId());
@@ -357,6 +368,25 @@ public class ChatService {
         row.put("content", message.getContent());
         row.put("createTime", message.getCreateTime());
         return row;
+    }
+
+    private ChatMessage findProductCard(Long conversationId, Long productId) {
+        List<ChatMessage> cards = messageMapper.selectList(Wrappers.<ChatMessage>lambdaQuery()
+                .eq(ChatMessage::getConversationId, conversationId)
+                .eq(ChatMessage::getContentType, "product")
+                .orderByDesc(ChatMessage::getId)
+                .last("LIMIT 100"));
+        for (ChatMessage card : cards) {
+            try {
+                JsonNode node = objectMapper.readTree(card.getContent());
+                if (node.path("id").asLong() == productId) {
+                    return card;
+                }
+            } catch (Exception ignored) {
+                // 历史脏数据跳过
+            }
+        }
+        return null;
     }
 
     private String productSnapshot(Product product) {

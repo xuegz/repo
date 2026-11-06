@@ -1,6 +1,7 @@
 const {
   HOST,
   ensureLogin,
+  getChatToken,
   openidRequest,
   uploadImage,
   checkChatNotice,
@@ -86,6 +87,7 @@ Page({
     this.setData({ merchantName: fallbackName })
     ensureLogin().then(function (openid) {
       that.openid = openid
+      that.chatToken = getChatToken()
       if (options.id && Number(options.id) > 0) {
         that.setData({
           conversationId: Number(options.id),
@@ -112,14 +114,25 @@ Page({
   },
 
   afterOpen: function () {
-    this.loadMessages()
+    const that = this
     this.connectWs()
     this.startPolling()
     this.markRead()
-    const productId = Number(this.options.productId || 0)
-    if (productId > 0) {
-      this.doSend('product', '', productId)
-    }
+    this.loadMessages().then(function () {
+      const productId = Number(that.options.productId || 0)
+      // 同一会话同一商品只发一次卡片，反复从详情进入不再重复发送
+      if (productId > 0 && !that.hasProductCard(productId)) {
+        that.doSend('product', '', productId)
+      }
+    })
+  },
+
+  hasProductCard: function (productId) {
+    return this.data.messages.some(function (item) {
+      if (item.type !== 'product') return false
+      const product = item.product
+      return !!product && Number(product.id) === Number(productId)
+    })
   },
 
   loadMessages: function (silent) {
@@ -196,13 +209,18 @@ Page({
   },
 
   wsUrl: function () {
-    return HOST.replace(/^http/, 'ws') + '/ws/chat?role=user&openid=' + encodeURIComponent(this.openid || '')
+    return HOST.replace(/^http/, 'ws') + '/ws/chat?role=user'
   },
 
   connectWs: function () {
     const that = this
-    if (!this.openid || this.socket) return
-    const task = wx.connectSocket({ url: this.wsUrl() })
+    const token = this.chatToken || getChatToken()
+    if (!token || this.socket) return
+    this.chatToken = token
+    const task = wx.connectSocket({
+      url: this.wsUrl(),
+      header: { Authorization: 'Bearer ' + token }
+    })
     this.socket = task
     task.onMessage(function (res) {
       that.onPush(res.data)
