@@ -1,0 +1,88 @@
+/* 首页头部：黄橙渐变 + 内嵌搜索 */
+.hero {
+  margin: -20rpx -24rpx 20rpx;
+  padding: 28rpx 24rpx 30rpx;
+  background: linear-gradient(180deg, #ffd64d 0%, #ffb300 100%);
+  border-radius: 0 0 28rpx 28rpx;
+}
+.hero-nav {
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+}
+.hero-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+.hero-brand {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #33302a;
+  letter-spacing: 2rpx;
+}
+.hero-city {
+  font-size: 26rpx;
+  color: #5a4a12;
+  background: rgba(255, 255, 255, 0.55);
+  padding: 6rpx 18rpx;
+  border-radius: 24rpx;
+}
+.hero-slogan {
+  font-size: 26rpx;
+  color: #6b5300;
+}
+.hero-search {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 40rpx;
+  padding: 10rpx 10rpx 10rpx 26rpx;
+  box-shadow: 0 6rpx 18rpx rgba(180, 120, 0, 0.15);
+}
+.hero-input {
+  flex: 1;
+  font-size: 28rpx;
+}
+.hero-placeholder {
+  color: #b0b3b8;
+}
+.hero-btn {
+  background: #ff8a00;
+  color: #fff;
+  font-size: 26rpx;
+  padding: 12rpx 32rpx;
+  border-radius: 32rpx;
+  margin-left: 16rpx;
+}
+
+/* 一行筛选入口 */
+.filter-row {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 22rpx 0;
+  margin-bottom: 8rpx;
+}
+.filter-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.filter-text {
+  font-size: 27rpx;
+  color: #303133;
+}
+.filter-extra {
+  font-size: 22rpx;
+  color: #ff7a00;
+  margin-left: 6rpx;
+}
+.filter-split {
+  width: 1rpx;
+  height: 26rpx;
+  background: #ebeef3;
+}

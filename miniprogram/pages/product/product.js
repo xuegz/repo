@@ -5,6 +5,7 @@ const HISTORY_KEY = 'searchHistory'
 Page({
   data: {
     keyword: '',
+    statusBarHeight: 20,
     categories: [],
     categoryId: 0,
     sort: '',
@@ -20,10 +21,12 @@ Page({
   },
 
   onLoad: function () {
-    this.loadCategories()
+    const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
     this.setData({
+      statusBarHeight: info.statusBarHeight || 20,
       history: wx.getStorageSync(HISTORY_KEY) || []
     })
+    this.loadCategories()
   },
 
   onShow: function () {

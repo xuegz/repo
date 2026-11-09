@@ -1,18 +1,27 @@
 <wxs src="../../utils/tools.wxs" module="tools" />
 
 <view class="page">
-  <!-- 搜索 -->
-  <view class="search-bar">
-    <input
-      class="search-input"
-      placeholder-class="search-placeholder"
-      placeholder="搜索产品 / 品牌 / 产地"
-      value="{{keyword}}"
-      confirm-type="search"
-      bindinput="onKeywordInput"
-      bindconfirm="goSearch"
-    />
-    <view class="search-btn" bindtap="goSearch">搜索</view>
+  <!-- 头部：品牌 + 城市 + 搜索（自定义导航，黄色铺到状态栏） -->
+  <view class="hero" style="padding-top: {{statusBarHeight}}px">
+    <view class="hero-nav">
+      <text class="hero-brand">材路通</text>
+    </view>
+    <view class="hero-sub">
+      <text class="hero-slogan">找建材 · 直接对接商户</text>
+      <text class="hero-city">{{city}}</text>
+    </view>
+    <view class="hero-search">
+      <input
+        class="hero-input"
+        placeholder-class="hero-placeholder"
+        placeholder="搜索产品 / 品牌 / 产地"
+        value="{{keyword}}"
+        confirm-type="search"
+        bindinput="onKeywordInput"
+        bindconfirm="goSearch"
+      />
+      <view class="hero-btn" bindtap="goSearch">搜索</view>
+    </view>
   </view>
 
   <!-- 市场公告 -->
@@ -32,19 +41,23 @@
     </swiper-item>
   </swiper>
 
-  <!-- 快捷入口 -->
-  <view class="entry-row">
-    <view class="entry-card" bindtap="goShops">
-      <view class="entry-title">入驻商户</view>
-      <view class="entry-sub">已有 {{merchantCount}} 家同行</view>
+  <!-- 筛选入口 -->
+  <view class="filter-row">
+    <view class="filter-item" bindtap="goShops">
+      <text class="filter-text">入驻商户</text>
+      <text class="filter-extra">{{merchantCount}}</text>
     </view>
-    <view class="entry-card" bindtap="goMap">
-      <view class="entry-title">地图找店</view>
-      <view class="entry-sub">看位置 · 一键导航</view>
+    <view class="filter-split"></view>
+    <view class="filter-item" bindtap="goMap">
+      <text class="filter-text">地图找店</text>
     </view>
-    <view class="entry-card entry-primary" bindtap="goApply">
-      <view class="entry-title">免费入驻</view>
-      <view class="entry-sub">限时 0 元 · 1 日审核</view>
+    <view class="filter-split"></view>
+    <view class="filter-item" bindtap="goApply">
+      <text class="filter-text">免费入驻</text>
+    </view>
+    <view class="filter-split"></view>
+    <view class="filter-item" bindtap="goAllProducts">
+      <text class="filter-text">全部产品</text>
     </view>
   </view>
 
@@ -54,6 +67,10 @@
     <view class="category-item" wx:for="{{categories}}" wx:key="id" bindtap="goCategory" data-id="{{item.id}}">
       <view class="category-icon">{{item.firstLetter}}</view>
       <text class="category-name">{{item.name}}</text>
+    </view>
+    <view class="category-item" bindtap="goAllProducts">
+      <view class="category-icon category-icon-more">全</view>
+      <text class="category-name">全部</text>
     </view>
   </view>
 

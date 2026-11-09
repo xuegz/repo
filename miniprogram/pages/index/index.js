@@ -3,6 +3,8 @@ const { request } = require('../../utils/request')
 Page({
   data: {
     keyword: '',
+    city: '西安',
+    statusBarHeight: 20,
     banners: [],
     ads: [],
     categories: [],
@@ -14,6 +16,8 @@ Page({
   },
 
   onLoad: function () {
+    const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    this.setData({ statusBarHeight: info.statusBarHeight || 20 })
     this.loadData()
     this.loadMerchants()
     this.loadNotices()
@@ -52,7 +56,7 @@ Page({
     const that = this
     request('/home')
       .then(function (data) {
-        const cats = (data.categories || []).slice(0, 8).map(function (c) {
+        const cats = (data.categories || []).slice(0, 7).map(function (c) {
           return { id: c.id, name: c.name, firstLetter: c.name.substring(0, 1) }
         })
         that.setData({
@@ -60,7 +64,8 @@ Page({
           ads: data.ads || [],
           categories: cats,
           markets: data.markets || [],
-          recommends: data.recommends || []
+          recommends: data.recommends || [],
+          city: (data.markets && data.markets[0] && data.markets[0].city) || '西安'
         })
       })
       .catch(function () {})
@@ -143,6 +148,12 @@ Page({
   goCategory: function (e) {
     wx.removeStorageSync('searchKeyword')
     wx.setStorageSync('filterCategoryId', e.currentTarget.dataset.id)
+    wx.switchTab({ url: '/pages/product/product' })
+  },
+
+  goAllProducts: function () {
+    wx.removeStorageSync('searchKeyword')
+    wx.removeStorageSync('filterCategoryId')
     wx.switchTab({ url: '/pages/product/product' })
   },
 

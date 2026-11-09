@@ -32,10 +32,10 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#1f2937",
+    "navigationBarBackgroundColor": "#ffc93c",
     "navigationBarTitleText": "材路通",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#f5f7fa",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f6f8",
     "enablePullDownRefresh": true
   },
   "tabBar": {

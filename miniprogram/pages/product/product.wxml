@@ -1,17 +1,22 @@
 <wxs src="../../utils/tools.wxs" module="tools" />
 
 <view class="page">
-  <!-- 搜索 -->
-  <view class="search-bar">
-    <input
-      class="search-input"
-      placeholder-class="search-placeholder"
-      placeholder="搜索产品 / 品牌 / 产地"
-      value="{{keyword}}"
-      bindinput="onKeywordInput"
-      bindconfirm="doSearch"
-    />
-    <view class="search-btn" bindtap="doSearch">搜索</view>
+  <!-- 头部搜索（自定义导航） -->
+  <view class="hero" style="padding-top: {{statusBarHeight}}px">
+    <view class="hero-nav">
+      <text class="hero-brand">找产品</text>
+    </view>
+    <view class="hero-search">
+      <input
+        class="hero-input"
+        placeholder-class="hero-placeholder"
+        placeholder="搜索产品 / 品牌 / 产地"
+        value="{{keyword}}"
+        bindinput="onKeywordInput"
+        bindconfirm="doSearch"
+      />
+      <view class="hero-btn" bindtap="doSearch">搜索</view>
+    </view>
   </view>
 
   <!-- 搜索历史与热门词 -->

@@ -1,0 +1,41 @@
+/* 找产品页头部：与首页统一的黄橙渐变 + 内嵌搜索 */
+.hero {
+  margin: -20rpx -24rpx 20rpx;
+  padding: 0 24rpx 26rpx;
+  background: linear-gradient(180deg, #ffd64d 0%, #ffb300 100%);
+  border-radius: 0 0 28rpx 28rpx;
+}
+.hero-nav {
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+}
+.hero-brand {
+  font-size: 38rpx;
+  font-weight: bold;
+  color: #33302a;
+  letter-spacing: 2rpx;
+}
+.hero-search {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 40rpx;
+  padding: 10rpx 10rpx 10rpx 26rpx;
+  box-shadow: 0 6rpx 18rpx rgba(180, 120, 0, 0.15);
+}
+.hero-input {
+  flex: 1;
+  font-size: 28rpx;
+}
+.hero-placeholder {
+  color: #b0b3b8;
+}
+.hero-btn {
+  background: #ff8a00;
+  color: #fff;
+  font-size: 26rpx;
+  padding: 12rpx 32rpx;
+  border-radius: 32rpx;
+  margin-left: 16rpx;
+}

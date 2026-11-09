@@ -96,40 +96,54 @@ page {
   font-size: 26rpx;
   color: #606266;
 }
+.category-icon-more {
+  background: #fff3e0;
+  color: #ff8a00;
+}
 
 /* 产品列表 */
 .product-list {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  display: block;
 }
 .product-card {
   position: relative;
-  width: 49%;
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
   background: #fff;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
+  padding: 16rpx;
   overflow: hidden;
-  margin-bottom: 18rpx;
+  margin-bottom: 16rpx;
 }
 .product-img {
-  width: 100%;
-  height: 260rpx;
+  width: 220rpx;
+  height: 200rpx;
+  border-radius: 12rpx;
   background: #eceef1;
+  flex-shrink: 0;
 }
 .product-body {
-  padding: 14rpx 16rpx 18rpx;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 4rpx 4rpx 4rpx 20rpx;
+  overflow: hidden;
 }
 .product-name {
-  font-size: 27rpx;
+  font-size: 29rpx;
   font-weight: bold;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .product-meta {
-  font-size: 22rpx;
+  font-size: 23rpx;
   color: #909399;
-  margin-top: 6rpx;
+  margin-top: 8rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -138,11 +152,12 @@ page {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-top: 12rpx;
+  margin-top: auto;
+  padding-top: 8rpx;
 }
 .price {
-  color: #f56c6c;
-  font-size: 30rpx;
+  color: #ff4d2d;
+  font-size: 34rpx;
   font-weight: bold;
 }
 .price-none {
