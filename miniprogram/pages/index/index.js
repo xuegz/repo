@@ -119,6 +119,10 @@ Page({
     wx.navigateTo({ url: '/pages/market/market?id=' + e.currentTarget.dataset.id })
   },
 
+  goAllMarkets: function () {
+    wx.navigateTo({ url: '/pages/markets/markets' })
+  },
+
   /** 广告位跳转：支持 product?keyword=xxx 与小程序内页面路径 */
   goAd: function (e) {
     const link = e.currentTarget.dataset.link || ''

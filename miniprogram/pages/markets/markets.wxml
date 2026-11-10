@@ -1,0 +1,38 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
+<view class="page">
+  <view class="search-bar">
+    <input
+      class="search-input"
+      placeholder-class="search-placeholder"
+      placeholder="搜索市场名称或地址"
+      value="{{keyword}}"
+      confirm-type="search"
+      bindinput="onKeywordInput"
+    />
+    <view class="search-btn" wx:if="{{keyword}}" bindtap="clearKeyword">清空</view>
+  </view>
+
+  <view class="markets-count">共 {{filtered.length}} 个市场</view>
+
+  <view
+    class="market-row"
+    wx:for="{{filtered}}"
+    wx:key="id"
+    bindtap="goMarket"
+    data-id="{{item.id}}"
+    hover-class="tap-hover"
+    hover-stay-time="60"
+  >
+    <image wx:if="{{item.logo}}" src="{{tools.thumbUrl(item.logo, 160)}}" mode="aspectFill" class="market-row-logo" lazy-load />
+    <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="market-row-logo" />
+    <view class="market-row-info">
+      <view class="market-row-name">{{item.name}}</view>
+      <view class="market-row-meta">{{item.merchantCount || 0}} 家商户 · {{item.city || '西安市'}}</view>
+      <view class="market-row-address">{{item.address || '地址待完善'}}</view>
+    </view>
+    <view class="market-row-arrow">›</view>
+  </view>
+
+  <view class="empty" wx:if="{{loaded && filtered.length === 0}}">{{keyword ? '没有找到匹配的市场' : '暂无建材市场'}}</view>
+</view>

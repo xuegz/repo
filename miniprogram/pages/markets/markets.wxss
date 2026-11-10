@@ -1,0 +1,54 @@
+.markets-count {
+  padding: 0 6rpx 14rpx;
+  font-size: 24rpx;
+  color: #909399;
+}
+
+.market-row {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+}
+.market-row-logo {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 10rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+  background: #f5f6f8;
+}
+.market-row-info {
+  flex: 1;
+  min-width: 0;
+}
+.market-row-name {
+  font-size: 29rpx;
+  font-weight: bold;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.market-row-meta {
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  color: #ff7a00;
+}
+.market-row-address {
+  margin-top: 4rpx;
+  font-size: 23rpx;
+  color: #909399;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.market-row-arrow {
+  margin-left: 12rpx;
+  color: #c0c4cc;
+  font-size: 34rpx;
+  line-height: 1;
+}

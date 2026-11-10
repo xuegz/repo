@@ -88,3 +88,19 @@
   font-size: 25rpx;
   color: #303133;
 }
+
+/* 板块标题 + 右侧“查看全部” */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24rpx 0 16rpx;
+}
+.section-head .section-title {
+  margin: 0;
+}
+.section-more {
+  font-size: 24rpx;
+  color: #ff7a00;
+  padding: 8rpx 0 8rpx 20rpx;
+}

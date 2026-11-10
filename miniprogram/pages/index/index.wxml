@@ -76,7 +76,10 @@
 
   <!-- 热门建材市场 -->
   <block wx:if="{{markets.length > 0}}">
-    <view class="section-title">热门建材市场</view>
+    <view class="section-head">
+      <view class="section-title">热门建材市场</view>
+      <view class="section-more" bindtap="goAllMarkets" hover-class="tap-hover">查看全部 ›</view>
+    </view>
     <scroll-view scroll-x="true" class="market-scroll">
       <view
         class="market-card"
