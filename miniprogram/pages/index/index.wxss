@@ -58,31 +58,33 @@
 }
 
 /* 一行筛选入口 */
-.filter-row {
+.entry-grid {
   display: flex;
-  align-items: center;
   background: #fff;
   border-radius: 16rpx;
-  padding: 22rpx 0;
+  padding: 28rpx 0 22rpx;
   margin-bottom: 8rpx;
 }
-.filter-item {
+.entry-item {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.entry-circle {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 50%;
+  background: #fff3e0;
+  color: #ff8a00;
+  font-size: 42rpx;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.filter-text {
-  font-size: 27rpx;
+.entry-label {
+  margin-top: 12rpx;
+  font-size: 25rpx;
   color: #303133;
-}
-.filter-extra {
-  font-size: 22rpx;
-  color: #ff7a00;
-  margin-left: 6rpx;
-}
-.filter-split {
-  width: 1rpx;
-  height: 26rpx;
-  background: #ebeef3;
 }

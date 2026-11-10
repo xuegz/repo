@@ -1,0 +1,54 @@
+<wxs src="../../utils/tools.wxs" module="tools" />
+
+<view class="brands-page">
+  <view class="brands-search">
+    <input
+      class="brands-input"
+      placeholder-class="brands-placeholder"
+      placeholder="搜索商户名称或市场"
+      value="{{keyword}}"
+      confirm-type="search"
+      bindinput="onKeywordInput"
+    />
+  </view>
+
+  <view class="brands-body">
+    <scroll-view scroll-y class="brand-side">
+      <view
+        class="side-item {{activeId === 0 ? 'active' : ''}}"
+        bindtap="selectCategory"
+        data-id="0"
+        data-name="全部"
+      >全部</view>
+      <view
+        class="side-item {{activeId === item.id ? 'active' : ''}}"
+        wx:for="{{categories}}"
+        wx:key="id"
+        bindtap="selectCategory"
+        data-id="{{item.id}}"
+        data-name="{{item.name}}"
+      >{{item.name}}</view>
+    </scroll-view>
+
+    <scroll-view scroll-y class="brand-main">
+      <view class="brand-head">
+        <text class="brand-head-name">{{activeName}}</text>
+        <text class="brand-head-count">{{list.length}} 家</text>
+      </view>
+      <view class="brand-grid">
+        <view class="brand-cell" wx:for="{{list}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}" hover-class="tap-hover" hover-stay-time="60">
+          <image
+            wx:if="{{item.logo}}"
+            src="{{tools.thumbUrl(item.logo, 160)}}"
+            mode="aspectFit"
+            class="brand-logo"
+            lazy-load
+          />
+          <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="brand-logo" />
+          <view class="brand-name">{{item.name}}</view>
+        </view>
+      </view>
+      <view class="empty" wx:if="{{loaded && list.length === 0}}">该品类暂无入驻商户</view>
+    </scroll-view>
+  </view>
+</view>

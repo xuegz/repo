@@ -11,7 +11,6 @@ Page({
     markets: [],
     recommends: [],
     merchants: [],
-    merchantCount: 0,
     notices: []
   },
 
@@ -80,7 +79,6 @@ Page({
       .then(function (data) {
         const list = data || []
         that.setData({
-          merchantCount: list.length,
           merchants: list.slice(0, 4)
         })
       })
@@ -103,7 +101,7 @@ Page({
   },
 
   goShops: function () {
-    wx.navigateTo({ url: '/pages/shops/shops' })
+    wx.navigateTo({ url: '/pages/brands/brands' })
   },
 
   goMap: function () {

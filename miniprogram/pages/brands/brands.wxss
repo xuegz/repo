@@ -1,0 +1,110 @@
+.brands-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.brands-search {
+  padding: 16rpx 24rpx;
+  background: #fff;
+}
+.brands-input {
+  height: 72rpx;
+  background: #f5f6f8;
+  border-radius: 36rpx;
+  padding: 0 30rpx;
+  font-size: 27rpx;
+}
+.brands-placeholder {
+  color: #909399;
+}
+
+.brands-body {
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 105rpx);
+  display: flex;
+  border-top: 1rpx solid #f0f1f5;
+}
+
+.brand-side {
+  width: 176rpx;
+  height: 100%;
+  background: #f7f8fa;
+  flex-shrink: 0;
+}
+.side-item {
+  padding: 34rpx 10rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #606266;
+  position: relative;
+}
+.side-item.active {
+  background: #fff;
+  color: #ff7a00;
+  font-weight: bold;
+}
+.side-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 34rpx;
+  bottom: 34rpx;
+  width: 6rpx;
+  border-radius: 0 6rpx 6rpx 0;
+  background: #ff7a00;
+}
+
+.brand-main {
+  flex: 1;
+  height: 100%;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+}
+.brand-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 24rpx 6rpx 4rpx;
+}
+.brand-head-name {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+.brand-head-count {
+  font-size: 24rpx;
+  color: #909399;
+}
+
+.brand-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding-bottom: 40rpx;
+}
+.brand-cell {
+  width: 33.33%;
+  padding: 16rpx 10rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.brand-logo {
+  width: 168rpx;
+  height: 140rpx;
+  border-radius: 8rpx;
+  background: #f7f8fa;
+}
+.brand-name {
+  margin-top: 12rpx;
+  width: 100%;
+  text-align: center;
+  font-size: 24rpx;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

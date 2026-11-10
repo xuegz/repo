@@ -42,22 +42,22 @@
   </swiper>
 
   <!-- 筛选入口 -->
-  <view class="filter-row">
-    <view class="filter-item" bindtap="goShops">
-      <text class="filter-text">入驻商户</text>
-      <text class="filter-extra">{{merchantCount}}</text>
+  <view class="entry-grid">
+    <view class="entry-item" bindtap="goShops">
+      <view class="entry-circle">商</view>
+      <text class="entry-label">找商户</text>
     </view>
-    <view class="filter-split"></view>
-    <view class="filter-item" bindtap="goMap">
-      <text class="filter-text">地图找店</text>
+    <view class="entry-item" bindtap="goAllProducts">
+      <view class="entry-circle">品</view>
+      <text class="entry-label">找产品</text>
     </view>
-    <view class="filter-split"></view>
-    <view class="filter-item" bindtap="goApply">
-      <text class="filter-text">免费入驻</text>
+    <view class="entry-item" bindtap="goMap">
+      <view class="entry-circle">图</view>
+      <text class="entry-label">地图找店</text>
     </view>
-    <view class="filter-split"></view>
-    <view class="filter-item" bindtap="goAllProducts">
-      <text class="filter-text">全部产品</text>
+    <view class="entry-item" bindtap="goApply">
+      <view class="entry-circle">驻</view>
+      <text class="entry-label">免费入驻</text>
     </view>
   </view>
 
