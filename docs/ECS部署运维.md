@@ -1,6 +1,6 @@
 # ECS 部署与运维手册
 
-生产环境：阿里云 ECS（华东1 杭州），公网 IP `47.111.99.105`，当前**仅 HTTP 80** 对外（未绑定域名、未做 HTTPS）。
+生产环境：阿里云 ECS（华东1 杭州），公网 IP `47.111.99.105`，域名 `mycailutong.com`（已 ICP 备案，HTTPS 已启用；IP:80 保留兼容旧版小程序）。
 
 ## 一、环境概况
 
@@ -12,7 +12,7 @@
 | 磁盘 | 40 GB ESSD |
 | JDK | OpenJDK 17（`/usr/bin/java`） |
 | MySQL | 8.0.46，仅监听本机 3306 |
-| Nginx | 1.24，监听 80 |
+| Nginx | 1.24，监听 80（IP 与域名跳转）和 443（`mycailutong.com`） |
 | 后端端口 | 8080，仅本机访问（由 Nginx 反代） |
 
 ## 二、目录与服务
@@ -133,7 +133,25 @@ curl -s -o /dev/null -w '%{http_code}\n' \
   http://127.0.0.1:8080/ws/chat?role=user\&openid=test   # 期望 101，鉴权失败是 403/关闭
 ```
 
-握手失败不影响功能：小程序端 8 秒增量轮询会自动兜底。`ws://` 在体验版/正式版可能被合法域名校验拦截（未备案无 HTTPS），备案后换 `wss://`。
+握手失败不影响功能：小程序端 8 秒增量轮询会自动兜底。小程序走 `wss://mycailutong.com/ws/chat`（由 `HOST` 把 https 替换成 wss）。
+
+### 4.5 域名与 HTTPS
+
+- 域名 `mycailutong.com`：A 记录指向 `47.111.99.105`，ICP 备案已通过（备案号见阿里云备案控制台）。
+- 证书：Let's Encrypt，certbot 自动续期（`certbot-renew.timer`），部署钩子 `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh` 续期后 reload nginx。
+- 证书路径：`/etc/letsencrypt/live/mycailutong.com/{fullchain,privkey}.pem`，有效期 90 天。
+- Nginx：`/etc/nginx/conf.d/jiancai.conf` 末尾新增两个 server 块——域名 80（仅 ACME 验证 + 301 跳 443）和域名 443（admin/api/ws/demo/upload 反代）；原 `server_name _` 的 80 块保留给 IP 访问。
+- 验证命令：
+
+```bash
+curl -sI https://mycailutong.com/ | head -1                  # 200
+curl -s https://mycailutong.com/api/mp/categories | head -c 80
+certbot renew --dry-run                                       # 模拟续期
+```
+
+- 小程序合法域名（微信公众平台 → 开发管理 → 开发设置 → 服务器域名）：
+  - request / uploadFile / downloadFile：`https://mycailutong.com`
+  - socket：`wss://mycailutong.com`
 
 ## 五、数据库
 
@@ -219,7 +237,7 @@ tail -f /var/log/nginx/access.log /var/log/nginx/error.log
    > 直接在库中改密码不会触发小程序端任何逻辑；用户下次登录即用新密码。
 
 2. **凭据轮换**：OSS AccessKey、小程序 AppSecret 曾在对话中明文出现，建议在阿里云 RAM / 微信公众平台重置，新值只写入 `/opt/jiancai/config/application.yml` 后重启。
-3. **HTTPS**：等域名 `mycailutong.com` 完成实名 + ICP 备案后再做，需 Nginx 443 + 证书 + 小程序合法域名（当前域名未实名、未备案，无法解析）。
+3. **HTTPS**：已于 2026-11-10 完成（Let's Encrypt + nginx 443，域名 `mycailutong.com`），详见 4.5。
 4. **MySQL 不暴露公网**：当前 3306 只监听回环；安全组不要放行 3306。
 
 ## 八、当前验证基线（2026-11-05）

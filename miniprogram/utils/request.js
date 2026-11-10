@@ -1,9 +1,9 @@
 /**
  * 小程序接口请求封装
- * 当前指向 ECS 生产环境（仅体验版/开发版可用，需勾选"不校验合法域名"）
- * 本地调试改回 http://localhost:8080；域名备案完成后改为 https 域名
+ * 生产走 https 域名（需在微信公众平台配置 request/uploadFile/socket 合法域名）
+ * 本地调试改回 http://localhost:8080
  */
-const HOST = 'http://47.111.99.105'
+const HOST = 'https://mycailutong.com'
 const BASE_URL = HOST + '/api/mp'
 const OPENID_FLAG = 'openidReal'
 const TOKEN_KEY = 'chatToken'

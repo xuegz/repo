@@ -1,6 +1,6 @@
 // 小程序 WXML 模板工具函数
 // 上传/服务器地址（与 request.js 保持一致）
-var HOST = 'http://47.111.99.105'
+var HOST = 'https://mycailutong.com'
 
 /**
  * 拼接图片完整访问地址
