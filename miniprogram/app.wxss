@@ -400,6 +400,28 @@ page {
   opacity: 0.85;
   margin-top: 8rpx;
 }
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+.history-toggle {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: #ff7a00;
+  padding: 8rpx 0 8rpx 20rpx;
+}
+.history-toggle-arrow {
+  margin-left: 6rpx;
+  display: inline-block;
+  transform: rotate(90deg);
+  transition: transform 0.2s;
+}
+.history-toggle-arrow.up {
+  transform: rotate(-90deg);
+}
 .history-item {
   display: flex;
   align-items: center;

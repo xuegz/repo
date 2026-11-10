@@ -4,6 +4,7 @@ const merchant = require('../../utils/merchant')
 Page({
   data: {
     history: [],
+    historyExpanded: false,
     servicePhone: '400-000-0000',
     loginState: 'loading',
     nickname: '',
@@ -116,6 +117,10 @@ Page({
     wx.navigateTo({ url: '/pages/detail/detail?id=' + e.currentTarget.dataset.id })
   },
 
+  toggleHistory: function () {
+    this.setData({ historyExpanded: !this.data.historyExpanded })
+  },
+
   goApply: function () {
     wx.navigateTo({ url: '/pages/apply/apply' })
   },
@@ -168,7 +173,7 @@ Page({
         if (res.confirm) {
           openidRequest('/history/clear', 'POST')
             .then(function () {
-              that.setData({ history: [] })
+              that.setData({ history: [], historyExpanded: false })
               wx.showToast({ title: '已清除', icon: 'success' })
             })
             .catch(function () {})

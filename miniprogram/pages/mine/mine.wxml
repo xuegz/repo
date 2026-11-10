@@ -28,15 +28,23 @@
   </view>
 
   <view class="card">
-    <view class="section-title" style="margin: 0 0 10rpx">我的浏览记录</view>
-    <view class="history-item" wx:for="{{history}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-      <image wx:if="{{item.imageList[0]}}" src="{{tools.thumbUrl(item.imageList[0], 120)}}" mode="aspectFill" class="history-img" lazy-load />
-      <image wx:else src="/assets/placeholder/product-small.jpg" mode="aspectFill" class="history-img" />
-      <view class="history-info">
-        <view class="product-name">{{item.name}}</view>
-        <view class="product-meta">{{item.merchantName}}</view>
+    <view class="history-head">
+      <view class="section-title" style="margin: 0">我的浏览记录</view>
+      <view class="history-toggle" wx:if="{{history.length > 3}}" bindtap="toggleHistory" hover-class="tap-hover">
+        <text>{{historyExpanded ? '收起' : '展开全部'}}</text>
+        <text class="history-toggle-arrow {{historyExpanded ? 'up' : ''}}">›</text>
       </view>
     </view>
+    <block wx:for="{{history}}" wx:key="id">
+      <view class="history-item" wx:if="{{historyExpanded || index < 3}}" bindtap="goDetail" data-id="{{item.id}}">
+        <image wx:if="{{item.imageList[0]}}" src="{{tools.thumbUrl(item.imageList[0], 120)}}" mode="aspectFill" class="history-img" lazy-load />
+        <image wx:else src="/assets/placeholder/product-small.jpg" mode="aspectFill" class="history-img" />
+        <view class="history-info">
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-meta">{{item.merchantName}}</view>
+        </view>
+      </view>
+    </block>
     <view class="empty" wx:if="{{history.length === 0}}">还没有浏览记录</view>
   </view>
 
