@@ -1,6 +1,6 @@
 # ECS 部署与运维手册
 
-生产环境：阿里云 ECS（华东1 杭州），公网 IP `47.111.99.105`，域名 `mycailutong.com`（已 ICP 备案，HTTPS 已启用；IP:80 保留兼容旧版小程序）。
+生产环境：阿里云 ECS（华东1 杭州），公网 IP `47.111.99.105`，域名 `mycailutong.com`（已 ICP 备案，HTTPS 已启用；访问 IP:80 会 301 跳转到域名，不再直接服务页面）。
 
 ## 一、环境概况
 
@@ -140,7 +140,7 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 - 域名 `mycailutong.com`：A 记录指向 `47.111.99.105`，ICP 备案已通过（备案号见阿里云备案控制台）。
 - 证书：Let's Encrypt，certbot 自动续期（`certbot-renew.timer`），部署钩子 `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh` 续期后 reload nginx。
 - 证书路径：`/etc/letsencrypt/live/mycailutong.com/{fullchain,privkey}.pem`，有效期 90 天。
-- Nginx：`/etc/nginx/conf.d/jiancai.conf` 末尾新增两个 server 块——域名 80（仅 ACME 验证 + 301 跳 443）和域名 443（admin/api/ws/demo/upload 反代）；原 `server_name _` 的 80 块保留给 IP 访问。
+- Nginx：`/etc/nginx/conf.d/jiancai.conf` 只保留两个 server 块——域名 80（`default_server`，仅 ACME 验证 + 301 跳 `https://mycailutong.com`）和域名 443（admin/api/ws/demo/upload 反代）。原 `server_name _` 的 IP 直连块已于 2026-11-10 删除（旧版小程序不再使用）；任何未匹配的 Host（含 IP）都会 301 到域名。
 - 验证命令：
 
 ```bash
@@ -242,7 +242,7 @@ tail -f /var/log/nginx/access.log /var/log/nginx/error.log
 
 ## 八、当前验证基线（2026-11-05）
 
-- `http://47.111.99.105/` → 200，跳转 `/login`
+- `https://mycailutong.com/` → 200，跳转 `/login`；`http://47.111.99.105/` → 301 到 `https://mycailutong.com/`（2026-11-10 起 IP 不再直接服务）
 - `POST /api/auth/login`（admin/123456）→ 200 并返回 token，`mustChangePassword=false`
 - 商户手机号 + `123456` 登录 → 200，`mustChangePassword=true`
 - `POST /api/account/password`（带 token，原密码/新密码）→ 200
