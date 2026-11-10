@@ -1,41 +1,88 @@
 const { request } = require('../../utils/request')
 
+const PAGE_SIZE = 30
+
 Page({
   data: {
     keyword: '',
     categories: [],
     list: [],
+    total: 0,
     activeId: 0,
     activeName: '全部',
-    loaded: false
+    loaded: false,
+    loading: false,
+    noMore: false
   },
 
   onLoad: function () {
-    this.loadData()
+    this._seq = 0
+    this._page = 1
+    this.loadCategories()
+    this.reload()
+  },
+
+  onUnload: function () {
+    if (this._timer) clearTimeout(this._timer)
   },
 
   onPullDownRefresh: function () {
-    this.loadData(function () {
+    this.reload(function () {
       wx.stopPullDownRefresh()
     })
   },
 
-  loadData: function (cb) {
+  loadCategories: function () {
     const that = this
-    Promise.all([request('/categories'), request('/merchants')])
-      .then(function (res) {
-        that.allMerchants = res[1] || []
-        that.baseMerchants = that.allMerchants
+    request('/categories')
+      .then(function (list) {
+        that.setData({ categories: list || [] })
+      })
+      .catch(function () {})
+  },
+
+  /** 从第一页重新加载（切品类/搜索/下拉刷新） */
+  reload: function (cb) {
+    this._page = 1
+    this.fetchPage(true, cb)
+  },
+
+  loadMore: function () {
+    if (this.data.loading || this.data.noMore || !this.data.loaded) return
+    this._page += 1
+    this.fetchPage(false)
+  },
+
+  fetchPage: function (reset, cb) {
+    const that = this
+    const seq = (this._seq || 0) + 1
+    this._seq = seq
+    const params = ['pageNum=' + this._page, 'pageSize=' + PAGE_SIZE]
+    const keyword = (this.data.keyword || '').trim()
+    if (keyword) params.push('keyword=' + encodeURIComponent(keyword))
+    if (this.data.activeId) params.push('categoryId=' + this.data.activeId)
+    this.setData({ loading: true })
+    request('/merchants/page?' + params.join('&'))
+      .then(function (page) {
+        if (seq !== that._seq) return
+        const records = (page && page.records) || []
+        const list = reset ? records : (that.data.list || []).concat(records)
+        const total = (page && page.total) || 0
         that.setData({
-          activeId: 0,
-          activeName: '全部',
-          categories: res[0] || [],
-          loaded: true
+          list: list,
+          total: total,
+          loaded: true,
+          loading: false,
+          noMore: list.length >= total || records.length < PAGE_SIZE
         })
-        that.applyFilter()
       })
       .catch(function () {
-        that.setData({ loaded: true })
+        if (seq !== that._seq) return
+        that.setData({
+          loaded: true,
+          loading: false,
+          noMore: true
+        })
       })
       .then(function () {
         if (cb) cb()
@@ -43,47 +90,20 @@ Page({
   },
 
   selectCategory: function (e) {
-    const that = this
     const id = Number(e.currentTarget.dataset.id) || 0
     const name = e.currentTarget.dataset.name || '全部'
-    this.setData({ activeId: id, activeName: name })
-    if (!id) {
-      this.baseMerchants = this.allMerchants || []
-      this.applyFilter()
-      return
-    }
-    const seq = (this._seq || 0) + 1
-    this._seq = seq
-    request('/merchants?categoryId=' + id)
-      .then(function (list) {
-        if (seq !== that._seq) return
-        that.baseMerchants = list || []
-        that.applyFilter()
-      })
-      .catch(function () {
-        if (seq !== that._seq) return
-        that.baseMerchants = []
-        that.applyFilter()
-      })
+    if (id === this.data.activeId) return
+    this.setData({ activeId: id, activeName: name, list: [], total: 0, loaded: false, noMore: false })
+    this.reload()
   },
 
   onKeywordInput: function (e) {
+    const that = this
     this.setData({ keyword: e.detail.value })
-    this.applyFilter()
-  },
-
-  applyFilter: function () {
-    const keyword = (this.data.keyword || '').trim().toLowerCase()
-    const list = (this.baseMerchants || []).filter(function (m) {
-      if (keyword) {
-        const text = ((m.name || '') + ' ' + (m.market || '')).toLowerCase()
-        if (text.indexOf(keyword) < 0) {
-          return false
-        }
-      }
-      return true
-    })
-    this.setData({ list: list })
+    if (this._timer) clearTimeout(this._timer)
+    this._timer = setTimeout(function () {
+      that.reload()
+    }, 300)
   },
 
   goShop: function (e) {

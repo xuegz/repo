@@ -240,11 +240,10 @@ public class MpController {
                 .in(categoryId != null, Merchant::getCategoryId,
                         categoryId == null ? List.of() : categoryService.subtreeIds(categoryId));
         List<Merchant> list = merchantService.list(wrapper);
+        Map<Long, Integer> counts = productService.countOnSaleByMerchants(
+                list.stream().map(Merchant::getId).collect(Collectors.toList()));
         for (Merchant m : list) {
-            long count = productService.count(Wrappers.<Product>lambdaQuery()
-                    .eq(Product::getMerchantId, m.getId())
-                    .eq(Product::getStatus, 1));
-            m.setProductCount((int) count);
+            m.setProductCount(counts.getOrDefault(m.getId(), 0));
             if (lat != null && lng != null && m.getLatitude() != null && m.getLongitude() != null) {
                 m.setDistance(distanceKm(lat, lng,
                         m.getLatitude().doubleValue(), m.getLongitude().doubleValue()));
@@ -260,6 +259,34 @@ public class MpController {
             list.sort(byHot);
         }
         return R.ok(list);
+    }
+
+    /** 入驻商户分页（品牌导览页滚动加载，按热度排序，关键词匹配名称/市场） */
+    @GetMapping("/merchants/page")
+    public R<IPage<Merchant>> merchantPage(@RequestParam(defaultValue = "1") long pageNum,
+                                           @RequestParam(defaultValue = "30") long pageSize,
+                                           @RequestParam(required = false) String keyword,
+                                           @RequestParam(required = false) Long categoryId,
+                                           @RequestParam(required = false) Long marketId) {
+        long size = Math.min(Math.max(pageSize, 1), 100);
+        var wrapper = Wrappers.<Merchant>lambdaQuery()
+                .eq(Merchant::getStatus, 1)
+                .and(keyword != null && !keyword.isBlank(), w -> w
+                        .like(Merchant::getName, keyword)
+                        .or()
+                        .like(Merchant::getMarket, keyword))
+                .eq(marketId != null, Merchant::getMarketId, marketId)
+                .in(categoryId != null, Merchant::getCategoryId,
+                        categoryId == null ? List.of() : categoryService.subtreeIds(categoryId))
+                .orderByDesc(Merchant::getViews)
+                .orderByDesc(Merchant::getForwards)
+                .orderByDesc(Merchant::getCalls)
+                .orderByAsc(Merchant::getId);
+        IPage<Merchant> page = merchantService.page(new Page<>(Math.max(pageNum, 1), size), wrapper);
+        Map<Long, Integer> counts = productService.countOnSaleByMerchants(
+                page.getRecords().stream().map(Merchant::getId).collect(Collectors.toList()));
+        page.getRecords().forEach(m -> m.setProductCount(counts.getOrDefault(m.getId(), 0)));
+        return R.ok(page);
     }
 
     private static long hotScore(Merchant m) {

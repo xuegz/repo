@@ -165,8 +165,15 @@ const logout = () => {
 }
 .menu-badge {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
-.menu-badge :deep(.el-badge__content) {
+.menu-badge :deep(.el-badge__content),
+.menu-badge :deep(.el-badge__content.is-fixed) {
+  position: static;
+  transform: none;
+  margin-left: 8px;
   border: none;
 }
 .main {

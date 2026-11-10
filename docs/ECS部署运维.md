@@ -141,6 +141,17 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 - 证书：Let's Encrypt，certbot 自动续期（`certbot-renew.timer`），部署钩子 `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh` 续期后 reload nginx。
 - 证书路径：`/etc/letsencrypt/live/mycailutong.com/{fullchain,privkey}.pem`，有效期 90 天。
 - Nginx：`/etc/nginx/conf.d/jiancai.conf` 只保留两个 server 块——域名 80（`default_server`，仅 ACME 验证 + 301 跳 `https://mycailutong.com`）和域名 443（admin/api/ws/demo/upload 反代）。原 `server_name _` 的 IP 直连块已于 2026-11-10 删除（旧版小程序不再使用）；任何未匹配的 Host（含 IP）都会 301 到域名。
+- 压缩：系统级 `/etc/nginx/nginx.conf` 的 `http` 块启用 gzip（关掉时管理后台首屏 JS 约 1.26MB，压缩后约 0.4MB）：
+
+```nginx
+gzip on;
+gzip_min_length 1k;
+gzip_comp_level 6;
+gzip_vary on;
+gzip_types text/plain text/css application/json application/javascript application/xml image/svg+xml;
+```
+
+- 管理后台构建：`vite.config.js` 用 `manualChunks` 拆分 `vue-vendor` / `element-plus` / `axios`，`index` 只剩业务代码；发布 `admin/dist` 时旧的 hash 资源可整目录替换。
 - 验证命令：
 
 ```bash

@@ -108,3 +108,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.brand-more {
+  padding: 8rpx 0 48rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #909399;
+}

@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -105,6 +107,20 @@ public class ProductService extends ServiceImpl<ProductMapper, Product> {
         return Arrays.stream(images.split(","))
                 .filter(s -> !s.isBlank())
                 .collect(Collectors.toList());
+    }
+
+    /** 批量统计商户在售产品数（单次查询，避免逐商户 count） */
+    public Map<Long, Integer> countOnSaleByMerchants(Collection<Long> merchantIds) {
+        if (merchantIds == null || merchantIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, Integer> counts = new HashMap<>();
+        list(Wrappers.<Product>lambdaQuery()
+                .select(Product::getId, Product::getMerchantId)
+                .in(Product::getMerchantId, merchantIds)
+                .eq(Product::getStatus, 1))
+                .forEach(p -> counts.merge(p.getMerchantId(), 1, Integer::sum));
+        return counts;
     }
 
     /** 详情（含展示信息） */
