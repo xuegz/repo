@@ -24,6 +24,7 @@ const routes = [
       { path: 'content', component: () => import('@/views/ContentManage.vue'), meta: { title: '内容管理', roles: [1] } },
       { path: 'feedback', component: () => import('@/views/FeedbackList.vue'), meta: { title: '反馈处理', roles: [1] } },
       { path: 'log', component: () => import('@/views/OperationLog.vue'), meta: { title: '操作日志', roles: [1] } },
+      { path: 'account', component: () => import('@/views/AccountList.vue'), meta: { title: '账号管理', roles: [1] } },
       { path: 'change-password', component: () => import('@/views/ChangePassword.vue'), meta: { title: '修改密码', roles: [1, 2] } },
       // 商户端
       { path: 'm/dashboard', component: () => import('@/views/merchant/MerchantDashboard.vue'), meta: { title: '数据看板', roles: [2] } },

@@ -63,7 +63,8 @@ const adminMenus = [
   { path: '/category', title: '品类管理', icon: 'Menu' },
   { path: '/content', title: '内容管理', icon: 'Picture' },
   { path: '/feedback', title: '反馈处理', icon: 'ChatLineSquare' },
-  { path: '/log', title: '操作日志', icon: 'Document' }
+  { path: '/log', title: '操作日志', icon: 'Document' },
+  { path: '/account', title: '账号管理', icon: 'UserFilled' }
 ]
 
 const merchantMenus = [

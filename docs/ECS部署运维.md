@@ -256,3 +256,10 @@ tail -f /var/log/nginx/access.log /var/log/nginx/error.log
 - `GET /api/admin/product/export`、`GET /api/merchant/product/export` → 200，`text/csv` 且带 UTF-8 BOM
 - `POST /api/mp/login` 空 code → 返回「缺少微信登录凭证」；配置 AppSecret 后，假 code 应返回「微信登录失败」而非「微信登录未配置」
 - 商户端菜单「询价线索」待报价角标与小程序「我的」红点均按 `/merchant/inquiry/counts` 与 `/mp/inquiries` 数据展示
+
+2026-11-10 新增（本地 H2 已验证）：
+- `GET /api/admin/account/list` → 200；`POST /api/admin/account/create` → 200 返回一次性临时密码，子账号首次登录 `mustChangePassword=true`
+- `POST /api/admin/account/status` 禁用后登录提示「账号已被禁用」；禁用当前登录账号返回「不能禁用当前登录账号」
+- `POST /api/admin/account/reset-password` → 200；重置后登录仍强制改密
+- 登录成功/失败、品类/市场/内容的编辑与删除均写入 `operation_log`（`login_success`、`login_fail`、`category_save`、`category_remove`、`market_save`、`market_remove`、`content_save`、`content_remove`、`account_create`、`account_reset_password`、`account_status`）
+- `GET /api/mp/merchants?categoryId=1` → 200，仅返回该品类（含子类）商户

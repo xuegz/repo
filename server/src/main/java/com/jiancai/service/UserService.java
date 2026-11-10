@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,28 +22,43 @@ public class UserService extends ServiceImpl<SysUserMapper, SysUser> {
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     @Autowired
     private JwtUtil jwtUtil;
 
     @Autowired
     private LoginAttemptService loginAttemptService;
 
+    @Autowired
+    private OperationLogService operationLogService;
+
     /** 登录：返回 token 与用户信息 */
     public Map<String, Object> login(String username, String password) {
         String account = username == null ? "" : username.trim();
-        loginAttemptService.check(account);
+        try {
+            loginAttemptService.check(account);
+        } catch (BusinessException e) {
+            operationLogService.recordLogin(null, account, false, e.getMessage());
+            throw e;
+        }
         SysUser user = lambdaQuery().eq(SysUser::getUsername, account).one();
         if (user == null || !encoder.matches(password, user.getPassword())) {
             int remaining = loginAttemptService.recordFailure(account);
+            operationLogService.recordLogin(user, account, false,
+                    user == null ? "账号不存在" : "密码错误");
             if (remaining == 0) {
                 throw new BusinessException("密码错误次数过多，请 10 分钟后再试");
             }
             throw new BusinessException("账号或密码错误，还可尝试 " + remaining + " 次");
         }
         if (Integer.valueOf(0).equals(user.getStatus())) {
+            operationLogService.recordLogin(user, account, false, "账号已被禁用");
             throw new BusinessException("账号已被禁用，请联系平台");
         }
         loginAttemptService.clear(account);
+        operationLogService.recordLogin(user, account, true,
+                "登录成功（" + (Integer.valueOf(1).equals(user.getRole()) ? "平台管理员" : "商户") + "）");
         String token = jwtUtil.generateToken(user.getId(), user.getRole(), user.getMerchantId());
 
         Map<String, Object> data = new HashMap<>(8);
@@ -113,5 +129,15 @@ public class UserService extends ServiceImpl<SysUserMapper, SysUser> {
         user.setPassword(encoder.encode(rawPassword));
         user.setMustChangePassword(1);
         updateById(user);
+    }
+
+    /** 避开易混淆字符的 8 位临时密码 */
+    public String generateTempPassword() {
+        final String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        StringBuilder sb = new StringBuilder(8);
+        for (int i = 0; i < 8; i++) {
+            sb.append(chars.charAt(RANDOM.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 }

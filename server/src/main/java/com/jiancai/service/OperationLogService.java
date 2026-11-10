@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jiancai.entity.OperationLog;
 import com.jiancai.entity.SysUser;
 import com.jiancai.mapper.OperationLogMapper;
+import com.jiancai.mapper.SysUserMapper;
 import com.jiancai.security.UserContext;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ public class OperationLogService extends ServiceImpl<OperationLogMapper, Operati
     private static final int MAX_DETAIL_LENGTH = 500;
 
     @Autowired
-    private UserService userService;
+    private SysUserMapper sysUserMapper;
 
     public void record(String action, String targetType, Long targetId, String detail) {
         try {
@@ -36,7 +37,7 @@ public class OperationLogService extends ServiceImpl<OperationLogMapper, Operati
             Long userId = UserContext.getUserId();
             entry.setUserId(userId);
             if (userId != null) {
-                SysUser user = userService.getById(userId);
+                SysUser user = sysUserMapper.selectById(userId);
                 if (user != null) {
                     entry.setUsername(user.getUsername());
                     entry.setRealName(user.getRealName());
@@ -53,6 +54,29 @@ public class OperationLogService extends ServiceImpl<OperationLogMapper, Operati
         } catch (Exception e) {
             // 日志失败不影响主流程
             log.warn("记录操作日志失败: {}", e.getMessage());
+        }
+    }
+
+    /** 登录场景无登录态，显式传入账号信息；失败时 user 可能为 null */
+    public void recordLogin(SysUser user, String username, boolean success, String detail) {
+        try {
+            OperationLog entry = new OperationLog();
+            if (user != null) {
+                entry.setUserId(user.getId());
+                entry.setUsername(user.getUsername());
+                entry.setRealName(user.getRealName());
+                entry.setRole(user.getRole());
+            } else {
+                entry.setUsername(username);
+            }
+            entry.setAction(success ? "login_success" : "login_fail");
+            entry.setTargetType("sys_user");
+            entry.setTargetId(user == null ? null : user.getId());
+            entry.setDetail(detail);
+            entry.setIp(clientIp());
+            save(entry);
+        } catch (Exception e) {
+            log.warn("记录登录日志失败: {}", e.getMessage());
         }
     }
 

@@ -66,10 +66,22 @@ import { onMounted, reactive, ref } from 'vue'
 import request from '@/api/request'
 
 const actionOptions = [
+  { value: 'login_success', label: '登录成功' },
+  { value: 'login_fail', label: '登录失败' },
   { value: 'merchant_audit', label: '商户审核' },
   { value: 'merchant_reset_password', label: '重置密码' },
   { value: 'product_audit', label: '产品审核' },
-  { value: 'feedback_handle', label: '反馈处理' }
+  { value: 'category_save', label: '品类编辑' },
+  { value: 'category_remove', label: '品类删除' },
+  { value: 'market_save', label: '市场编辑' },
+  { value: 'market_remove', label: '市场删除' },
+  { value: 'content_save', label: '内容编辑' },
+  { value: 'content_remove', label: '内容删除' },
+  { value: 'feedback_handle', label: '反馈处理' },
+  { value: 'chat_report', label: '会话举报' },
+  { value: 'account_create', label: '新增账号' },
+  { value: 'account_reset_password', label: '账号重置密码' },
+  { value: 'account_status', label: '账号启停' }
 ]
 const query = reactive({ pageNum: 1, pageSize: 10, action: '', username: '' })
 const dateRange = ref([])

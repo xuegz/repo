@@ -7,6 +7,7 @@ import com.jiancai.config.CacheConfig;
 import com.jiancai.entity.Category;
 import com.jiancai.entity.Product;
 import com.jiancai.service.CategoryService;
+import com.jiancai.service.OperationLogService;
 import com.jiancai.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -28,6 +29,9 @@ public class AdminCategoryController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private OperationLogService operationLogService;
 
     @GetMapping("/list")
     public R<List<Category>> list() {
@@ -72,13 +76,17 @@ public class AdminCategoryController {
                 throw new BusinessException("移动后层级会超过三级，请先调整子类");
             }
         }
+        boolean isNew = category.getId() == null;
         categoryService.saveOrUpdate(category);
+        operationLogService.record("category_save", "category", category.getId(),
+                (isNew ? "新增" : "编辑") + "品类「" + category.getName() + "」");
         return R.ok();
     }
 
     @PostMapping("/remove/{id}")
     @CacheEvict(cacheNames = CacheConfig.CATEGORY, allEntries = true)
     public R<Void> remove(@PathVariable Long id) {
+        Category category = categoryService.getById(id);
         long children = categoryService.count(
                 Wrappers.<Category>lambdaQuery().eq(Category::getParentId, id));
         if (children > 0) {
@@ -90,6 +98,8 @@ public class AdminCategoryController {
             throw new BusinessException("该品类下还有 " + products + " 个产品，不能删除");
         }
         categoryService.removeById(id);
+        operationLogService.record("category_remove", "category", id,
+                "删除品类「" + (category == null ? id : category.getName()) + "」");
         return R.ok();
     }
 }

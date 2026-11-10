@@ -223,11 +223,12 @@ public class MpController {
         return R.ok(data);
     }
 
-    /** 入驻商户列表（按关键词/市场筛选，含在售产品数；传 lat/lng + sort=distance 按距离排序） */
+    /** 入驻商户列表（按关键词/市场/品类筛选，含在售产品数；传 lat/lng + sort=distance 按距离排序） */
     @GetMapping("/merchants")
     public R<List<Merchant>> merchants(@RequestParam(required = false) String keyword,
                                        @RequestParam(required = false) String market,
                                        @RequestParam(required = false) Long marketId,
+                                       @RequestParam(required = false) Long categoryId,
                                        @RequestParam(required = false) Double lat,
                                        @RequestParam(required = false) Double lng,
                                        @RequestParam(required = false) String sort) {
@@ -235,7 +236,9 @@ public class MpController {
                 .eq(Merchant::getStatus, 1)
                 .like(keyword != null && !keyword.isBlank(), Merchant::getName, keyword)
                 .eq(market != null && !market.isBlank(), Merchant::getMarket, market)
-                .eq(marketId != null, Merchant::getMarketId, marketId);
+                .eq(marketId != null, Merchant::getMarketId, marketId)
+                .in(categoryId != null, Merchant::getCategoryId,
+                        categoryId == null ? List.of() : categoryService.subtreeIds(categoryId));
         List<Merchant> list = merchantService.list(wrapper);
         for (Merchant m : list) {
             long count = productService.count(Wrappers.<Product>lambdaQuery()

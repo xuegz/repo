@@ -9,6 +9,7 @@ import com.jiancai.entity.Notice;
 import com.jiancai.mapper.NoticeMapper;
 import com.jiancai.service.SiteService;
 import com.jiancai.service.StatService;
+import com.jiancai.service.OperationLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,9 @@ public class AdminContentController {
     @Autowired
     private NoticeMapper noticeMapper;
 
+    @Autowired
+    private OperationLogService operationLogService;
+
     // ---------------- 市场公告 ----------------
     @GetMapping("/notice/list")
     public R<List<Notice>> noticeList() {
@@ -43,18 +47,24 @@ public class AdminContentController {
     @PostMapping("/notice/save")
     @CacheEvict(cacheNames = CacheConfig.NOTICE, allEntries = true)
     public R<Void> noticeSave(@RequestBody Notice notice) {
-        if (notice.getId() == null) {
+        boolean isNew = notice.getId() == null;
+        if (isNew) {
             noticeMapper.insert(notice);
         } else {
             noticeMapper.updateById(notice);
         }
+        operationLogService.record("content_save", "notice", notice.getId(),
+                (isNew ? "新增" : "编辑") + "公告「" + notice.getTitle() + "」");
         return R.ok();
     }
 
     @PostMapping("/notice/remove/{id}")
     @CacheEvict(cacheNames = CacheConfig.NOTICE, allEntries = true)
     public R<Void> noticeRemove(@PathVariable Long id) {
+        Notice notice = noticeMapper.selectById(id);
         noticeMapper.deleteById(id);
+        operationLogService.record("content_remove", "notice", id,
+                "删除公告「" + (notice == null ? id : notice.getTitle()) + "」");
         return R.ok();
     }
 
@@ -66,13 +76,17 @@ public class AdminContentController {
 
     @PostMapping("/banner/save")
     public R<Void> bannerSave(@RequestBody Banner banner) {
+        boolean isNew = banner.getId() == null;
         siteService.saveBanner(banner);
+        operationLogService.record("content_save", "banner", banner.getId(),
+                (isNew ? "新增" : "编辑") + "轮播「" + banner.getTitle() + "」");
         return R.ok();
     }
 
     @PostMapping("/banner/remove/{id}")
     public R<Void> bannerRemove(@PathVariable Long id) {
         siteService.removeBanner(id);
+        operationLogService.record("content_remove", "banner", id, "删除轮播 #" + id);
         return R.ok();
     }
 
@@ -84,13 +98,17 @@ public class AdminContentController {
 
     @PostMapping("/ad/save")
     public R<Void> adSave(@RequestBody Ad ad) {
+        boolean isNew = ad.getId() == null;
         siteService.saveAd(ad);
+        operationLogService.record("content_save", "ad", ad.getId(),
+                (isNew ? "新增" : "编辑") + "广告位「" + ad.getPosition() + "」");
         return R.ok();
     }
 
     @PostMapping("/ad/remove/{id}")
     public R<Void> adRemove(@PathVariable Long id) {
         siteService.removeAd(id);
+        operationLogService.record("content_remove", "ad", id, "删除广告位 #" + id);
         return R.ok();
     }
 
