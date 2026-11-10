@@ -160,5 +160,12 @@ Page({
 
   goDetail: function (e) {
     wx.navigateTo({ url: '/pages/detail/detail?id=' + e.currentTarget.dataset.id })
+  },
+
+  onShareAppMessage: function () {
+    return {
+      title: '材路通 · 西安建材市场与商户导购',
+      path: '/pages/index/index'
+    }
   }
 })

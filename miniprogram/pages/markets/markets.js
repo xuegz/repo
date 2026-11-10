@@ -66,5 +66,12 @@ Page({
 
   goMarket: function (e) {
     wx.navigateTo({ url: '/pages/market/market?id=' + e.currentTarget.dataset.id })
+  },
+
+  onShareAppMessage: function () {
+    return {
+      title: '西安建材市场大全 · 材路通',
+      path: '/pages/markets/markets'
+    }
   }
 })
