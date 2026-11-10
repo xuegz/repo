@@ -49,7 +49,7 @@
   color: #b0b3b8;
 }
 .hero-btn {
-  background: #ff8a00;
+  background: #ff7a00;
   color: #fff;
   font-size: 26rpx;
   padding: 12rpx 32rpx;
@@ -75,8 +75,8 @@
   width: 104rpx;
   height: 104rpx;
   border-radius: 50%;
-  background: #fff3e0;
-  color: #ff8a00;
+  background: #fff4e8;
+  color: #ff7a00;
   font-size: 42rpx;
   font-weight: bold;
   display: flex;

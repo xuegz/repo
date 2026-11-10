@@ -343,6 +343,6 @@ onMounted(() => {
   margin-top: 6px;
   font-size: 20px;
   font-weight: 600;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 </style>

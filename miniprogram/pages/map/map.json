@@ -1,3 +1,5 @@
 {
+  "navigationBarTitleText": "地图找商户",
+  "enablePullDownRefresh": false,
   "usingComponents": {}
 }

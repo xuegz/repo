@@ -32,18 +32,18 @@
     }
   ],
   "window": {
-    "backgroundTextStyle": "light",
+    "backgroundTextStyle": "dark",
     "navigationBarBackgroundColor": "#ffc93c",
     "navigationBarTitleText": "材路通",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f5f6f8",
+    "backgroundColor": "#f5f7fa",
     "enablePullDownRefresh": true
   },
   "tabBar": {
     "color": "#909399",
     "selectedColor": "#ff7a00",
     "backgroundColor": "#ffffff",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",

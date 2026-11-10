@@ -1,13 +1,13 @@
 <template>
   <el-container class="layout">
     <el-aside width="220px" class="aside">
-      <div class="logo">建材商户平台</div>
+      <div class="logo">材路通 · 管理后台</div>
       <el-menu
         :default-active="route.path"
         router
         background-color="#1f2937"
         text-color="#c0c4cc"
-        active-text-color="#ffd04b"
+        active-text-color="#ffc93c"
       >
         <el-menu-item v-for="item in menus" :key="item.path" :index="item.path">
           <el-icon><component :is="item.icon" /></el-icon>
@@ -139,8 +139,8 @@ const logout = () => {
   height: 60px;
   line-height: 60px;
   text-align: center;
-  color: #fff;
-  font-size: 18px;
+  color: #ffc93c;
+  font-size: 17px;
   font-weight: bold;
   background: #18222f;
   letter-spacing: 1px;

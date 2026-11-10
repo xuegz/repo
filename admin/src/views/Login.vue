@@ -1,8 +1,8 @@
 <template>
   <div class="login-page">
     <div class="login-box">
-      <h2>建材商户平台</h2>
-      <p class="sub">管理后台 / 商户端</p>
+      <h2>材路通</h2>
+      <p class="sub">建材商户管理后台</p>
 
       <el-form size="large" @keyup.enter="submit">
         <el-form-item>
@@ -22,7 +22,7 @@
         </el-button>
       </el-form>
 
-      <div class="tip">平台管理员：admin / 123456　商户：merchant / 123456<br />商户首次登录需修改初始密码</div>
+      <div class="tip">商户首次登录需修改初始密码；如需帮助请联系平台管理员</div>
     </div>
   </div>
 </template>
@@ -70,7 +70,7 @@ const submit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1f2937, #409eff);
+  background: linear-gradient(135deg, #ffc93c, #ff7a00);
 }
 .login-box {
   width: 380px;

@@ -1,4 +1,5 @@
 const {
+  HOST,
   request,
   openidRequest,
   reportView,
@@ -160,6 +161,17 @@ Page({
     wx.makePhoneCall({
       phoneNumber: product.merchantPhone,
       fail: function () {}
+    })
+  },
+
+  previewProductImage: function (e) {
+    const list = (this.data.product.imageList || []).map(function (src) {
+      return src.indexOf('http') === 0 ? src : HOST + src
+    })
+    if (!list.length) return
+    wx.previewImage({
+      urls: list,
+      current: list[Number(e.currentTarget.dataset.index) || 0]
     })
   },
 

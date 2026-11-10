@@ -12,7 +12,8 @@ Page({
     activeName: '全部',
     loaded: false,
     loading: false,
-    noMore: false
+    noMore: false,
+    scrollTop: 0
   },
 
   onLoad: function () {
@@ -24,6 +25,20 @@ Page({
 
   onUnload: function () {
     if (this._timer) clearTimeout(this._timer)
+  },
+
+  onScroll: function (e) {
+    this._scrollTop = e.detail.scrollTop
+  },
+
+  /** 切品类/搜索后回到顶部 */
+  resetScroll: function () {
+    const that = this
+    if (!this._scrollTop) return
+    this._scrollTop = 0
+    this.setData({ scrollTop: 1 }, function () {
+      that.setData({ scrollTop: 0 })
+    })
   },
 
   onPullDownRefresh: function () {
@@ -94,6 +109,7 @@ Page({
     const name = e.currentTarget.dataset.name || '全部'
     if (id === this.data.activeId) return
     this.setData({ activeId: id, activeName: name, list: [], total: 0, loaded: false, noMore: false })
+    this.resetScroll()
     this.reload()
   },
 
@@ -102,6 +118,7 @@ Page({
     this.setData({ keyword: e.detail.value })
     if (this._timer) clearTimeout(this._timer)
     this._timer = setTimeout(function () {
+      that.resetScroll()
       that.reload()
     }, 300)
   },

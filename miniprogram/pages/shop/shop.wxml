@@ -6,7 +6,7 @@
     <image wx:else src="/assets/placeholder/shop-wide.jpg" mode="aspectFill" class="shop-logo" />
     <view class="shop-name">{{merchant.name}}</view>
     <view class="info-row"><text class="info-label">联系人</text><text>{{merchant.contactName || '-'}}</text></view>
-    <view class="info-row"><text class="info-label">电话</text><text>{{merchant.phone}}</text></view>
+    <view class="info-row"><text class="info-label">电话</text><text class="phone-link" bindtap="callPhone">{{merchant.phone}}</text></view>
     <view class="info-row" wx:if="{{merchant.marketId}}" bindtap="goMarket">
       <text class="info-label">市场</text>
       <text class="market-link">{{merchant.market || '-'}} ›</text>

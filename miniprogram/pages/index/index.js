@@ -75,11 +75,10 @@ Page({
 
   loadMerchants: function () {
     const that = this
-    request('/merchants')
-      .then(function (data) {
-        const list = data || []
+    request('/merchants/page?pageNum=1&pageSize=4')
+      .then(function (page) {
         that.setData({
-          merchants: list.slice(0, 4)
+          merchants: (page && page.records) || []
         })
       })
       .catch(function () {})

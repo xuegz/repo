@@ -178,7 +178,7 @@ onMounted(load)
   margin-top: 4px;
 }
 .coord-tip a {
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 .muted {
   color: #b0b3b8;

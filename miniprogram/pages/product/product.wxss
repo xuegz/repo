@@ -32,7 +32,7 @@
   color: #b0b3b8;
 }
 .hero-btn {
-  background: #ff8a00;
+  background: #ff7a00;
   color: #fff;
   font-size: 26rpx;
   padding: 12rpx 32rpx;

@@ -125,7 +125,7 @@ function tagType(action) {
   margin-top: 8px;
   font-size: 26px;
   font-weight: bold;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 .card-header {
   display: flex;

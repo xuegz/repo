@@ -123,7 +123,7 @@ onMounted(async () => {
   margin-top: 4px;
 }
 .coord-tip a {
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 .logo {
   width: 200px;

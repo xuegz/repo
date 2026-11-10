@@ -137,7 +137,7 @@ onMounted(() => {
   margin-top: 8px;
   font-size: 26px;
   font-weight: bold;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 .card-header {
   display: flex;
@@ -160,13 +160,13 @@ onMounted(() => {
   margin-right: 6px;
 }
 .dot.views {
-  background: #409eff;
+  background: var(--el-color-primary);
 }
 .dot.inquiries {
   background: #67c23a;
 }
 .dot.users {
-  background: #e6a23c;
+  background: #64748b;
 }
 .legend-tip {
   color: #c0c4cc;
@@ -208,13 +208,13 @@ onMounted(() => {
   transition: height 0.3s;
 }
 .bar.views {
-  background: #409eff;
+  background: var(--el-color-primary);
 }
 .bar.inquiries {
   background: #67c23a;
 }
 .bar.users {
-  background: #e6a23c;
+  background: #64748b;
 }
 .chart-label {
   height: 18px;

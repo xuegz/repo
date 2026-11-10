@@ -1,5 +1,5 @@
 .feedback-header {
-  background: linear-gradient(135deg, #1f2937, #ff7a00);
+  background: linear-gradient(135deg, #e8590c, #ff7a00);
 }
 .feedback-title {
   font-size: 36rpx;
@@ -94,6 +94,6 @@
   word-break: break-all;
 }
 .record-reply-label {
-  color: #d46b08;
+  color: #b85000;
   font-weight: bold;
 }

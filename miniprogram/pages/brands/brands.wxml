@@ -34,6 +34,8 @@
       scroll-y
       class="brand-main"
       lower-threshold="200"
+      scroll-top="{{scrollTop}}"
+      bindscroll="onScroll"
       bindscrolltolower="loadMore"
     >
       <view class="brand-head">
@@ -53,7 +55,7 @@
           <view class="brand-name">{{item.name}}</view>
         </view>
       </view>
-      <view class="empty" wx:if="{{loaded && list.length === 0}}">该品类暂无入驻商户</view>
+      <view class="empty" wx:if="{{loaded && list.length === 0}}">{{keyword ? '没有找到匹配的商户' : '该品类暂无入驻商户'}}</view>
       <view class="brand-more" wx:if="{{loading}}">加载中…</view>
       <view class="brand-more" wx:elif="{{noMore && list.length > 0}}">没有更多了</view>
     </scroll-view>

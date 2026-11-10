@@ -4,7 +4,14 @@
   <!-- 产品图 -->
   <swiper class="detail-swiper" indicator-dots="true" circular="true" wx:if="{{product.imageList.length > 0}}">
     <swiper-item wx:for="{{product.imageList}}" wx:key="*this">
-      <image src="{{tools.fileUrl(item)}}" mode="aspectFill" class="detail-img" />
+      <image
+        src="{{tools.fileUrl(item)}}"
+        mode="aspectFill"
+        class="detail-img"
+        lazy-load
+        bindtap="previewProductImage"
+        data-index="{{index}}"
+      />
     </swiper-item>
   </swiper>
   <view class="detail-swiper" wx:else>
@@ -66,7 +73,7 @@
       <view class="info-link" bindtap="goShop">查看商户主页 ›</view>
     </view>
     <view class="info-row"><text class="info-label">商户</text><text>{{product.merchantName}}</text></view>
-    <view class="info-row"><text class="info-label">电话</text><text>{{product.merchantPhone}}</text></view>
+    <view class="info-row"><text class="info-label">电话</text><text class="phone-link" bindtap="callPhone">{{product.merchantPhone}}</text></view>
     <view class="btn-row">
       <button class="btn-shop" bindtap="openNav">到店导航</button>
     </view>

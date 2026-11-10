@@ -338,7 +338,7 @@ onMounted(load)
 }
 
 .quote-total {
-  color: #d46b08;
+  color: #b85000;
 }
 
 .quote-main.expired {
