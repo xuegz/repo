@@ -1,21 +1,5 @@
 const merchant = require('../../../utils/merchant')
-
-function pad(n) {
-  return n < 10 ? '0' + n : '' + n
-}
-
-function timeText(value) {
-  if (!value) return ''
-  const date = new Date(String(value).replace(/-/g, '/').replace('T', ' ').split('.')[0])
-  if (isNaN(date.getTime())) return ''
-  const now = new Date()
-  if (date.toDateString() === now.toDateString()) {
-    return pad(date.getHours()) + ':' + pad(date.getMinutes())
-  }
-  const yesterday = new Date(now.getTime() - 86400000)
-  if (date.toDateString() === yesterday.toDateString()) return '昨天'
-  return (date.getMonth() + 1) + '-' + date.getDate()
-}
+const { convTime } = require('../../../utils/format')
 
 Page({
   data: {
@@ -32,6 +16,7 @@ Page({
       }
       that.load()
       that.startTimer()
+      that.connectWs()
     }).catch(function () {
       that.setData({ loading: false })
     })
@@ -39,10 +24,12 @@ Page({
 
   onHide: function () {
     this.stopTimer()
+    this.closeWs()
   },
 
   onUnload: function () {
     this.stopTimer()
+    this.closeWs()
   },
 
   onPullDownRefresh: function () {
@@ -54,6 +41,7 @@ Page({
   startTimer: function () {
     const that = this
     this.stopTimer()
+    // 15 秒兜底轮询；WS 推送到达时立即刷新
     this.timer = setInterval(function () {
       that.load(true)
     }, 15000)
@@ -63,6 +51,69 @@ Page({
     if (this.timer) {
       clearInterval(this.timer)
       this.timer = null
+    }
+  },
+
+  // ---------------- WebSocket 实时刷新 ----------------
+  connectWs: function () {
+    const that = this
+    const token = merchant.token()
+    if (!token || this.socket) {
+      return
+    }
+    const url = merchant.HOST.replace(/^http/, 'ws') + '/ws/chat?role=merchant&token=' + encodeURIComponent(token)
+    const task = wx.connectSocket({ url: url })
+    this.socket = task
+    task.onMessage(function (res) {
+      that.onPush(res.data)
+    })
+    task.onClose(function () {
+      that.socket = null
+      that.scheduleReconnect()
+    })
+    task.onError(function () {
+      that.socket = null
+      that.scheduleReconnect()
+    })
+  },
+
+  closeWs: function () {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+    if (this.socket) {
+      try {
+        this.socket.close()
+      } catch (e) {}
+      this.socket = null
+    }
+  },
+
+  scheduleReconnect: function () {
+    const that = this
+    if (this.reconnectTimer) {
+      return
+    }
+    this.reconnectTimer = setTimeout(function () {
+      that.reconnectTimer = null
+      if (that.timer) {
+        // 页面仍在展示时才重连
+        that.connectWs()
+      }
+    }, 5000)
+  },
+
+  /** 任意会话有新消息即刷新会话列表 */
+  onPush: function (raw) {
+    let data
+    try {
+      data = JSON.parse(raw)
+    } catch (e) {
+      return
+    }
+    if (data && data.event === 'message') {
+      this.load(true)
     }
   },
 
@@ -85,7 +136,7 @@ Page({
       const name = item.userName || '微信访客'
       return Object.assign({}, item, {
         initial: name.charAt(0),
-        timeText: timeText(item.lastMessageAt),
+        timeText: convTime(item.lastMessageAt),
         badge: item.unread > 99 ? '99+' : String(item.unread || 0)
       })
     })

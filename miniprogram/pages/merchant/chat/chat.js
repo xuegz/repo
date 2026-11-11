@@ -1,16 +1,6 @@
 const merchant = require('../../../utils/merchant')
 const { uploadImage } = require('../../../utils/request')
-
-function pad(n) {
-  return n < 10 ? '0' + n : '' + n
-}
-
-function timeText(value) {
-  if (!value) return ''
-  const date = new Date(String(value).replace(/-/g, '/').replace('T', ' ').split('.')[0])
-  if (isNaN(date.getTime())) return ''
-  return pad(date.getHours()) + ':' + pad(date.getMinutes())
-}
+const { chatTime } = require('../../../utils/format')
 
 function decorate(rows) {
   return rows.map(function (item) {
@@ -22,7 +12,7 @@ function decorate(rows) {
         view.product = null
       }
     }
-    view.timeText = timeText(item.createTime)
+    view.timeText = chatTime(item.createTime)
     return view
   })
 }

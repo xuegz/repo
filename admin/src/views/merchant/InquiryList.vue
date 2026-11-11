@@ -182,9 +182,11 @@ const load = async () => {
     total.value = Number(res.data.total)
   } finally {
     loading.value = false
-    loadCounts()
   }
 }
+
+/** 角标只在进入页面和数据变动后刷新，翻页/筛选不重复请求 */
+const refreshCounts = () => loadCounts()
 
 const loadCounts = async () => {
   try {
@@ -220,6 +222,7 @@ const submitQuote = async () => {
     ElMessage.success('报价已提交，客户可在小程序查看')
     dialogVisible.value = false
     load()
+    refreshCounts()
   } finally {
     submitting.value = false
   }
@@ -229,12 +232,14 @@ const handle = async (row) => {
   await request.post(`/merchant/inquiry/handle/${row.id}`)
   ElMessage.success('已标记为跟进中')
   load()
+  refreshCounts()
 }
 
 const remove = async (row) => {
   await request.post(`/merchant/inquiry/remove/${row.id}`)
   ElMessage.success('已删除')
   load()
+  refreshCounts()
 }
 
 const statusMeta = (status) => STATUS_META[status] || { text: '未知', type: 'info' }
@@ -254,7 +259,10 @@ const localDate = () => {
 
 const isExpired = (row) => !!(row.quoteValidUntil && row.quoteValidUntil < localDate())
 
-onMounted(load)
+onMounted(() => {
+  load()
+  refreshCounts()
+})
 </script>
 
 <style scoped>

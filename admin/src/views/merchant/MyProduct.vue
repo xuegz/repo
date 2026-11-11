@@ -18,10 +18,19 @@
         <el-button @click="reset">重置</el-button>
         <el-button type="success" @click="openAdd">发布产品</el-button>
         <el-button :loading="exporting" @click="exportProducts">导出商品</el-button>
+        <el-button @click="openImport">导入商品</el-button>
       </el-form-item>
     </el-form>
 
-    <el-table :data="tableData" border v-loading="loading" @sort-change="onSortChange">
+    <div class="batch-bar" v-if="selection.length">
+      <span class="batch-tip">已选 {{ selection.length }} 项</span>
+      <el-button size="small" type="success" @click="batchStatus(1)">批量上架</el-button>
+      <el-button size="small" type="warning" @click="batchStatus(3)">批量下架</el-button>
+      <el-button size="small" type="danger" @click="batchRemove">批量删除</el-button>
+    </div>
+
+    <el-table :data="tableData" border v-loading="loading" @sort-change="onSortChange" @selection-change="onSelectionChange">
+      <el-table-column type="selection" width="45" />
       <el-table-column label="产品图" width="90">
         <template #default="{ row }">
           <el-image
@@ -82,13 +91,13 @@
     />
 
     <el-dialog v-model="dialogVisible" :title="form.id ? '编辑产品' : '发布产品'" width="700px">
-      <el-form :model="form" label-width="90px">
-        <el-form-item label="产品名称">
-          <el-input v-model="form.name" />
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
+        <el-form-item label="产品名称" prop="name">
+          <el-input v-model="form.name" maxlength="128" show-word-limit />
         </el-form-item>
         <el-row :gutter="10">
           <el-col :span="12">
-            <el-form-item label="品类">
+            <el-form-item label="品类" prop="categoryId">
               <el-select v-model="form.categoryId" clearable style="width: 100%">
                 <el-option v-for="c in categories" :key="c.id" :label="c.label" :value="c.id" />
               </el-select>
@@ -146,15 +155,59 @@
         <el-button type="primary" @click="save">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="importVisible" title="导入商品（CSV）" width="580px">
+      <el-alert
+        type="info"
+        :closable="false"
+        class="import-tip"
+        title="必填列：商品名称、品类；可选列：品牌、产地、规格、型号、价格、单位、图片、描述"
+        description="可先「导出商品」获取标准表头；导入后产品进入待审核，平台审核通过后自动上架。单次最多 2000 条，文件不超过 5MB。"
+      />
+      <el-upload
+        drag
+        action="/api/merchant/product/import"
+        :headers="uploadHeaders"
+        :show-file-list="false"
+        accept=".csv"
+        :on-success="onImportSuccess"
+        :on-error="onImportError"
+      >
+        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+        <div class="el-upload__text">选择 CSV 文件或拖拽到此处</div>
+      </el-upload>
+      <template v-if="importResult">
+        <el-alert
+          class="import-tip"
+          :type="importResult.imported > 0 ? 'success' : 'error'"
+          :closable="false"
+          :title="`共 ${importResult.total} 行，成功导入 ${importResult.imported} 条`"
+        />
+        <el-table
+          v-if="importResult.errors && importResult.errors.length"
+          :data="importResult.errors"
+          size="small"
+          max-height="220"
+        >
+          <el-table-column prop="row" label="行号" width="70" />
+          <el-table-column prop="message" label="错误原因" />
+        </el-table>
+      </template>
+      <template #footer>
+        <el-button @click="importVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </el-card>
 </template>
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { UploadFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import request from '@/api/request'
 import { categorySelectOptions } from '@/utils/category'
+import { useUploadHeaders } from '@/utils/upload'
 import productPlaceholder from '@/assets/product-placeholder.jpg'
 
 const query = reactive({ pageNum: 1, pageSize: 10, name: '', status: -1, sort: '' })
@@ -165,9 +218,18 @@ const counts = ref({})
 const categories = ref([])
 const dialogVisible = ref(false)
 const form = ref({})
+const formRef = ref()
+const rules = {
+  name: [{ required: true, message: '请输入产品名称', trigger: 'blur' }],
+  categoryId: [{ required: true, message: '请选择产品品类', trigger: 'change' }]
+}
 const imageList = ref([])
-const uploadHeaders = { Authorization: localStorage.getItem('token') || '' }
+const MAX_IMAGES = 9
+const uploadHeaders = useUploadHeaders()
 const exporting = ref(false)
+const selection = ref([])
+const importVisible = ref(false)
+const importResult = ref(null)
 
 const statusText = (s) => ({ 0: '待审核', 1: '在售', 2: '已拒绝', 3: '已下架' }[s] || '未知')
 const statusType = (s) => ({ 0: 'warning', 1: 'success', 2: 'danger', 3: 'info' }[s] || 'info')
@@ -237,6 +299,14 @@ const openEdit = (row) => {
 }
 
 const onUploadSuccess = (res) => {
+  if (res.code !== 200) {
+    ElMessage.error(res.msg || '图片上传失败')
+    return
+  }
+  if (imageList.value.length >= MAX_IMAGES) {
+    ElMessage.warning(`最多上传 ${MAX_IMAGES} 张图片`)
+    return
+  }
   imageList.value.push(res.data.url)
 }
 
@@ -245,6 +315,8 @@ const removeImage = (index) => {
 }
 
 const save = async () => {
+  await formRef.value.validate()
+  form.value.name = (form.value.name || '').trim()
   form.value.images = imageList.value.join(',')
   form.value.imageList = [...imageList.value]
   const isNew = !form.value.id
@@ -252,6 +324,62 @@ const save = async () => {
   ElMessage.success(isNew ? '已提交，等待平台审核' : '保存成功')
   dialogVisible.value = false
   load()
+  loadStatusCount()
+}
+
+// ---------------- 批量操作 ----------------
+const onSelectionChange = (rows) => {
+  selection.value = rows
+}
+
+const batchStatus = async (status) => {
+  const ids = selection.value.map((r) => r.id)
+  await ElMessageBox.confirm(
+    `确定对选中的 ${ids.length} 个产品批量${status === 1 ? '上架' : '下架'}？未通过审核的产品会自动跳过`,
+    '批量操作',
+    { type: 'warning' }
+  )
+  const res = await request.post('/merchant/product/batch-status', { ids, status })
+  const { updated, skipped } = res.data
+  ElMessage.success(`已${status === 1 ? '上架' : '下架'} ${updated} 个${skipped ? `，跳过 ${skipped} 个` : ''}`)
+  load()
+  loadStatusCount()
+}
+
+const batchRemove = async () => {
+  const ids = selection.value.map((r) => r.id)
+  await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 个产品？删除后不可恢复`, '批量删除', {
+    type: 'warning',
+    confirmButtonText: '删除',
+    confirmButtonClass: 'el-button--danger'
+  })
+  const res = await request.post('/merchant/product/batch-remove', { ids })
+  ElMessage.success(`已删除 ${res.data} 个产品`)
+  load()
+  loadStatusCount()
+}
+
+// ---------------- CSV 导入 ----------------
+const openImport = () => {
+  importResult.value = null
+  importVisible.value = true
+}
+
+const onImportSuccess = (res) => {
+  if (res.code !== 200) {
+    ElMessage.error(res.msg || '导入失败')
+    return
+  }
+  importResult.value = res.data
+  if (res.data.imported > 0) {
+    ElMessage.success(`成功导入 ${res.data.imported} 条`)
+    load()
+    loadStatusCount()
+  }
+}
+
+const onImportError = () => {
+  ElMessage.error('上传失败，请检查网络后重试')
 }
 
 const changeStatus = async (row, status) => {
@@ -307,6 +435,20 @@ onMounted(async () => {
 .reason {
   font-size: 12px;
   color: #f56c6c;
+}
+.batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.batch-tip {
+  font-size: 13px;
+  color: #909399;
+  margin-right: 4px;
+}
+.import-tip {
+  margin-bottom: 12px;
 }
 .img-list {
   display: flex;

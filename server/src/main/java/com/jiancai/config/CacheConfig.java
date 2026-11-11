@@ -22,6 +22,8 @@ public class CacheConfig {
     public static final String AD = "mpAd";
     public static final String NOTICE = "mpNotice";
     public static final String MARKET = "mpMarket";
+    /** 商户看板统计，60 秒短缓存（允许延迟，换取高频刷新下的查询合并） */
+    public static final String MERCHANT_STAT = "merchantStat";
 
     @Bean
     public CacheManager cacheManager() {
@@ -33,6 +35,10 @@ public class CacheConfig {
         manager.registerCustomCache(MARKET, Caffeine.newBuilder()
                 .maximumSize(10)
                 .expireAfterWrite(Duration.ofMinutes(2))
+                .build());
+        manager.registerCustomCache(MERCHANT_STAT, Caffeine.newBuilder()
+                .maximumSize(500)
+                .expireAfterWrite(Duration.ofSeconds(60))
                 .build());
         return manager;
     }

@@ -1,20 +1,10 @@
 const merchant = require('../../../utils/merchant')
+const { formatDateTime, todayStr } = require('../../../utils/format')
 
 const STATUS_META = {
   0: { text: '待报价', cls: 'pending' },
   1: { text: '已报价', cls: 'online' },
   2: { text: '跟进中', cls: 'follow' }
-}
-
-function formatTime(t) {
-  return t ? String(t).replace('T', ' ').slice(0, 16) : ''
-}
-
-function todayStr() {
-  const d = new Date()
-  const m = ('0' + (d.getMonth() + 1)).slice(-2)
-  const day = ('0' + d.getDate()).slice(-2)
-  return d.getFullYear() + '-' + m + '-' + day
 }
 
 function moneyText(v) {
@@ -126,8 +116,8 @@ Page({
     const meta = STATUS_META[item.status] || { text: '未知', cls: 'pending' }
     item.statusText = meta.text
     item.statusClass = meta.cls
-    item.timeText = formatTime(item.createTime)
-    item.quoteTimeText = formatTime(item.quoteTime)
+    item.timeText = formatDateTime(item.createTime)
+    item.quoteTimeText = formatDateTime(item.quoteTime)
     item.hasQuote = item.quotePrice != null || item.quoteTotal != null
     item.quotePriceText = moneyText(item.quotePrice)
     item.quoteTotalText = moneyText(item.quoteTotal)

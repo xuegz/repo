@@ -1,5 +1,6 @@
 package com.jiancai.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jiancai.common.BusinessException;
@@ -23,6 +24,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -257,6 +259,88 @@ public class MerchantController {
         return R.ok();
     }
 
+    /** 批量上下架：1=上架 3=下架，仅本商户产品；待审核/被拒绝的产品跳过不上架 */
+    @PostMapping("/product/batch-status")
+    public R<Map<String, Integer>> productBatchStatus(@RequestBody Map<String, Object> body) {
+        List<Long> ids = parseIds(body.get("ids"));
+        Integer status = Integer.valueOf(body.get("status").toString());
+        if (!status.equals(1) && !status.equals(3)) {
+            throw new BusinessException("状态不合法");
+        }
+        Long merchantId = currentMerchantId();
+        int updated = 0;
+        int skipped = 0;
+        for (Long id : ids) {
+            Product exist = productService.getById(id);
+            if (exist == null || !merchantId.equals(exist.getMerchantId())) {
+                skipped++;
+                continue;
+            }
+            if (status.equals(1)
+                    && (Integer.valueOf(0).equals(exist.getStatus())
+                    || Integer.valueOf(2).equals(exist.getStatus()))) {
+                // 未通过审核的产品不能上架
+                skipped++;
+                continue;
+            }
+            productService.changeStatus(id, status);
+            updated++;
+        }
+        Map<String, Integer> result = new LinkedHashMap<>();
+        result.put("updated", updated);
+        result.put("skipped", skipped);
+        return R.ok(result);
+    }
+
+    /** 批量删除本商户产品，返回实际删除数 */
+    @PostMapping("/product/batch-remove")
+    public R<Integer> productBatchRemove(@RequestBody Map<String, Object> body) {
+        List<Long> ids = parseIds(body.get("ids"));
+        Long merchantId = currentMerchantId();
+        long count = productService.count(Wrappers.<Product>lambdaQuery()
+                .in(Product::getId, ids)
+                .eq(Product::getMerchantId, merchantId));
+        if (count > 0) {
+            productService.remove(Wrappers.<Product>lambdaQuery()
+                    .in(Product::getId, ids)
+                    .eq(Product::getMerchantId, merchantId));
+        }
+        return R.ok((int) count);
+    }
+
+    /** 商户自助导入商品：CSV 品类/名称校验同平台端，但导入后进入待审核（status=0），不绕过审核 */
+    @PostMapping("/product/import")
+    public R<Map<String, Object>> importProducts(@RequestParam("file") MultipartFile file) {
+        return R.ok(productCsvService.importMerchantCsv(file, currentMerchantId()));
+    }
+
+    /** 批量操作的 id 列表：支持数组或逗号分隔字符串，1~100 个 */
+    private static List<Long> parseIds(Object value) {
+        if (value == null) {
+            throw new BusinessException("请选择要操作的产品");
+        }
+        List<String> parts;
+        if (value instanceof List<?> list) {
+            parts = list.stream().map(String::valueOf).toList();
+        } else {
+            parts = List.of(value.toString().split(","));
+        }
+        try {
+            List<Long> ids = parts.stream()
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(Long::valueOf)
+                    .distinct()
+                    .toList();
+            if (ids.isEmpty() || ids.size() > 100) {
+                throw new BusinessException("每次最多操作 100 个产品");
+            }
+            return ids;
+        } catch (NumberFormatException e) {
+            throw new BusinessException("产品 id 不合法");
+        }
+    }
+
     /** 导出本商户商品清单 */
     @GetMapping("/product/export")
     public ResponseEntity<byte[]> exportProducts(@RequestParam(required = false) String name,
@@ -321,19 +405,37 @@ public class MerchantController {
         return R.ok(page);
     }
 
-    /** 各状态线索数，用于 tab 角标 */
+    /** 各状态线索数，用于 tab 角标（单条 GROUP BY，替代 4 次 selectCount） */
     @GetMapping("/inquiry/counts")
     public R<Map<String, Long>> inquiryCounts() {
         Long merchantId = currentMerchantId();
+        long all = 0, pending = 0, quoted = 0, follow = 0;
+        for (Map<String, Object> row : inquiryMapper.selectMaps(new QueryWrapper<Inquiry>()
+                .select("status", "COUNT(*) AS c")
+                .eq("merchant_id", merchantId)
+                .groupBy("status"))) {
+            long c = 0;
+            Object count = row.containsKey("c") ? row.get("c") : row.get("C");
+            if (count instanceof Number number) {
+                c = number.longValue();
+            }
+            all += c;
+            Object status = row.containsKey("status") ? row.get("status") : row.get("STATUS");
+            if (status == null) {
+                continue;
+            }
+            switch (Integer.valueOf(status.toString())) {
+                case 0 -> pending = c;
+                case 1 -> quoted = c;
+                case 2 -> follow = c;
+                default -> { }
+            }
+        }
         Map<String, Long> counts = new LinkedHashMap<>();
-        counts.put("all", inquiryMapper.selectCount(
-                Wrappers.<Inquiry>lambdaQuery().eq(Inquiry::getMerchantId, merchantId)));
-        counts.put("pending", inquiryMapper.selectCount(
-                Wrappers.<Inquiry>lambdaQuery().eq(Inquiry::getMerchantId, merchantId).eq(Inquiry::getStatus, 0)));
-        counts.put("quoted", inquiryMapper.selectCount(
-                Wrappers.<Inquiry>lambdaQuery().eq(Inquiry::getMerchantId, merchantId).eq(Inquiry::getStatus, 1)));
-        counts.put("follow", inquiryMapper.selectCount(
-                Wrappers.<Inquiry>lambdaQuery().eq(Inquiry::getMerchantId, merchantId).eq(Inquiry::getStatus, 2)));
+        counts.put("all", all);
+        counts.put("pending", pending);
+        counts.put("quoted", quoted);
+        counts.put("follow", follow);
         return R.ok(counts);
     }
 

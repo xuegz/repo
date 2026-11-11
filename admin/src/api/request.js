@@ -23,7 +23,8 @@ request.interceptors.response.use(
     }
     const msg = (body && body.msg) || '请求失败'
     ElMessage.error(msg)
-    if (body && (body.code === 401 || body.code === 403)) {
+    // 仅 401（未登录/过期）才登出；403 是业务拒绝（如会员专享），只提示不踢出
+    if (body && body.code === 401) {
       localStorage.clear()
       setTimeout(() => {
         window.location.href = '/login'

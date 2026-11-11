@@ -1,10 +1,7 @@
 const merchant = require('../../../utils/merchant')
+const { formatDateTime } = require('../../../utils/format')
 
 const STATUS_META = { 0: '待审核', 1: '已通过', 2: '已拒绝' }
-
-function formatTime(value) {
-  return value ? String(value).replace('T', ' ').slice(0, 16) : '-'
-}
 
 Page({
   data: {
@@ -34,7 +31,7 @@ Page({
       .then(function (data) {
         const rows = ((data && data.invited) || []).map(function (item) {
           item.statusText = STATUS_META[item.status] || '未知'
-          item.timeText = formatTime(item.inviteTime || item.createTime)
+          item.timeText = formatDateTime(item.inviteTime || item.createTime)
           return item
         })
         that.setData({

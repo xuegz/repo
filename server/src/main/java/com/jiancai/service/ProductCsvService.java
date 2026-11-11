@@ -50,8 +50,29 @@ public class ProductCsvService {
     @Autowired
     private CategoryService categoryService;
 
+    /** 平台端导入：按 CSV 中的「商户手机号」列确定归属，导入后直接在售 */
     @Transactional
     public Map<String, Object> importCsv(MultipartFile file) {
+        return doImport(file, null);
+    }
+
+    /**
+     * 商户自助导入：归属固定为当前商户，CSV 无需「商户手机号」列；
+     * 导入后进入待审核（status=0），不绕过平台审核
+     */
+    @Transactional
+    public Map<String, Object> importMerchantCsv(MultipartFile file, Long merchantId) {
+        Merchant merchant = merchantService.getById(merchantId);
+        if (merchant == null || !Integer.valueOf(1).equals(merchant.getStatus())) {
+            throw new BusinessException("商户不存在或未通过审核");
+        }
+        return doImport(file, merchant);
+    }
+
+    /**
+     * 导入主流程：fixedMerchant 为空时按手机号列归属（平台端），否则固定归属（商户端）
+     */
+    private Map<String, Object> doImport(MultipartFile file, Merchant fixedMerchant) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("请选择要导入的 CSV 文件");
         }
@@ -68,11 +89,14 @@ public class ProductCsvService {
         for (int i = 0; i < headers.size(); i++) {
             columns.putIfAbsent(headers.get(i), i);
         }
-        Integer phoneCol = column(columns, "商户手机号", "手机号");
+        Integer phoneCol = fixedMerchant == null ? column(columns, "商户手机号", "手机号") : null;
         Integer nameCol = column(columns, "商品名称", "产品名称");
         Integer categoryCol = column(columns, "品类", "分类");
-        if (phoneCol == null || nameCol == null || categoryCol == null) {
-            throw new BusinessException("表头缺少必填列：商户手机号、商品名称、品类");
+        if (nameCol == null || categoryCol == null
+                || (fixedMerchant == null && phoneCol == null)) {
+            throw new BusinessException(fixedMerchant == null
+                    ? "表头缺少必填列：商户手机号、商品名称、品类"
+                    : "表头缺少必填列：商品名称、品类");
         }
         Integer brandCol = column(columns, "品牌");
         Integer originCol = column(columns, "产地");
@@ -83,9 +107,11 @@ public class ProductCsvService {
         Integer imagesCol = column(columns, "图片", "图片地址");
         Integer descCol = column(columns, "描述", "简介");
 
-        Map<String, List<Merchant>> merchantsByPhone = merchantService.list().stream()
-                .filter(m -> m.getPhone() != null && !m.getPhone().isBlank())
-                .collect(Collectors.groupingBy(m -> m.getPhone().trim()));
+        Map<String, List<Merchant>> merchantsByPhone = fixedMerchant == null
+                ? merchantService.list().stream()
+                        .filter(m -> m.getPhone() != null && !m.getPhone().isBlank())
+                        .collect(Collectors.groupingBy(m -> m.getPhone().trim()))
+                : null;
         Map<String, List<Category>> categoriesByName = categoryService.listAll().stream()
                 .collect(Collectors.groupingBy(c -> c.getName().trim()));
 
@@ -103,25 +129,27 @@ public class ProductCsvService {
                 throw new BusinessException("单次最多导入 " + MAX_ROWS + " 条商品，请拆分文件");
             }
             int rowNo = i + 1;
-            String phone = cell(row, phoneCol);
             String name = cell(row, nameCol);
             String categoryName = cell(row, categoryCol);
             Product product = new Product();
             List<String> rowErrors = new ArrayList<>();
 
-            Merchant merchant = null;
-            if (phone.isEmpty()) {
-                rowErrors.add("商户手机号不能为空");
-            } else {
-                List<Merchant> matched = merchantsByPhone.get(phone);
-                if (matched == null || matched.isEmpty()) {
-                    rowErrors.add("商户手机号 " + phone + " 不存在");
-                } else if (matched.size() > 1) {
-                    rowErrors.add("手机号 " + phone + " 对应多个商户，无法确定归属");
+            Merchant merchant = fixedMerchant;
+            if (merchant == null) {
+                String phone = cell(row, phoneCol);
+                if (phone.isEmpty()) {
+                    rowErrors.add("商户手机号不能为空");
                 } else {
-                    merchant = matched.get(0);
-                    if (!Integer.valueOf(1).equals(merchant.getStatus())) {
-                        rowErrors.add("商户「" + merchant.getName() + "」未通过审核");
+                    List<Merchant> matched = merchantsByPhone.get(phone);
+                    if (matched == null || matched.isEmpty()) {
+                        rowErrors.add("商户手机号 " + phone + " 不存在");
+                    } else if (matched.size() > 1) {
+                        rowErrors.add("手机号 " + phone + " 对应多个商户，无法确定归属");
+                    } else {
+                        merchant = matched.get(0);
+                        if (!Integer.valueOf(1).equals(merchant.getStatus())) {
+                            rowErrors.add("商户「" + merchant.getName() + "」未通过审核");
+                        }
                     }
                 }
             }
@@ -220,7 +248,8 @@ public class ProductCsvService {
         LocalDateTime now = LocalDateTime.now();
         for (RowProduct item : parsed) {
             Product product = item.product();
-            product.setStatus(1);
+            // 平台导入直接在售；商户自助导入进入待审核，不绕过审核
+            product.setStatus(fixedMerchant == null ? 1 : 0);
             product.setViews(0);
             product.setForwards(0);
             product.setCalls(0);

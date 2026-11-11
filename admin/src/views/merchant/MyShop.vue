@@ -4,16 +4,16 @@
       <span>我的门店信息</span>
     </template>
 
-    <el-form :model="form" label-width="100px" style="max-width: 720px" v-loading="loading">
-      <el-form-item label="门店名称">
-        <el-input v-model="form.name" />
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" style="max-width: 720px" v-loading="loading">
+      <el-form-item label="门店名称" prop="name">
+        <el-input v-model="form.name" maxlength="128" />
       </el-form-item>
       <el-row :gutter="10">
         <el-col :span="12">
-          <el-form-item label="联系人"><el-input v-model="form.contactName" /></el-form-item>
+          <el-form-item label="联系人" prop="contactName"><el-input v-model="form.contactName" maxlength="64" /></el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="联系电话"><el-input v-model="form.phone" /></el-form-item>
+          <el-form-item label="联系电话" prop="phone"><el-input v-model="form.phone" maxlength="20" /></el-form-item>
         </el-col>
       </el-row>
       <el-form-item label="所属市场">
@@ -76,12 +76,22 @@ import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { categorySelectOptions } from '@/utils/category'
+import { useUploadHeaders } from '@/utils/upload'
 
 const form = ref({})
+const formRef = ref()
+const rules = {
+  name: [{ required: true, message: '请填写门店名称', trigger: 'blur' }],
+  contactName: [{ required: true, message: '请填写联系人', trigger: 'blur' }],
+  phone: [
+    { required: true, message: '请填写联系电话', trigger: 'blur' },
+    { pattern: /^[\d\-+ ]{5,20}$/, message: '联系电话格式不正确', trigger: 'blur' }
+  ]
+}
 const categories = ref([])
 const markets = ref([])
 const loading = ref(false)
-const uploadHeaders = { Authorization: localStorage.getItem('token') || '' }
+const uploadHeaders = useUploadHeaders()
 
 const load = async () => {
   loading.value = true
@@ -94,11 +104,17 @@ const load = async () => {
 }
 
 const onUploadSuccess = (res) => {
+  if (res.code !== 200) {
+    ElMessage.error(res.msg || '图片上传失败')
+    return
+  }
   form.value.logo = res.data.url
 }
 
 const save = async () => {
+  await formRef.value.validate()
   const payload = { ...form.value }
+  payload.name = (payload.name || '').trim()
   if (payload.latitude === '') payload.latitude = null
   if (payload.longitude === '') payload.longitude = null
   await request.post('/merchant/shop/save', payload)

@@ -2,6 +2,7 @@ package com.jiancai.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.jiancai.config.CacheConfig;
 import com.jiancai.entity.CallRecord;
 import com.jiancai.entity.ForwardRecord;
 import com.jiancai.entity.Inquiry;
@@ -17,6 +18,7 @@ import com.jiancai.mapper.MpUserMapper;
 import com.jiancai.mapper.ProductMapper;
 import com.jiancai.mapper.ViewRecordMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -152,17 +154,33 @@ public class StatService {
         return map;
     }
 
-    /** 商户端数据概览 */
+    /** 商户端数据概览（60 秒短缓存，看板页高频刷新不再每次 10+ 查询） */
+    @Cacheable(cacheNames = CacheConfig.MERCHANT_STAT, key = "#merchantId")
     public Map<String, Object> merchantOverview(Long merchantId) {
+        // 一条 GROUP BY 拿回各状态产品数，替代 3 次 selectCount
+        Map<Integer, Long> statusCounts = new HashMap<>();
+        long productTotal = 0;
+        for (Map<String, Object> row : productMapper.selectMaps(new QueryWrapper<Product>()
+                .select("status", "COUNT(*) AS c")
+                .eq("merchant_id", merchantId)
+                .groupBy("status"))) {
+            Object status = firstValue(row, "status", "STATUS");
+            Number count = (Number) firstValue(row, "c", "C");
+            if (count == null) {
+                continue;
+            }
+            long c = count.longValue();
+            productTotal += c;
+            if (status != null) {
+                statusCounts.put(Integer.valueOf(status.toString()), c);
+            }
+        }
         List<Long> productIds = ownProductIds(merchantId);
 
         Map<String, Object> map = new HashMap<>(16);
-        map.put("productTotal", productMapper.selectCount(Wrappers.<Product>lambdaQuery()
-                .eq(Product::getMerchantId, merchantId)));
-        map.put("productOnSale", productMapper.selectCount(Wrappers.<Product>lambdaQuery()
-                .eq(Product::getMerchantId, merchantId).eq(Product::getStatus, 1)));
-        map.put("productPending", productMapper.selectCount(Wrappers.<Product>lambdaQuery()
-                .eq(Product::getMerchantId, merchantId).eq(Product::getStatus, 0)));
+        map.put("productTotal", productTotal);
+        map.put("productOnSale", statusCounts.getOrDefault(1, 0L));
+        map.put("productPending", statusCounts.getOrDefault(0, 0L));
         map.put("viewTotal", countView(merchantId, productIds));
         map.put("forwardTotal", countForward(merchantId, productIds));
         map.put("callTotal", callRecordMapper.selectCount(Wrappers.<CallRecord>lambdaQuery()
@@ -177,8 +195,12 @@ public class StatService {
 
     /**
      * 商户最近动态：浏览 / 转发 / 电话联系 合并后按时间倒序
+     * 每张流水表只取前 limit 条再合并（各表 Top-N 的并集必含全局 Top-N），
+     * 避免把商户全部流水拉进内存
      */
+    @Cacheable(cacheNames = CacheConfig.MERCHANT_STAT, key = "#merchantId + ':' + #limit")
     public List<Map<String, Object>> merchantRecords(Long merchantId, int limit) {
+        int n = Math.max(1, Math.min(limit, 50));
         Map<Long, String> productNames = productMapper
                 .selectList(Wrappers.<Product>lambdaQuery().eq(Product::getMerchantId, merchantId))
                 .stream()
@@ -196,7 +218,9 @@ public class StatService {
                 .and(w -> w.eq(ViewRecord::getTargetType, TARGET_MERCHANT)
                         .eq(ViewRecord::getTargetId, merchantId)
                         .or().eq(ViewRecord::getTargetType, TARGET_PRODUCT)
-                        .in(ViewRecord::getTargetId, productIds));
+                        .in(ViewRecord::getTargetId, productIds))
+                .orderByDesc(ViewRecord::getCreateTime)
+                .last("limit " + n);
         for (ViewRecord r : viewRecordMapper.selectList(viewWrapper)) {
             result.add(toRecord("浏览", r.getTargetType(), r.getTargetId(),
                     r.getOpenid(), r.getCreateTime(), productNames, merchantName));
@@ -206,14 +230,18 @@ public class StatService {
                 .and(w -> w.eq(ForwardRecord::getTargetType, TARGET_MERCHANT)
                         .eq(ForwardRecord::getTargetId, merchantId)
                         .or().eq(ForwardRecord::getTargetType, TARGET_PRODUCT)
-                        .in(ForwardRecord::getTargetId, productIds));
+                        .in(ForwardRecord::getTargetId, productIds))
+                .orderByDesc(ForwardRecord::getCreateTime)
+                .last("limit " + n);
         for (ForwardRecord r : forwardRecordMapper.selectList(forwardWrapper)) {
             result.add(toRecord("转发", r.getTargetType(), r.getTargetId(),
                     r.getOpenid(), r.getCreateTime(), productNames, merchantName));
         }
 
         for (CallRecord r : callRecordMapper.selectList(Wrappers.<CallRecord>lambdaQuery()
-                .eq(CallRecord::getMerchantId, merchantId))) {
+                .eq(CallRecord::getMerchantId, merchantId)
+                .orderByDesc(CallRecord::getCreateTime)
+                .last("limit " + n))) {
             result.add(toRecord("电话联系", r.getTargetType(), r.getTargetId(),
                     r.getOpenid(), r.getCreateTime(), productNames, merchantName));
         }
@@ -221,8 +249,8 @@ public class StatService {
         result.sort(Comparator.comparing(
                 m -> (LocalDateTime) m.get("createTime"),
                 Comparator.nullsLast(Comparator.reverseOrder())));
-        if (result.size() > limit) {
-            return result.subList(0, limit);
+        if (result.size() > n) {
+            return result.subList(0, n);
         }
         return result;
     }
@@ -324,11 +352,22 @@ public class StatService {
 
     private List<Long> ownProductIds(Long merchantId) {
         List<Product> products = productMapper.selectList(Wrappers.<Product>lambdaQuery()
+                .select(Product::getId)
                 .eq(Product::getMerchantId, merchantId));
         if (products.isEmpty()) {
             return Collections.singletonList(-1L);
         }
         return products.stream().map(Product::getId).collect(Collectors.toList());
+    }
+
+    /** selectMaps 返回的列名大小写因数据库而异，取第一个命中的值 */
+    private Object firstValue(Map<String, Object> row, String... keys) {
+        for (String key : keys) {
+            if (row.containsKey(key) && row.get(key) != null) {
+                return row.get(key);
+            }
+        }
+        return null;
     }
 
     private long countView(Long merchantId, List<Long> productIds) {
