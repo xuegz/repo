@@ -22,17 +22,18 @@ public class MpProductController {
 
     private final MpProductQueryService mpProductQueryService;
 
-    /** 产品列表（分页 / 关键词 / 品类 / 市场 / 价格排序） */
+    /** 产品列表（分页 / 关键词 / 品类 / 城市 / 市场 / 价格排序） */
     @GetMapping("/products")
     public R<IPage<Product>> products(@RequestParam(defaultValue = "1") long pageNum,
                                       @RequestParam(defaultValue = "10") long pageSize,
                                       @RequestParam(required = false) String keyword,
                                       @RequestParam(required = false) Long categoryId,
+                                      @RequestParam(required = false) String city,
                                       @RequestParam(required = false) String market,
                                       @RequestParam(required = false) String sort,
                                       @RequestParam(required = false) String openid) {
         return R.ok(mpProductQueryService.pageProducts(pageNum, pageSize, keyword,
-                categoryId, market, sort, openid));
+                categoryId, city, market, sort, openid));
     }
 
     /** 产品详情 */

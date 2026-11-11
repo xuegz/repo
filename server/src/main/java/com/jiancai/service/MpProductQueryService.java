@@ -26,9 +26,10 @@ public class MpProductQueryService {
     private final MerchantService merchantService;
     private final MemberAccessService memberAccessService;
 
-    /** 产品列表（分页 / 关键词 匹配名称+品牌+产地 / 品类 / 市场 / 价格排序） */
+    /** 产品列表（分页 / 关键词 匹配名称+品牌+产地 / 品类 / 城市 / 市场 / 价格排序） */
     public IPage<Product> pageProducts(long pageNum, long pageSize, String keyword,
-                                       Long categoryId, String market, String sort, String openid) {
+                                       Long categoryId, String city, String market,
+                                       String sort, String openid) {
         var wrapper = Wrappers.<Product>lambdaQuery()
                 .eq(Product::getStatus, 1);
         // 选中一级品类时，其下所有子类的产品一并展示
@@ -57,6 +58,16 @@ public class MpProductQueryService {
                 return new Page<>(pageNum, pageSize);
             }
             wrapper.in(Product::getMerchantId, merchantIds);
+        }
+
+        if (city != null && !city.isBlank()) {
+            List<Long> cityMerchantIds = merchantService.list(Wrappers.<Merchant>lambdaQuery()
+                            .eq(Merchant::getCity, city.trim()))
+                    .stream().map(Merchant::getId).toList();
+            if (cityMerchantIds.isEmpty()) {
+                return new Page<>(pageNum, pageSize);
+            }
+            wrapper.in(Product::getMerchantId, cityMerchantIds);
         }
         if ("price_asc".equals(sort)) {
             wrapper.orderByAsc(Product::getPrice);

@@ -34,9 +34,10 @@ public class MpShopController {
         return R.ok(mpShopQueryService.merchantDetail(id, openid));
     }
 
-    /** 入驻商户列表（按关键词/市场/品类筛选，含在售产品数；传 lat/lng + sort=distance 按距离排序） */
+    /** 入驻商户列表（按关键词/城市/市场/品类筛选，含在售产品数；传 lat/lng + sort=distance 按距离排序） */
     @GetMapping("/merchants")
     public R<List<Merchant>> merchants(@RequestParam(required = false) String keyword,
+                                       @RequestParam(required = false) String city,
                                        @RequestParam(required = false) String market,
                                        @RequestParam(required = false) Long marketId,
                                        @RequestParam(required = false) Long categoryId,
@@ -44,7 +45,7 @@ public class MpShopController {
                                        @RequestParam(required = false) Double lng,
                                        @RequestParam(required = false) String sort,
                                        @RequestParam(required = false) String openid) {
-        return R.ok(mpShopQueryService.merchants(keyword, market, marketId, categoryId,
+        return R.ok(mpShopQueryService.merchants(keyword, city, market, marketId, categoryId,
                 lat, lng, sort, openid));
     }
 
@@ -53,11 +54,18 @@ public class MpShopController {
     public R<IPage<Merchant>> merchantPage(@RequestParam(defaultValue = "1") long pageNum,
                                            @RequestParam(defaultValue = "30") long pageSize,
                                            @RequestParam(required = false) String keyword,
+                                           @RequestParam(required = false) String city,
                                            @RequestParam(required = false) Long categoryId,
                                            @RequestParam(required = false) Long marketId,
                                            @RequestParam(required = false) String openid) {
-        return R.ok(mpShopQueryService.merchantPage(pageNum, pageSize, keyword,
+        return R.ok(mpShopQueryService.merchantPage(pageNum, pageSize, keyword, city,
                 categoryId, marketId, openid));
+    }
+
+    /** 已通过商户涉及的城市列表（供筛选下拉） */
+    @GetMapping("/cities")
+    public R<List<String>> cities() {
+        return R.ok(mpShopQueryService.cities());
     }
 
     /** 邀请码校验：入驻页展示邀请人门店名称，不暴露联系方式 */

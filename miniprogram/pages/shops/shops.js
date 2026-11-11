@@ -4,6 +4,10 @@ Page({
   data: {
     keyword: '',
     markets: [],
+    cities: [],
+    // 首项为「全部城市」，与 cityIndex 下标对应
+    cityOptions: ['全部城市'],
+    cityIndex: 0,
     list: [],
     mapCount: 0,
     loaded: false,
@@ -17,6 +21,7 @@ Page({
 
   onLoad: function () {
     this.loadMarkets()
+    this.loadCities()
     const that = this
     getMemberAccess().then(function (access) {
       that.accessLoaded = true
@@ -73,11 +78,36 @@ Page({
       .catch(function () {})
   },
 
+  loadCities: function () {
+    const that = this
+    request('/cities')
+      .then(function (data) {
+        const cities = data || []
+        that.setData({
+          cities: cities,
+          cityOptions: ['全部城市'].concat(cities)
+        })
+      })
+      .catch(function () {})
+  },
+
+  onCityChange: function (e) {
+    const index = Number(e.detail.value) || 0
+    const that = this
+    this.setData({ cityIndex: index }, function () {
+      that.loadList()
+    })
+  },
+
   loadList: function (cb) {
     const that = this
     const params = {}
     if (this.data.keyword) {
       params.keyword = this.data.keyword
+    }
+    const city = this.data.cityIndex > 0 ? this.data.cities[this.data.cityIndex - 1] : ''
+    if (city) {
+      params.city = city
     }
     if (this.data.sortMode === 'distance' && this.data.userLat != null) {
       params.lat = this.data.userLat

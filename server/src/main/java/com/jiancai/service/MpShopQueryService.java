@@ -50,13 +50,14 @@ public class MpShopQueryService {
         return data;
     }
 
-    /** 入驻商户列表（按关键词/市场/品类筛选，含在售产品数；传 lat/lng + sort=distance 按距离排序） */
-    public List<Merchant> merchants(String keyword, String market, Long marketId, Long categoryId,
+    /** 入驻商户列表（按关键词/城市/市场/品类筛选，含在售产品数；传 lat/lng + sort=distance 按距离排序） */
+    public List<Merchant> merchants(String keyword, String city, String market, Long marketId, Long categoryId,
                                     Double lat, Double lng, String sort, String openid) {
         boolean member = memberAccessService.isMember(openid);
         var wrapper = Wrappers.<Merchant>lambdaQuery()
                 .eq(Merchant::getStatus, 1)
                 .like(keyword != null && !keyword.isBlank(), Merchant::getName, keyword)
+                .eq(city != null && !city.isBlank(), Merchant::getCity, city)
                 .eq(market != null && !market.isBlank(), Merchant::getMarket, market)
                 .eq(marketId != null, Merchant::getMarketId, marketId)
                 .in(categoryId != null, Merchant::getCategoryId,
@@ -86,7 +87,7 @@ public class MpShopQueryService {
     }
 
     /** 入驻商户分页（品牌导览页滚动加载，按热度排序，关键词匹配名称/市场） */
-    public IPage<Merchant> merchantPage(long pageNum, long pageSize, String keyword,
+    public IPage<Merchant> merchantPage(long pageNum, long pageSize, String keyword, String city,
                                         Long categoryId, Long marketId, String openid) {
         long size = Math.min(Math.max(pageSize, 1), 100);
         var wrapper = Wrappers.<Merchant>lambdaQuery()
@@ -95,6 +96,7 @@ public class MpShopQueryService {
                         .like(Merchant::getName, keyword)
                         .or()
                         .like(Merchant::getMarket, keyword))
+                .eq(city != null && !city.isBlank(), Merchant::getCity, city)
                 .eq(marketId != null, Merchant::getMarketId, marketId)
                 .in(categoryId != null, Merchant::getCategoryId,
                         categoryId == null ? List.of() : categoryService.subtreeIds(categoryId))
@@ -108,6 +110,20 @@ public class MpShopQueryService {
         page.getRecords().forEach(m -> m.setProductCount(counts.getOrDefault(m.getId(), 0)));
         memberAccessService.maskMerchants(page.getRecords(), memberAccessService.isMember(openid));
         return page;
+    }
+
+    /** 已通过商户涉及的城市列表（去重排序，供小程序筛选下拉） */
+    public List<String> cities() {
+        return merchantService.list(Wrappers.<Merchant>lambdaQuery()
+                        .select(Merchant::getCity)
+                        .eq(Merchant::getStatus, 1))
+                .stream()
+                .map(Merchant::getCity)
+                .filter(c -> c != null && !c.isBlank())
+                .map(String::trim)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     private static long hotScore(Merchant m) {

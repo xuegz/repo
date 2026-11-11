@@ -14,6 +14,12 @@
   </view>
 
   <view class="shop-toolbar">
+    <picker wx:if="{{cities.length > 0}}" class="city-picker" mode="selector" range="{{cityOptions}}" value="{{cityIndex}}" bindchange="onCityChange">
+      <view class="city-picker-inner {{cityIndex > 0 ? 'active' : ''}}">
+        <text class="city-picker-name">{{cityOptions[cityIndex]}}</text>
+        <text class="city-picker-arrow">▾</text>
+      </view>
+    </picker>
     <view class="sort-tabs">
       <view class="sort-tab {{sortMode === 'hot' ? 'active' : ''}}" bindtap="selectSort" data-mode="hot">综合热度</view>
       <view class="sort-tab {{sortMode === 'distance' ? 'active' : ''}}" wx:if="{{memberActive}}" bindtap="selectSort" data-mode="distance">

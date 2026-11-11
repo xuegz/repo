@@ -1324,6 +1324,33 @@ page {
   display: flex;
   align-items: center;
 }
+.city-picker {
+  margin-right: 16rpx;
+  padding-right: 16rpx;
+  border-right: 1rpx solid #f0f2f5;
+}
+.city-picker-inner {
+  display: flex;
+  align-items: center;
+  font-size: 25rpx;
+  color: #606266;
+}
+.city-picker-inner.active {
+  color: #ff7a00;
+  font-weight: bold;
+}
+.city-picker-name {
+  max-width: 180rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.city-picker-arrow {
+  margin-left: 6rpx;
+  color: #ff9a3c;
+  font-size: 24rpx;
+  line-height: 1;
+}
 .sort-tabs .sort-tab {
   margin-right: 12rpx;
 }
