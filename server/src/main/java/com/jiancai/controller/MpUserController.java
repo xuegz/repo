@@ -10,12 +10,15 @@ import com.jiancai.mapper.FavoriteMapper;
 import com.jiancai.mapper.InquiryMapper;
 import com.jiancai.mapper.ViewRecordMapper;
 import com.jiancai.security.JwtUtil;
+import com.jiancai.service.MemberAccessService;
 import com.jiancai.service.MpUserService;
 import com.jiancai.service.WxLoginService;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +36,7 @@ public class MpUserController {
     private final InquiryMapper inquiryMapper;
     private final WxLoginService wxLoginService;
     private final JwtUtil jwtUtil;
+    private final MemberAccessService memberAccessService;
 
     /** 微信登录：小程序 wx.login 的 code 换 openid，同时下发聊天 token */
     @PostMapping("/login")
@@ -74,11 +78,11 @@ public class MpUserController {
         return R.ok(data);
     }
 
-    /** 「我的」页摘要：浏览/收藏/询价数量 */
+    /** 「我的」页摘要：浏览/收藏/询价数量 + 注册序号 + 会员角色与到期时间 */
     @GetMapping("/mine/summary")
     public R<Map<String, Object>> summary(@RequestParam String openid) {
         String id = requireOpenid(openid);
-        Map<String, Object> data = new HashMap<>(8);
+        Map<String, Object> data = new HashMap<>(16);
         data.put("historyCount", viewRecordMapper.selectCount(Wrappers.<ViewRecord>lambdaQuery()
                 .eq(ViewRecord::getOpenid, id)
                 .eq(ViewRecord::getTargetType, 1)));
@@ -86,6 +90,25 @@ public class MpUserController {
                 .eq(Favorite::getOpenid, id)));
         data.put("inquiryCount", inquiryMapper.selectCount(Wrappers.<Inquiry>lambdaQuery()
                 .eq(Inquiry::getOpenid, id)));
+
+        MpUser user = mpUserService.findByOpenid(id);
+        data.put("userNo", mpUserService.userNo(user));
+        if (user != null) {
+            data.put("registerTime", user.getCreateTime());
+        }
+
+        Map<String, Object> member = memberAccessService.status(id);
+        data.put("bound", member.get("bound"));
+        data.put("memberActive", member.get("memberActive"));
+        if (member.get("shopName") != null) {
+            data.put("shopName", member.get("shopName"));
+        }
+        if (member.get("expireTime") instanceof LocalDateTime expire) {
+            data.put("expireTime", expire);
+            // 按自然日计算剩余天数，避免“还剩 3 小时”显示成剩 0 天
+            data.put("daysLeft", ChronoUnit.DAYS.between(LocalDateTime.now().toLocalDate(),
+                    expire.toLocalDate()));
+        }
         return R.ok(data);
     }
 

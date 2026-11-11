@@ -1,14 +1,27 @@
 const { openidRequest, ensureLogin, uploadImage } = require('../../utils/request')
 const merchant = require('../../utils/merchant')
 
+/** 统一格式化为 yyyy-MM-dd（后端返回 2026-12-12T00:00:00） */
+function formatDate(value) {
+  if (!value) {
+    return ''
+  }
+  return String(value).replace('T', ' ').slice(0, 10)
+}
+
 Page({
   data: {
     history: [],
     historyExpanded: false,
     memberLabel: '商家会员 · 绑定后开通',
+    memberRoleText: '普通用户 · 绑定商户后开通会员',
     historyCount: 0,
     favoriteCount: 0,
     inquiryCount: 0,
+    userNo: 0,
+    memberActive: false,
+    expireDate: '',
+    daysLeft: null,
     servicePhone: '400-000-0000',
     loginState: 'loading',
     nickname: '',
@@ -32,7 +45,13 @@ Page({
         that.setData({
           historyCount: data.historyCount || 0,
           favoriteCount: data.favoriteCount || 0,
-          inquiryCount: data.inquiryCount || 0
+          inquiryCount: data.inquiryCount || 0,
+          userNo: data.userNo || 0,
+          memberActive: !!data.memberActive,
+          expireDate: formatDate(data.expireTime),
+          daysLeft: typeof data.daysLeft === 'number' ? data.daysLeft : null
+        }, function () {
+          that.refreshMemberText()
         })
       })
       .catch(function () {})
@@ -43,26 +62,45 @@ Page({
     merchant.refreshSession()
       .then(function (data) {
         const bound = !!(data && data.bound)
-        const expire = data && data.expireTime ? String(data.expireTime).replace('T', ' ').slice(0, 10) : ''
-        let memberLabel = '商家会员 · 绑定后开通'
-        if (bound) {
-          if (data.memberActive) {
-            memberLabel = '会员有效期至 ' + expire
-          } else if (expire) {
-            memberLabel = '商户会员已到期'
-          } else {
-            memberLabel = '商家会员 · 未开通'
-          }
-        }
         that.setData({
           merchantBound: bound,
           merchantShop: bound ? data : {},
-          memberLabel: memberLabel
+          memberActive: !!(data && data.memberActive),
+          expireDate: formatDate(data && data.expireTime)
+        }, function () {
+          that.refreshMemberText()
         })
       })
       .catch(function () {
-        that.setData({ merchantBound: false, merchantShop: {} })
+        that.setData({ merchantBound: false, merchantShop: {} }, function () {
+          that.refreshMemberText()
+        })
       })
+  },
+
+  /** 会员横幅显示「第 N 号会员」，头像区下方显示角色与到期时间 */
+  refreshMemberText: function () {
+    const active = !!this.data.memberActive
+    const bound = !!this.data.merchantBound
+    const expire = this.data.expireDate
+    const userNo = this.data.userNo
+    const daysLeft = this.data.daysLeft
+
+    let label = '商家会员 · 绑定后开通'
+    if (userNo > 0) {
+      label = '第 ' + userNo + ' 号' + (active ? '会员' : '用户')
+    }
+
+    let roleText = '普通用户 · 绑定商户后开通会员'
+    if (active) {
+      roleText = '会员' + (expire ? ' · 到期时间 ' + expire : '')
+      if (daysLeft !== null && daysLeft !== undefined && daysLeft >= 0) {
+        roleText += '（剩 ' + daysLeft + ' 天）'
+      }
+    } else if (bound) {
+      roleText = expire ? '会员已到期（' + expire + '）· 续费后恢复权益' : '商户已绑定 · 会员未开通'
+    }
+    this.setData({ memberLabel: label, memberRoleText: roleText })
   },
 
   goMerchant: function () {

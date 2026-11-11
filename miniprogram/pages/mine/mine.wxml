@@ -12,7 +12,8 @@
       <view class="mine-user-info">
         <input wx:if="{{loginState === 'ok'}}" class="mine-name-input" type="nickname" value="{{nickname}}" placeholder="点击设置昵称" placeholder-class="mine-name-placeholder" maxlength="20" bindblur="onNicknameBlur" bindconfirm="onNicknameBlur" />
         <view wx:else class="mine-title">{{loginState === 'loading' ? '登录中…' : '未登录'}}</view>
-        <view class="mine-sub">{{loginState === 'ok' ? '已通过微信登录，数据自动同步' : '登录后同步浏览、收藏与询价'}}</view>
+        <view class="mine-sub" wx:if="{{loginState === 'ok'}}">{{memberRoleText}}</view>
+        <view class="mine-sub" wx:else>{{loginState === 'loading' ? '正在登录…' : '登录后同步浏览、收藏与询价'}}</view>
       </view>
       <view wx:if="{{loginState !== 'ok'}}" class="mine-login" bindtap="doLogin">{{loginState === 'loading' ? '登录中' : '微信登录'}}</view>
     </view>
