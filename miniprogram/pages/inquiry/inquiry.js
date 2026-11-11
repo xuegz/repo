@@ -1,4 +1,11 @@
-const { openidRequest, reportCall, getSubscribeConfig, requestSubscribe } = require('../../utils/request')
+const {
+  openidRequest,
+  reportCall,
+  getMemberAccess,
+  guideMembership,
+  getSubscribeConfig,
+  requestSubscribe
+} = require('../../utils/request')
 
 const STATUS_META = {
   0: { text: '待报价', cls: 'pending' },
@@ -152,7 +159,15 @@ Page({
   callMerchant: function (e) {
     const phone = e.currentTarget.dataset.phone
     if (!phone) {
-      wx.showToast({ title: '商户未留电话', icon: 'none' })
+      const that = this
+      getMemberAccess(true).then(function (access) {
+        if (access && access.memberActive) {
+          that.loadList()
+          wx.showToast({ title: '该商户暂未留电话', icon: 'none' })
+          return
+        }
+        guideMembership(access)
+      })
       return
     }
     reportCall(2, e.currentTarget.dataset.id)

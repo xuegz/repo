@@ -1,4 +1,4 @@
-const { request, reportCall } = require('../../utils/request')
+const { openidRequest, getMemberAccess, guideMembership, reportCall } = require('../../utils/request')
 
 const DEFAULT_CENTER = { latitude: 34.3086, longitude: 108.9402 }
 
@@ -17,18 +17,62 @@ Page({
     market: '',
     merchantCount: 0,
     selected: {},
-    loaded: false
+    loaded: false,
+    memberActive: false,
+    memberBound: false
   },
 
   onLoad: function (options) {
     this.entryMerchantId = options && options.merchantId ? Number(options.merchantId) : 0
     this.initialMarket = options && options.market ? decodeURIComponent(options.market) : ''
-    this.loadMerchants()
+    const that = this
+    getMemberAccess().then(function (access) {
+      that.accessLoaded = true
+      that.setData({
+        memberActive: !!(access && access.memberActive),
+        memberBound: !!(access && access.bound)
+      })
+      if (access && access.memberActive) {
+        that.loadMerchants()
+      } else {
+        that.setData({ loaded: true })
+      }
+    })
+  },
+
+  onShow: function () {
+    if (!this.accessLoaded) {
+      return
+    }
+    const that = this
+    getMemberAccess(true).then(function (access) {
+      const active = !!(access && access.memberActive)
+      const changed = active !== that.data.memberActive
+      that.setData({
+        memberActive: active,
+        memberBound: !!(access && access.bound)
+      })
+      if (changed && active) {
+        that.loadMerchants()
+      }
+    })
+  },
+
+  goMember: function () {
+    const that = this
+    getMemberAccess(true).then(function (access) {
+      if (access && access.memberActive) {
+        that.setData({ memberActive: true, memberBound: !!(access && access.bound) })
+        that.loadMerchants()
+        return
+      }
+      guideMembership(access)
+    })
   },
 
   loadMerchants: function () {
     const that = this
-    request('/merchants')
+    openidRequest('/merchants', 'GET')
       .then(function (data) {
         const list = (data || []).map(function (merchant) {
           return Object.assign({}, merchant, { addressText: addressOf(merchant) })
@@ -143,6 +187,10 @@ Page({
   },
 
   callShop: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const merchant = this.data.selected
     if (!merchant || !merchant.phone) {
       return
@@ -155,6 +203,10 @@ Page({
   },
 
   openNav: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const merchant = this.data.selected
     if (!merchant || !merchant.latitude || !merchant.longitude) {
       wx.showToast({ title: '该商户暂未标注位置', icon: 'none' })

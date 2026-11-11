@@ -2,8 +2,15 @@ package com.jiancai.controller;
 
 import com.jiancai.common.BusinessException;
 import com.jiancai.common.R;
+import com.jiancai.entity.Favorite;
+import com.jiancai.entity.Inquiry;
 import com.jiancai.entity.MpUser;
+import com.jiancai.entity.ViewRecord;
+import com.jiancai.mapper.FavoriteMapper;
+import com.jiancai.mapper.InquiryMapper;
+import com.jiancai.mapper.ViewRecordMapper;
 import com.jiancai.service.MpUserService;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 小程序用户资料（昵称、头像）
+ * 小程序用户资料（昵称、头像）与「我的」页摘要
  */
 @RestController
 @RequestMapping("/api/mp")
@@ -19,6 +26,9 @@ import java.util.Map;
 public class MpUserController {
 
     private final MpUserService mpUserService;
+    private final ViewRecordMapper viewRecordMapper;
+    private final FavoriteMapper favoriteMapper;
+    private final InquiryMapper inquiryMapper;
 
     /** 查询资料；未设置过时返回空对象 */
     @GetMapping("/profile")
@@ -30,6 +40,21 @@ public class MpUserController {
             data.put("nickname", user.getNickname());
             data.put("avatar", user.getAvatar());
         }
+        return R.ok(data);
+    }
+
+    /** 「我的」页摘要：浏览/收藏/询价数量 */
+    @GetMapping("/mine/summary")
+    public R<Map<String, Object>> summary(@RequestParam String openid) {
+        String id = requireOpenid(openid);
+        Map<String, Object> data = new HashMap<>(8);
+        data.put("historyCount", viewRecordMapper.selectCount(Wrappers.<ViewRecord>lambdaQuery()
+                .eq(ViewRecord::getOpenid, id)
+                .eq(ViewRecord::getTargetType, 1)));
+        data.put("favoriteCount", favoriteMapper.selectCount(Wrappers.<Favorite>lambdaQuery()
+                .eq(Favorite::getOpenid, id)));
+        data.put("inquiryCount", inquiryMapper.selectCount(Wrappers.<Inquiry>lambdaQuery()
+                .eq(Inquiry::getOpenid, id)));
         return R.ok(data);
     }
 

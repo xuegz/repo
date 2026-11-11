@@ -5,6 +5,7 @@ import com.jiancai.common.R;
 import com.jiancai.security.JwtUtil;
 import com.jiancai.security.MpAuth;
 import com.jiancai.service.ChatService;
+import com.jiancai.service.MemberAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,19 +22,20 @@ public class ChatController {
 
     private final ChatService chatService;
     private final JwtUtil jwtUtil;
+    private final MemberAccessService memberAccessService;
 
     /** 打开与某商户的会话（不存在时创建） */
     @PostMapping("/open")
     public R<Map<String, Object>> open(@RequestHeader(value = "Authorization", required = false) String auth,
                                        @RequestBody Map<String, Object> body) {
-        return R.ok(chatService.openConversation(authOpenid(auth, text(body.get("openid"))),
+        return R.ok(chatService.openConversation(authMemberOpenid(auth, text(body.get("openid"))),
                 toLong(body.get("merchantId"))));
     }
 
     @GetMapping("/list")
     public R<List<Map<String, Object>>> list(@RequestHeader(value = "Authorization", required = false) String auth,
                                              @RequestParam(required = false) String openid) {
-        return R.ok(chatService.listForUser(authOpenid(auth, openid)));
+        return R.ok(chatService.listForUser(authMemberOpenid(auth, openid)));
     }
 
     @GetMapping("/messages")
@@ -42,13 +44,13 @@ public class ChatController {
                                                  @RequestParam Long conversationId,
                                                  @RequestParam(required = false) Long afterId,
                                                  @RequestParam(required = false) Long beforeId) {
-        return R.ok(chatService.messages(conversationId, authOpenid(auth, openid), null, afterId, beforeId));
+        return R.ok(chatService.messages(conversationId, authMemberOpenid(auth, openid), null, afterId, beforeId));
     }
 
     @PostMapping("/send")
     public R<Map<String, Object>> send(@RequestHeader(value = "Authorization", required = false) String auth,
                                        @RequestBody Map<String, Object> body) {
-        return R.ok(chatService.sendAsUser(authOpenid(auth, text(body.get("openid"))),
+        return R.ok(chatService.sendAsUser(authMemberOpenid(auth, text(body.get("openid"))),
                 toLong(body.get("conversationId")), text(body.get("type")), text(body.get("content")),
                 toLong(body.get("productId"))));
     }
@@ -56,7 +58,7 @@ public class ChatController {
     @PostMapping("/read")
     public R<Void> read(@RequestHeader(value = "Authorization", required = false) String auth,
                         @RequestBody Map<String, Object> body) {
-        chatService.markReadAsUser(authOpenid(auth, text(body.get("openid"))),
+        chatService.markReadAsUser(authMemberOpenid(auth, text(body.get("openid"))),
                 toLong(body.get("conversationId")));
         return R.ok();
     }
@@ -65,7 +67,7 @@ public class ChatController {
     @PostMapping("/report")
     public R<Void> report(@RequestHeader(value = "Authorization", required = false) String auth,
                           @RequestBody Map<String, Object> body) {
-        chatService.reportConversation(authOpenid(auth, text(body.get("openid"))),
+        chatService.reportConversation(authMemberOpenid(auth, text(body.get("openid"))),
                 toLong(body.get("conversationId")), text(body.get("reason")));
         return R.ok();
     }
@@ -74,12 +76,14 @@ public class ChatController {
     @GetMapping("/unread")
     public R<Integer> unread(@RequestHeader(value = "Authorization", required = false) String auth,
                              @RequestParam(required = false) String openid) {
-        return R.ok(chatService.unreadForUser(authOpenid(auth, openid)));
+        return R.ok(chatService.unreadForUser(authMemberOpenid(auth, openid)));
     }
 
-    /** 校验用户 token，openid 仅用于前端兼容，必须与 token 一致 */
-    private String authOpenid(String authorization, String claimed) {
-        return MpAuth.requireOpenid(jwtUtil, authorization, claimed);
+    /** 校验用户 token（openid 仅用于前端兼容，必须与 token 一致），并在站内咨询为会员专享 */
+    private String authMemberOpenid(String authorization, String claimed) {
+        String openid = MpAuth.requireOpenid(jwtUtil, authorization, claimed);
+        memberAccessService.requireMember(openid, "在线咨询");
+        return openid;
     }
 
     private static String text(Object value) {

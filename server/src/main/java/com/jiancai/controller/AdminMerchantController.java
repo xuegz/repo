@@ -16,6 +16,7 @@ import com.jiancai.service.MarketService;
 import com.jiancai.service.MerchantService;
 import com.jiancai.service.OperationLogService;
 import com.jiancai.service.StatService;
+import com.jiancai.service.SystemConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,6 +53,9 @@ public class AdminMerchantController {
     @Autowired
     private SysUserMapper sysUserMapper;
 
+    @Autowired
+    private SystemConfigService systemConfigService;
+
     @GetMapping("/page")
     public R<IPage<Merchant>> page(@RequestParam(defaultValue = "1") long pageNum,
                                    @RequestParam(defaultValue = "10") long pageSize,
@@ -70,6 +74,7 @@ public class AdminMerchantController {
             merchant.setViews(0);
             merchant.setForwards(0);
             merchant.setCalls(0);
+            merchantService.applyPromoMembership(merchant);
         }
         marketService.syncMerchantMarket(merchant);
         merchantService.saveOrUpdate(merchant);
@@ -97,6 +102,51 @@ public class AdminMerchantController {
         Map<String, Object> result = merchantService.resetMerchantPassword(merchantId);
         operationLogService.record("merchant_reset_password", "merchant", merchantId,
                 "重置商户「" + (merchant == null ? merchantId : merchant.getName()) + "」登录密码");
+        return R.ok(result);
+    }
+
+    /** 会员设置：推广期赠送会员的有效期月数 */
+    @GetMapping("/config")
+    public R<Map<String, Object>> config() {
+        Map<String, Object> data = new HashMap<>(2);
+        data.put("membershipMonths", systemConfigService.membershipMonths());
+        return R.ok(data);
+    }
+
+    @PostMapping("/config")
+    public R<Map<String, Object>> saveConfig(@RequestBody Map<String, Object> body) {
+        Object value = body.get("membershipMonths");
+        Integer months;
+        try {
+            months = value == null ? null : Integer.valueOf(value.toString());
+        } catch (NumberFormatException e) {
+            throw new BusinessException("会员有效期月数格式不正确");
+        }
+        if (months == null || months < 1 || months > 120) {
+            throw new BusinessException("会员有效期需在 1-120 个月之间");
+        }
+        int previous = systemConfigService.membershipMonths();
+        systemConfigService.saveMembershipMonths(months);
+        boolean applyExisting = Boolean.TRUE.equals(body.get("applyExisting"));
+        int affected = applyExisting ? merchantService.applyPromoMembershipToExisting(months) : 0;
+        operationLogService.record("membership_config", "config", 0L,
+                "会员有效期 " + previous + " → " + months + " 个月"
+                        + (applyExisting ? "，同步未开通/已到期商户 " + affected + " 家" : ""));
+        Map<String, Object> data = new HashMap<>(4);
+        data.put("membershipMonths", months);
+        data.put("affected", affected);
+        return R.ok(data);
+    }
+
+    /** 人工开通/续费会员（线下收款，365 元/年） */
+    @PostMapping("/membership")
+    public R<Map<String, Object>> membership(@RequestBody Map<String, Object> body) {
+        Long merchantId = Long.valueOf(body.get("merchantId").toString());
+        Integer years = body.get("years") == null ? 1 : Integer.valueOf(body.get("years").toString());
+        Map<String, Object> result = merchantService.openMembership(merchantId, years);
+        Merchant merchant = merchantService.getById(merchantId);
+        operationLogService.record("merchant_membership", "merchant", merchantId,
+                "为商户「" + (merchant == null ? merchantId : merchant.getName()) + "」开通/续费会员 " + years + " 年");
         return R.ok(result);
     }
 

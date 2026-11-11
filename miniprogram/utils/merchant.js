@@ -1,4 +1,4 @@
-const { HOST, ensureLogin } = require('./request')
+const { HOST, ensureLogin, clearMemberAccess } = require('./request')
 
 const TOKEN_KEY = 'merchantToken'
 const SHOP_KEY = 'merchantShop'
@@ -104,6 +104,7 @@ function bindAccount(openid, username, password) {
       success: function (res) {
         const body = res.data || {}
         if (body.code === 200 && body.data) {
+          clearMemberAccess()
           resolve(body.data)
           return
         }
@@ -146,7 +147,10 @@ function refreshSession() {
 
 function unbind() {
   return ensureLogin().then(function (openid) {
-    return authRequest('/api/mp/merchant/unbind', 'POST', { openid: openid })
+    return authRequest('/api/mp/merchant/unbind', 'POST', { openid: openid }).then(function (data) {
+      clearMemberAccess()
+      return data
+    })
   })
 }
 

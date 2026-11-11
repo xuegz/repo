@@ -5,6 +5,7 @@ import com.jiancai.entity.MpUser;
 import com.jiancai.mapper.MpUserMapper;
 import com.jiancai.security.JwtUtil;
 import com.jiancai.security.LoginUser;
+import com.jiancai.service.MemberAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,7 @@ public class ChatSocketHandler extends TextWebSocketHandler {
     private final ChatSocketRegistry registry;
     private final MpUserMapper mpUserMapper;
     private final JwtUtil jwtUtil;
+    private final MemberAccessService memberAccessService;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -68,6 +70,10 @@ public class ChatSocketHandler extends TextWebSocketHandler {
         if (openid.length() > 64
                 || mpUserMapper.selectCount(Wrappers.<MpUser>lambdaQuery().eq(MpUser::getOpenid, openid)) == 0) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("用户不存在"));
+            return;
+        }
+        if (!memberAccessService.isMember(openid)) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("在线咨询为会员专享"));
             return;
         }
         registry.addUser(openid, session);

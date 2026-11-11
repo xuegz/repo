@@ -2,6 +2,7 @@ package com.jiancai.controller;
 
 import com.jiancai.common.R;
 import com.jiancai.security.UserContext;
+import com.jiancai.service.MemberAccessService;
 import com.jiancai.service.MpMerchantBindService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.Map;
 public class MpMerchantController {
 
     private final MpMerchantBindService bindService;
+    private final MemberAccessService memberAccessService;
 
     /** 商户账号密码绑定当前微信 */
     @PostMapping("/bind")
@@ -29,6 +31,12 @@ public class MpMerchantController {
     @GetMapping("/session")
     public R<Map<String, Object>> session(@RequestParam String openid) {
         return R.ok(bindService.session(openid));
+    }
+
+    /** 会员状态：小程序据此展示锁定态与开通/续费引导 */
+    @GetMapping("/access")
+    public R<Map<String, Object>> access(@RequestParam(required = false) String openid) {
+        return R.ok(memberAccessService.status(openid));
     }
 
     /** 解绑当前微信与商户账号 */

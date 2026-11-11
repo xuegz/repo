@@ -1,1 +1,46 @@
 /* pages/map/map.wxss */
+.map-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 160rpx 60rpx 0;
+  text-align: center;
+  background: #f5f7fa;
+}
+.map-locked-icon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 36rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.map-locked-title {
+  margin-top: 28rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #8a4b12;
+}
+.map-locked-sub {
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  color: #a87343;
+  line-height: 1.7;
+}
+.map-locked-btn {
+  margin-top: 40rpx;
+  padding: 18rpx 64rpx;
+  border-radius: 999rpx;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 28rpx;
+}
+.map-locked-link {
+  margin-top: 28rpx;
+  font-size: 26rpx;
+  color: #606266;
+}

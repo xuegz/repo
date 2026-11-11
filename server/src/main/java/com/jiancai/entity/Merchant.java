@@ -60,4 +60,8 @@ public class Merchant {
     /** 非数据库字段：门店资料保存时清除坐标 */
     @com.baomidou.mybatisplus.annotation.TableField(exist = false)
     private Boolean clearLocation;
+
+    /** 非数据库字段：当前访问者是否会员（非会员时联系方式与坐标已脱敏） */
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private Boolean memberActive;
 }

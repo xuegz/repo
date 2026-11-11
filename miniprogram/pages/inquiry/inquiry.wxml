@@ -51,7 +51,7 @@
     <view class="inquiry-actions">
       <button class="inquiry-btn" wx:if="{{item.productId}}" bindtap="goProduct" data-id="{{item.productId}}">查看产品</button>
       <button class="inquiry-btn" bindtap="goShop" data-id="{{item.merchantId}}">商户主页</button>
-      <button class="inquiry-btn accent" bindtap="callMerchant" data-phone="{{item.merchantPhone}}" data-id="{{item.merchantId}}">{{item.quoteExpired ? '电话确认' : '电话联系'}}</button>
+      <button class="inquiry-btn accent" bindtap="callMerchant" data-phone="{{item.merchantPhone}}" data-id="{{item.merchantId}}">{{item.merchantPhone ? (item.quoteExpired ? '电话确认' : '电话联系') : '电话会员可见'}}</button>
     </view>
   </view>
 

@@ -1,4 +1,4 @@
-<view class="map-page">
+<view class="map-page" wx:if="{{memberActive}}">
   <map
     id="shopMap"
     class="map-canvas"
@@ -37,4 +37,12 @@
   </cover-view>
 
   <cover-view class="map-list-entry" wx:if="{{!selected.id}}" bindtap="goShops">列表找商户 ›</cover-view>
+</view>
+
+<view class="map-page map-locked" wx:else>
+  <view class="map-locked-icon">位</view>
+  <view class="map-locked-title">地图找商户 · 会员专享</view>
+  <view class="map-locked-sub">开通商家会员后，可查看商户位置分布、按距离查找，并一键导航到店</view>
+  <view class="map-locked-btn" bindtap="goMember">开通会员</view>
+  <view class="map-locked-link" bindtap="goShops">先看商户列表 ›</view>
 </view>

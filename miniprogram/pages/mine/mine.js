@@ -5,6 +5,10 @@ Page({
   data: {
     history: [],
     historyExpanded: false,
+    memberLabel: '商家会员 · 绑定后开通',
+    historyCount: 0,
+    favoriteCount: 0,
+    inquiryCount: 0,
     servicePhone: '400-000-0000',
     loginState: 'loading',
     nickname: '',
@@ -16,7 +20,22 @@ Page({
   onShow: function () {
     this.loadLogin()
     this.loadHistory()
+    this.loadSummary()
     this.loadMerchant()
+  },
+
+  loadSummary: function () {
+    const that = this
+    openidRequest('/mine/summary', 'GET')
+      .then(function (data) {
+        if (!data) return
+        that.setData({
+          historyCount: data.historyCount || 0,
+          favoriteCount: data.favoriteCount || 0,
+          inquiryCount: data.inquiryCount || 0
+        })
+      })
+      .catch(function () {})
   },
 
   loadMerchant: function () {
@@ -24,9 +43,21 @@ Page({
     merchant.refreshSession()
       .then(function (data) {
         const bound = !!(data && data.bound)
+        const expire = data && data.expireTime ? String(data.expireTime).replace('T', ' ').slice(0, 10) : ''
+        let memberLabel = '商家会员 · 绑定后开通'
+        if (bound) {
+          if (data.memberActive) {
+            memberLabel = '会员有效期至 ' + expire
+          } else if (expire) {
+            memberLabel = '商户会员已到期'
+          } else {
+            memberLabel = '商家会员 · 未开通'
+          }
+        }
         that.setData({
           merchantBound: bound,
-          merchantShop: bound ? data : {}
+          merchantShop: bound ? data : {},
+          memberLabel: memberLabel
         })
       })
       .catch(function () {
@@ -121,6 +152,12 @@ Page({
     this.setData({ historyExpanded: !this.data.historyExpanded })
   },
 
+  goHistory: function () {
+    this.setData({ historyExpanded: true }, function () {
+      wx.pageScrollTo({ selector: '#historyCard', duration: 300 })
+    })
+  },
+
   goApply: function () {
     wx.navigateTo({ url: '/pages/apply/apply' })
   },
@@ -173,7 +210,7 @@ Page({
         if (res.confirm) {
           openidRequest('/history/clear', 'POST')
             .then(function () {
-              that.setData({ history: [], historyExpanded: false })
+              that.setData({ history: [], historyExpanded: false, historyCount: 0 })
               wx.showToast({ title: '已清除', icon: 'success' })
             })
             .catch(function () {})

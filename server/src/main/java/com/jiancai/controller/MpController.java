@@ -19,6 +19,7 @@ import com.jiancai.mapper.ViewRecordMapper;
 import com.jiancai.security.JwtUtil;
 import com.jiancai.service.CategoryService;
 import com.jiancai.service.MarketService;
+import com.jiancai.service.MemberAccessService;
 import com.jiancai.service.MerchantService;
 import com.jiancai.service.MpUserService;
 import com.jiancai.service.ProductService;
@@ -52,6 +53,9 @@ public class MpController {
 
     @Autowired
     private MerchantService merchantService;
+
+    @Autowired
+    private MemberAccessService memberAccessService;
 
     @Autowired
     private SiteService siteService;
@@ -116,9 +120,9 @@ public class MpController {
         return R.ok(wxSubscribeService.publicConfig());
     }
 
-    /** 首页聚合：轮播 + 广告位 + 品类 + 热门市场 + 推荐产品 */
+    /** 首页聚合：轮播 + 广告位 + 品类 + 热门市场 + 推荐产品（非会员不返回商户联系方式） */
     @GetMapping("/home")
-    public R<Map<String, Object>> home() {
+    public R<Map<String, Object>> home(@RequestParam(required = false) String openid) {
         Map<String, Object> data = new HashMap<>(8);
         data.put("banners", siteService.listEnabledBanner());
         data.put("ads", siteService.listAdByPosition("home"));
@@ -133,6 +137,7 @@ public class MpController {
                 .orderByDesc(Product::getCreateTime)
                 .last("limit 10"));
         productService.fillInfo(recommends);
+        memberAccessService.maskProducts(recommends, memberAccessService.isMember(openid));
         data.put("recommends", recommends);
         return R.ok(data);
     }
@@ -149,7 +154,8 @@ public class MpController {
                                       @RequestParam(required = false) String keyword,
                                       @RequestParam(required = false) Long categoryId,
                                       @RequestParam(required = false) String market,
-                                      @RequestParam(required = false) String sort) {
+                                      @RequestParam(required = false) String sort,
+                                      @RequestParam(required = false) String openid) {
         var wrapper = Wrappers.<Product>lambdaQuery()
                 .eq(Product::getStatus, 1);
         // 选中一级品类时，其下所有子类的产品一并展示
@@ -189,23 +195,27 @@ public class MpController {
 
         IPage<Product> page = productService.page(new Page<>(pageNum, pageSize), wrapper);
         productService.fillInfo(page.getRecords());
+        memberAccessService.maskProducts(page.getRecords(), memberAccessService.isMember(openid));
         return R.ok(page);
     }
 
     /** 产品详情 */
     @GetMapping("/product")
-    public R<Product> product(@RequestParam Long id) {
+    public R<Product> product(@RequestParam Long id,
+                              @RequestParam(required = false) String openid) {
         Product product = productService.getById(id);
         if (product == null || !Integer.valueOf(1).equals(product.getStatus())) {
             throw new BusinessException("产品不存在或已下架");
         }
         productService.fillInfo(List.of(product));
+        memberAccessService.maskProduct(product, memberAccessService.isMember(openid));
         return R.ok(product);
     }
 
     /** 商户详情（含在售产品） */
     @GetMapping("/merchant")
-    public R<Map<String, Object>> merchant(@RequestParam Long id) {
+    public R<Map<String, Object>> merchant(@RequestParam Long id,
+                                           @RequestParam(required = false) String openid) {
         Merchant merchant = merchantService.getById(id);
         if (merchant == null || !Integer.valueOf(1).equals(merchant.getStatus())) {
             throw new BusinessException("商户不存在或未上线");
@@ -216,6 +226,10 @@ public class MpController {
                 .orderByDesc(Product::getCreateTime)
                 .last("limit 50"));
         productService.fillInfo(products);
+
+        boolean member = memberAccessService.isMember(openid);
+        memberAccessService.maskMerchant(merchant, member);
+        memberAccessService.maskProducts(products, member);
 
         Map<String, Object> data = new HashMap<>(4);
         data.put("merchant", merchant);
@@ -231,7 +245,9 @@ public class MpController {
                                        @RequestParam(required = false) Long categoryId,
                                        @RequestParam(required = false) Double lat,
                                        @RequestParam(required = false) Double lng,
-                                       @RequestParam(required = false) String sort) {
+                                       @RequestParam(required = false) String sort,
+                                       @RequestParam(required = false) String openid) {
+        boolean member = memberAccessService.isMember(openid);
         var wrapper = Wrappers.<Merchant>lambdaQuery()
                 .eq(Merchant::getStatus, 1)
                 .like(keyword != null && !keyword.isBlank(), Merchant::getName, keyword)
@@ -244,13 +260,14 @@ public class MpController {
                 list.stream().map(Merchant::getId).collect(Collectors.toList()));
         for (Merchant m : list) {
             m.setProductCount(counts.getOrDefault(m.getId(), 0));
-            if (lat != null && lng != null && m.getLatitude() != null && m.getLongitude() != null) {
+            // 位置为会员权益，非会员不计算、不返回距离
+            if (member && lat != null && lng != null && m.getLatitude() != null && m.getLongitude() != null) {
                 m.setDistance(distanceKm(lat, lng,
                         m.getLatitude().doubleValue(), m.getLongitude().doubleValue()));
             }
         }
         Comparator<Merchant> byHot = Comparator.comparingLong(MpController::hotScore).reversed();
-        if ("distance".equals(sort) && lat != null && lng != null) {
+        if (member && "distance".equals(sort) && lat != null && lng != null) {
             Comparator<Merchant> byDistance = Comparator.comparing(
                     m -> m.getDistance() == null ? Double.MAX_VALUE : m.getDistance());
             list.sort(byDistance.thenComparing(byHot));
@@ -258,6 +275,7 @@ public class MpController {
             // 热度加权排序：浏览 1 分 + 转发 2 分 + 电话 5 分
             list.sort(byHot);
         }
+        memberAccessService.maskMerchants(list, member);
         return R.ok(list);
     }
 
@@ -267,7 +285,8 @@ public class MpController {
                                            @RequestParam(defaultValue = "30") long pageSize,
                                            @RequestParam(required = false) String keyword,
                                            @RequestParam(required = false) Long categoryId,
-                                           @RequestParam(required = false) Long marketId) {
+                                           @RequestParam(required = false) Long marketId,
+                                           @RequestParam(required = false) String openid) {
         long size = Math.min(Math.max(pageSize, 1), 100);
         var wrapper = Wrappers.<Merchant>lambdaQuery()
                 .eq(Merchant::getStatus, 1)
@@ -286,6 +305,7 @@ public class MpController {
         Map<Long, Integer> counts = productService.countOnSaleByMerchants(
                 page.getRecords().stream().map(Merchant::getId).collect(Collectors.toList()));
         page.getRecords().forEach(m -> m.setProductCount(counts.getOrDefault(m.getId(), 0)));
+        memberAccessService.maskMerchants(page.getRecords(), memberAccessService.isMember(openid));
         return R.ok(page);
     }
 
@@ -316,19 +336,26 @@ public class MpController {
     }
 
     /** 市场详情：入驻商户与在售产品数 */
+    @SuppressWarnings("unchecked")
     @GetMapping("/market")
     public R<Map<String, Object>> market(@RequestParam Long id,
                                          @RequestParam(required = false) Double lat,
-                                         @RequestParam(required = false) Double lng) {
-        return R.ok(marketService.detail(id, lat, lng));
+                                         @RequestParam(required = false) Double lng,
+                                         @RequestParam(required = false) String openid) {
+        Map<String, Object> data = marketService.detail(id, lat, lng);
+        memberAccessService.maskMerchants((List<Merchant>) data.get("merchants"),
+                memberAccessService.isMember(openid));
+        return R.ok(data);
     }
 
     /** 比价搜索：输入产品名或品牌，返回各家报价（按价格从低到高） */
     @GetMapping("/price-compare")
-    public R<List<Product>> priceCompare(@RequestParam String keyword) {
+    public R<List<Product>> priceCompare(@RequestParam String keyword,
+                                         @RequestParam(required = false) String openid) {
         if (keyword == null || keyword.isBlank()) {
             throw new BusinessException("请输入要比价的产品名称");
         }
+        memberAccessService.requireMember(openid, "同款比价");
         List<Product> list = productService.list(Wrappers.<Product>lambdaQuery()
                 .eq(Product::getStatus, 1)
                 .and(w -> w.like(Product::getName, keyword)
@@ -344,7 +371,9 @@ public class MpController {
      * 匹配优先级：同名 > 同品类+品牌+类型 > 同品类
      */
     @GetMapping("/product/compare")
-    public R<List<Product>> productCompare(@RequestParam Long id) {
+    public R<List<Product>> productCompare(@RequestParam Long id,
+                                           @RequestParam(required = false) String openid) {
+        memberAccessService.requireMember(openid, "同款比价");
         Product base = productService.getById(id);
         if (base == null || !Integer.valueOf(1).equals(base.getStatus())) {
             throw new BusinessException("产品不存在或已下架");
@@ -414,9 +443,10 @@ public class MpController {
         return R.ok(siteService.listEnabledNotice());
     }
 
-    /** 提交询价线索：客户留资，商户端跟进 */
+    /** 提交询价线索：客户留资，商户端跟进（会员专享） */
     @PostMapping("/inquiry")
     public R<Void> inquiry(@RequestBody(required = false) Map<String, Object> body) {
+        memberAccessService.requireMember(optionalOpenid(body), "在线询价");
         String contact = body == null || body.get("contact") == null ? null : body.get("contact").toString().trim();
         if (contact == null || contact.isBlank()) {
             throw new BusinessException("请填写联系方式");
@@ -454,6 +484,9 @@ public class MpController {
                 .orderByDesc(Inquiry::getCreateTime)
                 .last("limit 50"));
         fillInquiryInfo(list);
+        if (!memberAccessService.isMember(openid)) {
+            list.forEach(i -> i.setMerchantPhone(null));
+        }
         return R.ok(list);
     }
 
@@ -559,6 +592,7 @@ public class MpController {
         if (ids.isEmpty()) {
             return R.ok(new ArrayList<>());
         }
+        boolean member = memberAccessService.isMember(openid);
         if (targetType == 1) {
             List<Product> products = productService.list(Wrappers.<Product>lambdaQuery()
                     .in(Product::getId, ids)
@@ -568,6 +602,7 @@ public class MpController {
             List<Product> result = ids.stream().map(map::get)
                     .filter(Objects::nonNull).collect(Collectors.toList());
             productService.fillInfo(result);
+            memberAccessService.maskProducts(result, member);
             return R.ok(result);
         }
         List<Merchant> merchants = merchantService.list(Wrappers.<Merchant>lambdaQuery()
@@ -583,6 +618,7 @@ public class MpController {
                     .eq(Product::getStatus, 1));
             m.setProductCount((int) count);
         }
+        memberAccessService.maskMerchants(result, member);
         return R.ok(result);
     }
 
@@ -619,6 +655,7 @@ public class MpController {
         List<Product> result = ids.stream().map(map::get)
                 .filter(Objects::nonNull).collect(Collectors.toList());
         productService.fillInfo(result);
+        memberAccessService.maskProducts(result, memberAccessService.isMember(openid));
         return R.ok(result);
     }
 

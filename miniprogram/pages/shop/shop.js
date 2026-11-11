@@ -1,5 +1,7 @@
 const {
-  request,
+  openidRequest,
+  getMemberAccess,
+  guideMembership,
   reportView,
   reportCall,
   toggleFavorite,
@@ -11,13 +13,18 @@ Page({
     merchant: {},
     products: [],
     addressText: '-',
-    favorited: false
+    favorited: false,
+    memberActive: false,
+    memberBound: false
   },
 
   onLoad: function (options) {
     if (options && options.id) {
       const id = Number(options.id)
-      this.loadShop(id)
+      const that = this
+      this.loadAccess().then(function () {
+        that.loadShop(id)
+      })
       this.loadFavorite(id)
       // 商户被浏览统计
       reportView(2, id)
@@ -27,7 +34,50 @@ Page({
   onShow: function () {
     if (this.data.merchant.id) {
       this.loadFavorite(this.data.merchant.id)
+      this.refreshAccess(this.data.merchant.id)
     }
+  },
+
+  loadAccess: function () {
+    const that = this
+    return getMemberAccess().then(function (access) {
+      that.setData({
+        memberActive: !!(access && access.memberActive),
+        memberBound: !!(access && access.bound)
+      })
+    })
+  },
+
+  refreshAccess: function (id) {
+    const that = this
+    return getMemberAccess().then(function (access) {
+      const active = !!(access && access.memberActive)
+      const changed = active !== that.data.memberActive
+      that.setData({
+        memberActive: active,
+        memberBound: !!(access && access.bound)
+      })
+      if (changed) {
+        that.loadShop(id)
+      }
+    })
+  },
+
+  goMember: function () {
+    const that = this
+    getMemberAccess(true).then(function (access) {
+      that.setData({
+        memberActive: !!(access && access.memberActive),
+        memberBound: !!(access && access.bound)
+      })
+      if (access && access.memberActive) {
+        if (that.data.merchant.id) {
+          that.loadShop(that.data.merchant.id)
+        }
+        return
+      }
+      guideMembership(access)
+    })
   },
 
   loadFavorite: function (id) {
@@ -55,7 +105,7 @@ Page({
 
   loadShop: function (id) {
     const that = this
-    request('/merchant?id=' + id)
+    openidRequest('/merchant?id=' + id, 'GET')
       .then(function (data) {
         const m = data.merchant || {}
         const addressParts = [m.province, m.city, m.address].filter(function (s) {
@@ -72,6 +122,10 @@ Page({
   },
 
   callPhone: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const merchant = this.data.merchant
     if (!merchant.phone) {
       return
@@ -85,6 +139,10 @@ Page({
   },
 
   goChat: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const m = this.data.merchant
     if (!m || !m.id) {
       wx.showToast({ title: '商户信息加载中，请稍后', icon: 'none' })
@@ -97,6 +155,10 @@ Page({
   },
 
   openNav: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const m = this.data.merchant
     const addressText = this.data.addressText
     if (m.latitude && m.longitude) {
@@ -128,6 +190,10 @@ Page({
   },
 
   goMap: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const merchant = this.data.merchant
     if (!merchant.id) {
       return

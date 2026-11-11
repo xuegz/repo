@@ -18,6 +18,27 @@
     </view>
   </view>
 
+  <view class="card member-card">
+    <view class="member-banner" bindtap="goMerchant" hover-class="tap-hover" hover-stay-time="60">
+      <view class="member-no">{{memberLabel}}</view>
+      <view class="member-slogan">找建材就上材路通</view>
+    </view>
+    <view class="member-stats">
+      <view class="member-stat" bindtap="goHistory" hover-class="tap-hover" hover-stay-time="60">
+        <text class="member-stat-num">{{historyCount}}</text>
+        <text class="member-stat-label">浏览</text>
+      </view>
+      <view class="member-stat" bindtap="goFavorites" hover-class="tap-hover" hover-stay-time="60">
+        <text class="member-stat-num">{{favoriteCount}}</text>
+        <text class="member-stat-label">收藏</text>
+      </view>
+      <view class="member-stat" bindtap="goInquiries" hover-class="tap-hover" hover-stay-time="60">
+        <text class="member-stat-num">{{inquiryCount}}</text>
+        <text class="member-stat-label">询价</text>
+      </view>
+    </view>
+  </view>
+
   <view class="card merchant-entry" bindtap="goMerchant">
     <view class="merchant-entry-icon">{{merchantBound ? '店' : '商'}}</view>
     <view class="merchant-entry-info">
@@ -27,7 +48,7 @@
     <view class="merchant-entry-btn">{{merchantBound ? '进入' : '绑定'}}</view>
   </view>
 
-  <view class="card">
+  <view class="card" id="historyCard">
     <view class="history-head">
       <view class="section-title" style="margin: 0">我的浏览记录</view>
       <view class="history-toggle" wx:if="{{history.length > 3}}" bindtap="toggleHistory" hover-class="tap-hover">

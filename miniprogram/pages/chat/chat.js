@@ -2,6 +2,8 @@ const {
   HOST,
   ensureLogin,
   getChatToken,
+  getMemberAccess,
+  guideMembership,
   openidRequest,
   uploadImage,
   checkChatNotice,
@@ -96,28 +98,37 @@ Page({
     ensureLogin().then(function (openid) {
       that.openid = openid
       that.chatToken = getChatToken()
-      if (options.id && Number(options.id) > 0) {
-        that.setData({
-          conversationId: Number(options.id),
-          merchantId: Number(options.merchantId || 0)
-        })
-        that.afterOpen()
-        return
-      }
-      if (options.merchantId && Number(options.merchantId) > 0) {
-        return openidRequest('/chat/open', 'POST', { merchantId: Number(options.merchantId) })
-          .then(function (data) {
-            that.setData({
-              conversationId: data.conversationId,
-              merchantId: data.merchantId,
-              merchantName: data.merchantName || fallbackName,
-              merchantLogo: data.merchantLogo || ''
-            })
-            wx.setNavigationBarTitle({ title: data.merchantName || fallbackName })
-            that.afterOpen()
+      return getMemberAccess().then(function (access) {
+        if (!access || !access.memberActive) {
+          guideMembership(access)
+          if (access && access.bound) {
+            wx.navigateBack({ fail: function () {} })
+          }
+          return
+        }
+        if (options.id && Number(options.id) > 0) {
+          that.setData({
+            conversationId: Number(options.id),
+            merchantId: Number(options.merchantId || 0)
           })
-      }
-      wx.showToast({ title: '缺少会话参数', icon: 'none' })
+          that.afterOpen()
+          return
+        }
+        if (options.merchantId && Number(options.merchantId) > 0) {
+          return openidRequest('/chat/open', 'POST', { merchantId: Number(options.merchantId) })
+            .then(function (data) {
+              that.setData({
+                conversationId: data.conversationId,
+                merchantId: data.merchantId,
+                merchantName: data.merchantName || fallbackName,
+                merchantLogo: data.merchantLogo || ''
+              })
+              wx.setNavigationBarTitle({ title: data.merchantName || fallbackName })
+              that.afterOpen()
+            })
+        }
+        wx.showToast({ title: '缺少会话参数', icon: 'none' })
+      })
     }).catch(function () {})
   },
 

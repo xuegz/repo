@@ -1,4 +1,4 @@
-const { request } = require('../../utils/request')
+const { request, openidRequest, getMemberAccess, guideMembership } = require('../../utils/request')
 
 Page({
   data: {
@@ -10,12 +10,52 @@ Page({
     sortMode: 'hot',
     userLat: null,
     userLng: null,
-    locating: false
+    locating: false,
+    memberActive: false,
+    memberBound: false
   },
 
   onLoad: function () {
     this.loadMarkets()
-    this.loadList()
+    const that = this
+    getMemberAccess().then(function (access) {
+      that.accessLoaded = true
+      that.setData({
+        memberActive: !!(access && access.memberActive),
+        memberBound: !!(access && access.bound)
+      })
+      that.loadList()
+    })
+  },
+
+  onShow: function () {
+    if (!this.accessLoaded) {
+      return
+    }
+    const that = this
+    getMemberAccess(true).then(function (access) {
+      const active = !!(access && access.memberActive)
+      const changed = active !== that.data.memberActive
+      that.setData({
+        memberActive: active,
+        memberBound: !!(access && access.bound)
+      })
+      if (changed) {
+        that.loadList()
+      }
+    })
+  },
+
+  goMember: function () {
+    const that = this
+    getMemberAccess(true).then(function (access) {
+      if (access && access.memberActive) {
+        that.setData({ memberActive: true, memberBound: !!(access && access.bound) })
+        that.loadList()
+        return
+      }
+      guideMembership(access)
+    })
   },
 
   onPullDownRefresh: function () {
@@ -44,7 +84,7 @@ Page({
       params.lng = this.data.userLng
       params.sort = 'distance'
     }
-    request('/merchants', 'GET', params)
+    openidRequest('/merchants', 'GET', params)
       .then(function (data) {
         const list = data || []
         that.setData({
@@ -70,6 +110,10 @@ Page({
       this.setData({ sortMode: 'hot' }, function () {
         that.loadList()
       })
+      return
+    }
+    if (!this.data.memberActive) {
+      this.goMember()
       return
     }
     if (this.data.userLat != null) {

@@ -16,7 +16,7 @@
   <view class="shop-toolbar">
     <view class="sort-tabs">
       <view class="sort-tab {{sortMode === 'hot' ? 'active' : ''}}" bindtap="selectSort" data-mode="hot">综合热度</view>
-      <view class="sort-tab {{sortMode === 'distance' ? 'active' : ''}}" bindtap="selectSort" data-mode="distance">
+      <view class="sort-tab {{sortMode === 'distance' ? 'active' : ''}}" wx:if="{{memberActive}}" bindtap="selectSort" data-mode="distance">
         离我最近<text wx:if="{{locating}}">…</text>
       </view>
     </view>
@@ -54,8 +54,9 @@
     <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
     <view class="shop-info">
       <view class="shop-name-line">{{item.name}}</view>
-      <view class="shop-line">{{item.market || '未填写市场'}} · {{item.contactName}} {{item.phone}}</view>
-      <view class="shop-line gray">{{item.city}}{{item.address}}</view>
+      <view class="shop-line" wx:if="{{item.memberActive}}">{{item.market || '未填写市场'}} · {{item.contactName}} {{item.phone}}</view>
+      <view class="shop-line" wx:else>{{item.market || '未填写市场'}} · <text class="member-inline">联系方式会员可见</text></view>
+      <view class="shop-line gray">{{item.city}}{{item.memberActive ? item.address : ''}}</view>
       <view class="shop-tags">
         <text class="shop-tag distance" wx:if="{{item.distance !== null && item.distance !== undefined}}">距您 {{tools.distanceText(item.distance)}}</text>
         <text class="shop-tag muted-tag" wx:elif="{{sortMode === 'distance'}}">暂无位置</text>

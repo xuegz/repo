@@ -69,4 +69,8 @@ public class Product {
 
     @TableField(exist = false)
     private java.math.BigDecimal merchantLongitude;
+
+    /** 非数据库字段：当前访问者是否会员（非会员时商户联系方式与坐标已脱敏） */
+    @TableField(exist = false)
+    private Boolean memberActive;
 }

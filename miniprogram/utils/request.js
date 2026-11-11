@@ -12,6 +12,7 @@ let openidCache = ''
 let tokenCache = ''
 let loginPromise = null
 let lastLoginToastAt = 0
+let memberAccessCache = null
 
 /**
  * 聊天接口的登录凭证（与 openid 一并由 /login 下发）
@@ -29,9 +30,14 @@ function clearLogin() {
   openidCache = ''
   tokenCache = ''
   loginPromise = null
+  memberAccessCache = null
   wx.removeStorageSync('openid')
   wx.removeStorageSync(OPENID_FLAG)
   wx.removeStorageSync(TOKEN_KEY)
+}
+
+function clearMemberAccess() {
+  memberAccessCache = null
 }
 
 function request(url, method = 'GET', data = {}) {
@@ -56,7 +62,10 @@ function request(url, method = 'GET', data = {}) {
           if (needsAuth && body.code === 401) {
             clearLogin()
           }
-          wx.showToast({ title: body.msg || '请求失败', icon: 'none' })
+          // 403 为会员门禁，由页面展示锁定态与开通引导，不弹通用提示
+          if (body.code !== 403) {
+            wx.showToast({ title: body.msg || '请求失败', icon: 'none' })
+          }
           reject(body)
         }
       },
@@ -158,6 +167,38 @@ function openidRequest(url, method, data) {
   return ensureLogin().then(function (openid) {
     return request(url, method, Object.assign({}, data || {}, { openid: openid }))
   })
+}
+
+/**
+ * 当前微信的商家会员状态：{ bound, memberActive, expireTime, merchantId, shopName }
+ * 缓存到本次会话；绑定/解绑后调用 clearMemberAccess() 失效
+ */
+function getMemberAccess(force) {
+  if (memberAccessCache && !force) {
+    return Promise.resolve(memberAccessCache)
+  }
+  return openidRequest('/merchant/access', 'GET', {})
+    .then(function (data) {
+      memberAccessCache = data || {}
+      return memberAccessCache
+    })
+    .catch(function () {
+      return { bound: false, memberActive: false }
+    })
+}
+
+/** 未开通会员时的统一引导：已绑定提示续费，未绑定进入商户登录 */
+function guideMembership(access) {
+  const data = access || {}
+  if (data.bound) {
+    wx.showModal({
+      title: '会员未开通或已到期',
+      content: '请联系平台开通或续费会员，之后即可查看联系方式、位置、同款比价并使用在线咨询。',
+      showCancel: false
+    })
+    return
+  }
+  wx.navigateTo({ url: '/pages/merchant/login/login' })
 }
 
 /** 上报浏览 */
@@ -368,6 +409,9 @@ module.exports = {
   ensureLogin: ensureLogin,
   getChatToken: getChatToken,
   clearLogin: clearLogin,
+  getMemberAccess: getMemberAccess,
+  clearMemberAccess: clearMemberAccess,
+  guideMembership: guideMembership,
   openidRequest: openidRequest,
   uploadImage: uploadImage,
   reportView: reportView,

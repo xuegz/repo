@@ -460,6 +460,138 @@ page {
   padding: 30rpx 0;
 }
 
+/* 「我的」页会员横幅与数据栏 */
+.member-card {
+  padding: 0;
+  overflow: hidden;
+}
+.member-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26rpx 28rpx;
+  background: linear-gradient(135deg, #4a2c10, #8a4b12);
+}
+.member-no {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #ffe3b0;
+  letter-spacing: 1rpx;
+}
+.member-slogan {
+  font-size: 22rpx;
+  color: #ffd66b;
+  letter-spacing: 1rpx;
+}
+.member-stats {
+  display: flex;
+  padding: 22rpx 0;
+  background: #fff;
+}
+.member-stat {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.member-stat + .member-stat::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8rpx;
+  bottom: 8rpx;
+  width: 1rpx;
+  background: #f0f2f5;
+}
+.member-stat-num {
+  font-size: 38rpx;
+  font-weight: bold;
+  color: #ff7a00;
+  line-height: 1.2;
+}
+.member-stat-label {
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  color: #909399;
+}
+
+/* 会员权益门禁 */
+.member-lock {
+  display: flex;
+  align-items: center;
+  margin: 20rpx 24rpx;
+  padding: 24rpx 26rpx;
+  background: linear-gradient(135deg, #fff8ea, #ffefd2);
+  border: 1rpx solid #ffd9a0;
+  border-radius: 16rpx;
+}
+.member-lock-icon {
+  flex-shrink: 0;
+  margin-right: 18rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.member-lock-main {
+  flex: 1;
+  min-width: 0;
+}
+.member-lock-title {
+  font-size: 27rpx;
+  font-weight: bold;
+  color: #8a4b12;
+}
+.member-lock-sub {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #a87343;
+  line-height: 1.5;
+}
+.member-lock-btn {
+  flex-shrink: 0;
+  margin-left: 18rpx;
+  padding: 14rpx 26rpx;
+  border-radius: 999rpx;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 24rpx;
+}
+.member-inline {
+  color: #ff7a00;
+}
+.member-card-lock {
+  padding: 10rpx 0 6rpx;
+  text-align: center;
+}
+.member-card-lock-title {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #8a4b12;
+}
+.member-card-lock-sub {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #a87343;
+  line-height: 1.5;
+}
+.member-card-lock-btn {
+  display: inline-block;
+  margin-top: 18rpx;
+  padding: 12rpx 32rpx;
+  border-radius: 999rpx;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 24rpx;
+}
+
 /* 我的页商家中心入口 */
 .merchant-entry {
   display: flex;

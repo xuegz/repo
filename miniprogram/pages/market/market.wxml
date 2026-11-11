@@ -25,6 +25,15 @@
     <view class="market-intro">{{market.intro}}</view>
   </view>
 
+  <view class="member-lock" wx:if="{{!memberActive}}">
+    <view class="member-lock-icon">会</view>
+    <view class="member-lock-main">
+      <view class="member-lock-title">开通商家会员，直接联系档口</view>
+      <view class="member-lock-sub">查看市场内商户的联系人、电话与详细地址</view>
+    </view>
+    <view class="member-lock-btn" bindtap="goMember">去开通</view>
+  </view>
+
   <view class="section-title">入驻商户（{{merchants.length}}）</view>
 
   <view
@@ -40,7 +49,8 @@
     <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
     <view class="shop-info">
       <view class="shop-name-line">{{item.name}}</view>
-      <view class="shop-line">{{item.contactName || '联系人待完善'}} {{item.phone}}</view>
+      <view class="shop-line" wx:if="{{item.memberActive}}">{{item.contactName || '联系人待完善'}} {{item.phone}}</view>
+      <view class="shop-line" wx:else>联系人与电话 · 会员可见</view>
       <view class="shop-tags">
         <text class="shop-tag">在售 {{item.productCount}} 件</text>
         <text class="shop-tag" wx:if="{{item.categoryName}}">{{item.categoryName}}</text>

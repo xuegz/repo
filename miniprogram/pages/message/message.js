@@ -1,4 +1,4 @@
-const { openidRequest, checkChatNotice } = require('../../utils/request')
+const { openidRequest, getMemberAccess, guideMembership, checkChatNotice } = require('../../utils/request')
 
 function pad(n) {
   return n < 10 ? '0' + n : '' + n
@@ -19,13 +19,45 @@ function timeText(value) {
 Page({
   data: {
     list: [],
-    loading: true
+    loading: true,
+    locked: false,
+    memberActive: false,
+    memberBound: false
   },
 
   onShow: function () {
-    this.load()
-    this.startTimer()
-    checkChatNotice()
+    const that = this
+    getMemberAccess().then(function (access) {
+      const active = !!(access && access.memberActive)
+      that.setData({
+        memberActive: active,
+        memberBound: !!(access && access.bound),
+        locked: !active,
+        loading: false
+      })
+      if (active) {
+        that.load()
+        that.startTimer()
+        checkChatNotice()
+      } else {
+        that.stopTimer()
+        that.setData({ list: [] })
+        wx.removeTabBarBadge({ index: 2, fail: function () {} })
+      }
+    })
+  },
+
+  goMember: function () {
+    const that = this
+    getMemberAccess(true).then(function (access) {
+      if (access && access.memberActive) {
+        that.setData({ memberActive: true, memberBound: true, locked: false })
+        that.load()
+        that.startTimer()
+        return
+      }
+      guideMembership(access)
+    })
   },
 
   onHide: function () {
@@ -37,7 +69,10 @@ Page({
   },
 
   onPullDownRefresh: function () {
-    const that = this
+    if (this.data.locked) {
+      wx.stopPullDownRefresh()
+      return
+    }
     this.load().then(function () {
       wx.stopPullDownRefresh()
     })

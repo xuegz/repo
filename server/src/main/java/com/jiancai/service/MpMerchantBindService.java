@@ -79,6 +79,7 @@ public class MpMerchantBindService {
         data.put("merchantId", merchantId);
         data.put("shopName", merchant.getName());
         data.put("shopLogo", merchant.getLogo());
+        putMembership(data, merchant);
         data.put("realName", session.get("realName"));
         data.put("role", role);
         data.put("mustChangePassword", Boolean.TRUE.equals(session.get("mustChangePassword")));
@@ -113,15 +114,21 @@ public class MpMerchantBindService {
         data.put("merchantId", merchant.getId());
         data.put("shopName", merchant.getName());
         data.put("shopLogo", merchant.getLogo());
+        putMembership(data, merchant);
         data.put("realName", user.getRealName());
         data.put("role", user.getRole());
         data.put("mustChangePassword", Integer.valueOf(1).equals(user.getMustChangePassword()));
         return data;
     }
 
+    private static void putMembership(Map<String, Object> data, Merchant merchant) {
+        LocalDateTime expire = merchant.getExpireTime();
+        data.put("expireTime", expire);
+        data.put("memberActive", expire != null && expire.isAfter(LocalDateTime.now()));
+    }
+
     /** 解绑当前微信身份，仅允许解绑自己的绑定 */
-    public void unbind(Long userId, String openid) {
-        MpMerchantBind bind = findByOpenid(openid);
+    public void unbind(Long userId, String openid) {        MpMerchantBind bind = findByOpenid(openid);
         if (bind == null) {
             return;
         }

@@ -1,4 +1,4 @@
-const { request, reportCall } = require('../../utils/request')
+const { openidRequest, getMemberAccess, guideMembership, reportCall } = require('../../utils/request')
 
 Page({
   data: {
@@ -6,7 +6,9 @@ Page({
     merchants: [],
     productCount: 0,
     addressText: '',
-    loaded: false
+    loaded: false,
+    memberActive: false,
+    memberBound: false
   },
 
   onLoad: function (options) {
@@ -15,7 +17,45 @@ Page({
       return
     }
     this.marketId = Number(options.id)
-    this.load()
+    const that = this
+    getMemberAccess().then(function (access) {
+      that.accessLoaded = true
+      that.setData({
+        memberActive: !!(access && access.memberActive),
+        memberBound: !!(access && access.bound)
+      })
+      that.load()
+    })
+  },
+
+  onShow: function () {
+    if (!this.accessLoaded) {
+      return
+    }
+    const that = this
+    getMemberAccess(true).then(function (access) {
+      const active = !!(access && access.memberActive)
+      const changed = active !== that.data.memberActive
+      that.setData({
+        memberActive: active,
+        memberBound: !!(access && access.bound)
+      })
+      if (changed) {
+        that.load()
+      }
+    })
+  },
+
+  goMember: function () {
+    const that = this
+    getMemberAccess(true).then(function (access) {
+      if (access && access.memberActive) {
+        that.setData({ memberActive: true, memberBound: !!(access && access.bound) })
+        that.load()
+        return
+      }
+      guideMembership(access)
+    })
   },
 
   onPullDownRefresh: function () {
@@ -27,7 +67,7 @@ Page({
 
   load: function (cb) {
     const that = this
-    request('/market?id=' + this.marketId)
+    openidRequest('/market?id=' + this.marketId, 'GET')
       .then(function (data) {
         const market = data.market || {}
         const merchants = data.merchants || []
@@ -56,6 +96,10 @@ Page({
   },
 
   callShop: function (e) {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const index = e.currentTarget.dataset.index
     const merchant = this.data.merchants[index]
     if (!merchant || !merchant.phone) {

@@ -1,4 +1,4 @@
-const { request } = require('../../utils/request')
+const { request, openidRequest } = require('../../utils/request')
 
 Page({
   data: {
@@ -53,7 +53,7 @@ Page({
 
   loadData: function (cb) {
     const that = this
-    request('/home')
+    openidRequest('/home', 'GET')
       .then(function (data) {
         const cats = (data.categories || []).slice(0, 7).map(function (c) {
           return { id: c.id, name: c.name, firstLetter: c.name.substring(0, 1) }
@@ -75,7 +75,7 @@ Page({
 
   loadMerchants: function () {
     const that = this
-    request('/merchants/page?pageNum=1&pageSize=4')
+    openidRequest('/merchants/page?pageNum=1&pageSize=4', 'GET')
       .then(function (page) {
         that.setData({
           merchants: (page && page.records) || []

@@ -35,8 +35,26 @@
     <view class="info-row"><text class="info-label">产地</text><text>{{product.origin || '未填写'}}</text></view>
   </view>
 
+  <!-- 会员权益提示 -->
+  <view class="member-lock" wx:if="{{!memberActive}}">
+    <view class="member-lock-icon">会</view>
+    <view class="member-lock-main">
+      <view class="member-lock-title">开通商家会员，解锁完整信息</view>
+      <view class="member-lock-sub">查看商户电话、地址与同款比价，支持在线咨询和询价</view>
+    </view>
+    <view class="member-lock-btn" bindtap="goMember">去开通</view>
+  </view>
+
   <!-- 同款价格对比 -->
-  <view class="card" wx:if="{{compareList.length > 0}}">
+  <view class="card" wx:if="{{!memberActive}}">
+    <view class="section-title" style="margin: 0 0 10rpx">同款价格对比</view>
+    <view class="member-card-lock">
+      <view class="member-card-lock-title">会员可查看同款商户报价</view>
+      <view class="member-card-lock-sub">对比同款最低价，调货询价更有底气</view>
+      <view class="member-card-lock-btn" bindtap="goMember">开通会员查看</view>
+    </view>
+  </view>
+  <view class="card" wx:elif="{{compareList.length > 0}}">
     <view class="section-title" style="margin: 0 0 10rpx">同款价格对比（{{compareList.length}} 家报价）</view>
     <view class="compare-summary" wx:if="{{compareSummary}}">
       <view class="compare-summary-main">
@@ -73,13 +91,21 @@
       <view class="info-link" bindtap="goShop">查看商户主页 ›</view>
     </view>
     <view class="info-row"><text class="info-label">商户</text><text>{{product.merchantName}}</text></view>
-    <view class="info-row"><text class="info-label">电话</text><text class="phone-link" bindtap="callPhone">{{product.merchantPhone}}</text></view>
-    <view class="btn-row">
+    <view class="info-row">
+      <text class="info-label">电话</text>
+      <text class="phone-link" wx:if="{{memberActive}}" bindtap="callPhone">{{product.merchantPhone}}</text>
+      <text class="member-inline" wx:else bindtap="goMember">会员可见 ›</text>
+    </view>
+    <view class="btn-row" wx:if="{{memberActive}}">
       <button class="btn-shop" bindtap="openNav">到店导航</button>
+    </view>
+    <view class="btn-row" wx:else>
+      <button class="btn-shop" bindtap="goMember">开通会员查看到店导航</button>
     </view>
   </view>
 
-  <view class="tip-row">右上角可转发给同行，方便调货询价</view>
+  <view class="tip-row" wx:if="{{memberActive}}">右上角可转发给同行，方便调货询价</view>
+  <view class="tip-row" wx:else>转发给同行可一起看货；绑定商户账号并开通会员后可查看联系方式与比价</view>
 
   <view class="detail-bottom-space"></view>
   <view class="bottom-bar" wx:if="{{product.id}}">
@@ -87,9 +113,10 @@
       <text class="bar-icon-char">{{favorited ? '★' : '☆'}}</text>
       <text class="bar-icon-label">收藏</text>
     </view>
-    <button class="bar-btn bar-ghost" bindtap="goChat">在线咨询</button>
-    <button class="bar-btn bar-primary" bindtap="callPhone" disabled="{{!product.merchantPhone}}">电话联系</button>
-    <button class="bar-btn bar-accent" bindtap="openInquiry">聊价格</button>
+    <button class="bar-btn bar-ghost" wx:if="{{memberActive}}" bindtap="goChat">在线咨询</button>
+    <button class="bar-btn bar-primary" wx:if="{{memberActive}}" bindtap="callPhone" disabled="{{!product.merchantPhone}}">电话联系</button>
+    <button class="bar-btn bar-accent" wx:if="{{memberActive}}" bindtap="openInquiry">聊价格</button>
+    <button class="bar-btn bar-primary" wx:else bindtap="goMember">开通会员 · 解锁联系与询价</button>
   </view>
 
   <!-- 询价弹层 -->

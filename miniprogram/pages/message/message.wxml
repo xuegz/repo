@@ -1,6 +1,13 @@
 <wxs src="../../utils/tools.wxs" module="tools" />
 <view class="msg-page">
-  <view wx:if="{{loading}}" class="msg-empty">加载中…</view>
+  <view wx:if="{{locked}}" class="msg-empty">
+    <view class="msg-empty-icon">会</view>
+    <view class="msg-empty-title">在线咨询为会员专享</view>
+    <view class="msg-empty-sub">绑定商户账号并开通会员后，可直接与同行商户在线沟通、接收消息提醒</view>
+    <button class="msg-empty-btn" bindtap="goMember">{{memberBound ? '会员已到期，去开通' : '绑定商户账号'}}</button>
+  </view>
+
+  <view wx:elif="{{loading}}" class="msg-empty">加载中…</view>
 
   <view wx:elif="{{list.length === 0}}" class="msg-empty">
     <view class="msg-empty-icon">信</view>

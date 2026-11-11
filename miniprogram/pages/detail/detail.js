@@ -1,7 +1,8 @@
 const {
   HOST,
-  request,
   openidRequest,
+  getMemberAccess,
+  guideMembership,
   reportView,
   reportForward,
   reportCall,
@@ -25,6 +26,8 @@ Page({
     compareLoaded: false,
     compareSummary: null,
     favorited: false,
+    memberActive: false,
+    memberBound: false,
     today: '',
     inquiryShow: false,
     inquirySubmitting: false,
@@ -42,8 +45,12 @@ Page({
     })
     if (options && options.id) {
       const id = Number(options.id)
-      this.loadDetail(id)
-      this.loadCompare(id)
+      this.loadAccess().then(function () {
+        that.loadDetail(id)
+        if (that.data.memberActive) {
+          that.loadCompare(id)
+        }
+      })
       // 浏览即上报，用于商户端"被浏览"统计
       reportView(1, id)
     }
@@ -52,7 +59,52 @@ Page({
   onShow: function () {
     if (this.data.product.id) {
       this.loadFavorite()
+      this.refreshAccess()
     }
+  },
+
+  loadAccess: function () {
+    const that = this
+    return getMemberAccess().then(function (access) {
+      that.setData({
+        memberActive: !!(access && access.memberActive),
+        memberBound: !!(access && access.bound)
+      })
+    })
+  },
+
+  /** 绑定/续费后回到页面时刷新会员态，并重新拉取脱敏数据 */
+  refreshAccess: function () {
+    const that = this
+    return getMemberAccess().then(function (access) {
+      const active = !!(access && access.memberActive)
+      const changed = active !== that.data.memberActive
+      that.setData({
+        memberActive: active,
+        memberBound: !!(access && access.bound)
+      })
+      if (changed && that.data.product.id) {
+        that.loadDetail(that.data.product.id)
+        if (active) {
+          that.loadCompare(that.data.product.id)
+        }
+      }
+    })
+  },
+
+  goMember: function () {
+    const that = this
+    getMemberAccess(true).then(function (access) {
+      that.setData({
+        memberActive: !!(access && access.memberActive),
+        memberBound: !!(access && access.bound)
+      })
+      if (access && access.memberActive) {
+        that.refreshAccess()
+        return
+      }
+      guideMembership(access)
+    })
   },
 
   loadFavorite: function () {
@@ -80,7 +132,7 @@ Page({
 
   loadDetail: function (id) {
     const that = this
-    request('/product?id=' + id)
+    openidRequest('/product?id=' + id, 'GET')
       .then(function (data) {
         that.setData({ product: data }, function () {
           that.buildCompareSummary()
@@ -94,7 +146,7 @@ Page({
   /** 同款比价：其他商户对该产品的报价 */
   loadCompare: function (id) {
     const that = this
-    request('/product/compare?id=' + id)
+    openidRequest('/product/compare?id=' + id, 'GET')
       .then(function (data) {
         that.setData({ compareList: data || [], compareLoaded: true }, function () {
           that.buildCompareSummary()
@@ -152,6 +204,10 @@ Page({
   },
 
   callPhone: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const product = this.data.product
     if (!product.merchantPhone) {
       return
@@ -176,6 +232,10 @@ Page({
   },
 
   callComparePhone: function (e) {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const phone = e.currentTarget.dataset.phone
     if (!phone) {
       wx.showToast({ title: '该商户未留电话', icon: 'none' })
@@ -195,6 +255,10 @@ Page({
 
   /** 打开与商户的会话，并自动带上当前商品卡片 */
   goChat: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const product = this.data.product || {}
     if (!product.merchantId) {
       wx.showToast({ title: '该商品暂未关联商户', icon: 'none' })
@@ -210,6 +274,10 @@ Page({
 
   /** 到店导航：有坐标打开地图，无坐标复制地址 */
   openNav: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const p = this.data.product
     if (p.merchantLatitude && p.merchantLongitude) {
       wx.openLocation({
@@ -236,6 +304,10 @@ Page({
 
   // ---------------- 询价留资 ----------------
   openInquiry: function () {
+    if (!this.data.memberActive) {
+      this.goMember()
+      return
+    }
     const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
     const height = Math.max(150, Math.min(240, Math.round(info.windowHeight * 0.34)))
     this.setData({

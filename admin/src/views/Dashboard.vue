@@ -49,7 +49,7 @@
         <span>平台说明</span>
       </template>
       <el-descriptions :column="1" border>
-        <el-descriptions-item label="入驻收费">当前免费入驻；会员收费（365 元 / 年）能力已预留，暂未开通</el-descriptions-item>
+        <el-descriptions-item label="入驻收费">推广期：入驻免费，审核通过按「商户管理 → 会员设置」赠送会员（默认 12 个月）；到期后按 365 元 / 年人工续费</el-descriptions-item>
         <el-descriptions-item label="核心品类">卫浴、防水、油漆涂料、管道、瓷砖、板材、灯具、五金</el-descriptions-item>
         <el-descriptions-item label="平台价值">同行调货 · 跨区域价格对比 · 厂家找渠道 · 商户找货源</el-descriptions-item>
       </el-descriptions>

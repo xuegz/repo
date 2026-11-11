@@ -6,15 +6,19 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jiancai.common.BusinessException;
 import com.jiancai.entity.Category;
 import com.jiancai.entity.Merchant;
+import com.jiancai.entity.PaymentRecord;
 import com.jiancai.entity.Product;
 import com.jiancai.entity.SysUser;
 import com.jiancai.mapper.CategoryMapper;
 import com.jiancai.mapper.MerchantMapper;
+import com.jiancai.mapper.PaymentRecordMapper;
 import com.jiancai.mapper.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +40,52 @@ public class MerchantService extends ServiceImpl<MerchantMapper, Merchant> {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private PaymentRecordMapper paymentRecordMapper;
+
+    @Autowired
+    private SystemConfigService systemConfigService;
+
+    /** 后台人工开通/续费会员：线下收款后按年延长有效期并生成缴费记录 */
+    public Map<String, Object> openMembership(Long merchantId, Integer years) {
+        if (merchantId == null) {
+            throw new BusinessException("缺少商户编号");
+        }
+        int addYears = years == null ? 1 : years;
+        if (addYears < 1 || addYears > 5) {
+            throw new BusinessException("开通年限需在 1-5 年之间");
+        }
+        Merchant merchant = getById(merchantId);
+        if (merchant == null) {
+            throw new BusinessException("商户不存在");
+        }
+        if (!Integer.valueOf(1).equals(merchant.getStatus())) {
+            throw new BusinessException("商户未通过审核，暂不能开通会员");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime base = merchant.getExpireTime() != null && merchant.getExpireTime().isAfter(now)
+                ? merchant.getExpireTime() : now;
+        LocalDateTime expire = base.plusYears(addYears);
+        merchant.setExpireTime(expire);
+        updateById(merchant);
+
+        PaymentRecord record = new PaymentRecord();
+        record.setMerchantId(merchantId);
+        record.setAmount(BigDecimal.valueOf(365L * addYears));
+        record.setYears(addYears);
+        record.setPayType("offline");
+        record.setStatus(1);
+        record.setPayTime(now);
+        record.setExpireTime(expire);
+        record.setCreateTime(now);
+        paymentRecordMapper.insert(record);
+
+        Map<String, Object> data = new HashMap<>(4);
+        data.put("expireTime", expire);
+        data.put("amount", record.getAmount());
+        return data;
+    }
 
     /** 分页并附加展示信息 */
     public IPage<Merchant> pageWithInfo(IPage<Merchant> page, String name, Integer status, String market, Long marketId) {
@@ -86,8 +136,27 @@ public class MerchantService extends ServiceImpl<MerchantMapper, Merchant> {
                 userService.createUser(merchant.getPhone(), "123456",
                         merchant.getContactName(), merchant.getPhone(), 2, id, true);
             }
+            applyPromoMembership(merchant);
         }
         updateById(merchant);
+    }
+
+    /** 推广期赠送会员：未开通或已到期时按后台配置月数开通，不影响有效期内会员 */
+    public void applyPromoMembership(Merchant merchant) {
+        LocalDateTime now = LocalDateTime.now();
+        if (merchant.getExpireTime() == null || !merchant.getExpireTime().isAfter(now)) {
+            merchant.setExpireTime(now.plusMonths(systemConfigService.membershipMonths()));
+        }
+    }
+
+    /** 把会员有效期配置同步到未开通或已到期的已通过商户，返回更新数量 */
+    public int applyPromoMembershipToExisting(int months) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expire = now.plusMonths(months);
+        return getBaseMapper().update(null, Wrappers.<Merchant>lambdaUpdate()
+                .eq(Merchant::getStatus, 1)
+                .and(w -> w.isNull(Merchant::getExpireTime).or().lt(Merchant::getExpireTime, now))
+                .set(Merchant::getExpireTime, expire));
     }
 
     /** 平台重置商户密码：生成临时密码并返回给平台，商户首次登录需修改 */

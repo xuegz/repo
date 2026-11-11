@@ -121,7 +121,8 @@
       <image wx:else src="/assets/placeholder/shop.jpg" mode="aspectFill" class="shop-avatar" />
       <view class="shop-info">
         <view class="shop-name-line">{{item.name}}</view>
-        <view class="shop-line">{{item.market || '建材市场'}} · {{item.contactName}} {{item.phone}}</view>
+        <view class="shop-line" wx:if="{{item.memberActive}}">{{item.market || '建材市场'}} · {{item.contactName}} {{item.phone}}</view>
+        <view class="shop-line" wx:else>{{item.market || '建材市场'}} · <text class="member-inline">联系方式会员可见</text></view>
         <view class="shop-tags">
           <text class="shop-tag">在售 {{item.productCount}} 件</text>
         </view>

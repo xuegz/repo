@@ -20,6 +20,7 @@
         <el-button type="primary" @click="load">查询</el-button>
         <el-button @click="reset">重置</el-button>
         <el-button type="success" @click="openAdd">新增商户</el-button>
+        <el-button @click="openConfig">会员设置</el-button>
       </el-form-item>
     </el-form>
 
@@ -39,13 +40,21 @@
           <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="会员" width="126">
+        <template #default="{ row }">
+          <el-tag v-if="!row.expireTime" type="info">未开通</el-tag>
+          <el-tag v-else-if="isExpired(row.expireTime)" type="danger">已到期</el-tag>
+          <el-tag v-else type="success">{{ formatDate(row.expireTime) }} 到期</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="150" :formatter="formatTime" />
-      <el-table-column label="操作" width="220" fixed="right">
+      <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" link @click="openDetail(row)">详情</el-button>
           <el-button v-if="row.status === 0" type="success" link @click="audit(row, 1)">通过</el-button>
           <el-button v-if="row.status === 0" type="danger" link @click="audit(row, 2)">拒绝</el-button>
           <el-button type="primary" link @click="openEdit(row)">编辑</el-button>
+          <el-button v-if="row.status === 1" type="warning" link @click="openMembership(row)">会员</el-button>
           <el-button v-if="row.status === 1" type="warning" link @click="resetPassword(row)">重置密码</el-button>
           <el-popconfirm title="确定删除该商户？" @confirm="remove(row)">
             <template #reference>
@@ -111,6 +120,55 @@
       </template>
     </el-dialog>
 
+    <el-dialog v-model="configVisible" title="会员设置" width="480px">
+      <el-form label-width="110px">
+        <el-form-item label="赠送有效期">
+          <el-input-number v-model="configForm.months" :min="1" :max="120" />
+          <span class="member-hint">个月</span>
+        </el-form-item>
+        <el-form-item label="同步存量商户">
+          <el-switch v-model="configForm.applyExisting" />
+          <span class="member-hint">仅未开通 / 已到期的已通过商户</span>
+        </el-form-item>
+        <el-form-item label="说明">
+          <div class="member-hint">
+            推广期审核通过、后台代建档时按此月数赠送会员；保存只影响之后新开通的商户，开启同步会立即应用到符合条件的存量商户。
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="configVisible = false">取消</el-button>
+        <el-button type="primary" :loading="configLoading" @click="saveConfig">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="memberVisible" title="开通 / 续费会员" width="480px">
+      <el-descriptions :column="1" border size="small">
+        <el-descriptions-item label="商户">{{ memberForm.name }}</el-descriptions-item>
+        <el-descriptions-item label="当前会员">
+          <el-tag v-if="!memberForm.expireTime" type="info">未开通</el-tag>
+          <el-tag v-else-if="isExpired(memberForm.expireTime)" type="danger">已到期（{{ formatDate(memberForm.expireTime) }}）</el-tag>
+          <el-tag v-else type="success">有效期至 {{ formatDate(memberForm.expireTime) }}</el-tag>
+        </el-descriptions-item>
+      </el-descriptions>
+      <el-form label-width="90px" style="margin-top: 16px">
+        <el-form-item label="开通年限">
+          <el-input-number v-model="memberForm.years" :min="1" :max="5" />
+        </el-form-item>
+        <el-form-item label="应收金额">
+          <span class="member-amount">¥ {{ memberForm.years * 365 }}</span>
+          <span class="member-hint">线下收款，确认后生成缴费记录</span>
+        </el-form-item>
+        <el-form-item label="新到期时间">
+          <span>{{ memberPreview }}</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="memberVisible = false">取消</el-button>
+        <el-button type="primary" :loading="memberLoading" @click="submitMembership">确认开通</el-button>
+      </template>
+    </el-dialog>
+
     <el-drawer v-model="detailVisible" :title="`商户详情 - ${detail.merchant?.name || ''}`" size="760px">
       <div v-loading="detailLoading">
         <el-descriptions :column="2" border size="small">
@@ -130,7 +188,7 @@
             </el-tag>
             <span v-else>-</span>
           </el-descriptions-item>
-          <el-descriptions-item label="到期时间">{{ formatDate(detail.stats?.expireTime) }}</el-descriptions-item>
+          <el-descriptions-item label="会员到期">{{ formatDate(detail.stats?.expireTime) }}</el-descriptions-item>
           <el-descriptions-item label="入驻时间">{{ formatTime(null, null, detail.merchant?.createTime) }}</el-descriptions-item>
         </el-descriptions>
 
@@ -202,6 +260,13 @@ const detail = reactive({
   recentRecords: []
 })
 
+const memberVisible = ref(false)
+const memberLoading = ref(false)
+const memberForm = reactive({ id: null, name: '', expireTime: null, years: 1 })
+const configVisible = ref(false)
+const configLoading = ref(false)
+const configForm = reactive({ months: 12, applyExisting: false })
+
 const detailCards = computed(() => [
   { label: '产品总数', value: detail.stats?.productTotal ?? 0 },
   { label: '浏览总量', value: detail.stats?.viewTotal ?? 0 },
@@ -217,6 +282,7 @@ const statusText = (s) => ({ 0: '待审核', 1: '已通过', 2: '已拒绝' }[s]
 const statusType = (s) => ({ 0: 'warning', 1: 'success', 2: 'danger' }[s] || 'info')
 const formatTime = (row, column, value) => (value || '').replace('T', ' ').slice(0, 16)
 const formatDate = (value) => (value ? String(value).replace('T', ' ').slice(0, 10) : '-')
+const isExpired = (value) => !!value && new Date(String(value)).getTime() <= Date.now()
 const inquiryStatus = (status) => ({ 0: '待报价', 1: '已报价', 2: '跟进中' }[status] || '未知')
 
 const openDetail = async (row) => {
@@ -268,7 +334,7 @@ const save = async () => {
 
 const audit = async (row, status) => {
   await request.post('/admin/merchant/audit', { id: row.id, status })
-  ElMessage.success(status === 1 ? '已通过，商户账号已开通（账号为手机号，初始密码 123456，首次登录需修改）' : '已拒绝')
+  ElMessage.success(status === 1 ? '已通过，商户账号已开通（账号为手机号，初始密码 123456，首次登录需修改）；推广期已按会员设置赠送会员' : '已拒绝')
   load()
 }
 
@@ -291,6 +357,74 @@ const resetPassword = async (row) => {
   )
 }
 
+const memberPreview = computed(() => {
+  const now = new Date()
+  let base = now
+  if (memberForm.expireTime) {
+    const current = new Date(String(memberForm.expireTime))
+    if (current.getTime() > now.getTime()) {
+      base = current
+    }
+  }
+  const next = new Date(base.getTime())
+  next.setFullYear(next.getFullYear() + (memberForm.years || 1))
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`
+})
+
+const loadConfig = async () => {
+  try {
+    const res = await request.get('/admin/merchant/config')
+    configForm.months = Number(res.data?.membershipMonths || 12)
+  } catch (e) {
+    // 读取失败沿用默认值
+  }
+}
+
+const openConfig = () => {
+  configForm.applyExisting = false
+  configVisible.value = true
+}
+
+const saveConfig = async () => {
+  configLoading.value = true
+  try {
+    const res = await request.post('/admin/merchant/config', {
+      membershipMonths: configForm.months,
+      applyExisting: configForm.applyExisting
+    })
+    const affected = Number(res.data?.affected || 0)
+    ElMessage.success(`已保存：会员有效期 ${res.data?.membershipMonths} 个月` + (affected > 0 ? `，同步 ${affected} 家商户` : ''))
+    configVisible.value = false
+    load()
+  } finally {
+    configLoading.value = false
+  }
+}
+
+const openMembership = (row) => {
+  memberForm.id = row.id
+  memberForm.name = row.name
+  memberForm.expireTime = row.expireTime || null
+  memberForm.years = 1
+  memberVisible.value = true
+}
+
+const submitMembership = async () => {
+  memberLoading.value = true
+  try {
+    const res = await request.post('/admin/merchant/membership', {
+      merchantId: memberForm.id,
+      years: memberForm.years
+    })
+    ElMessage.success(`已开通 ${memberForm.years} 年，到期时间 ${formatDate(res.data.expireTime)}`)
+    memberVisible.value = false
+    load()
+  } finally {
+    memberLoading.value = false
+  }
+}
+
 const remove = async (row) => {
   await request.post(`/admin/merchant/remove/${row.id}`)
   ElMessage.success('删除成功')
@@ -311,6 +445,7 @@ onMounted(() => {
   load()
   loadCategories()
   loadMarkets()
+  loadConfig()
 })
 </script>
 
@@ -344,5 +479,15 @@ onMounted(() => {
   font-size: 20px;
   font-weight: 600;
   color: var(--el-color-primary);
+}
+.member-amount {
+  margin-right: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--el-color-primary);
+}
+.member-hint {
+  color: #909399;
+  font-size: 12px;
 }
 </style>
