@@ -761,6 +761,15 @@ page {
   color: rgba(255, 255, 255, 0.85);
   margin-top: 10rpx;
 }
+.apply-inviter {
+  margin-top: 18rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 10rpx;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 24rpx;
+  color: #fff;
+  line-height: 1.5;
+}
 .form-item {
   padding: 18rpx 0;
   border-bottom: 1rpx solid #f0f2f5;

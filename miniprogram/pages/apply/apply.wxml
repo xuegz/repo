@@ -4,6 +4,7 @@
   <view class="card apply-header">
     <view class="apply-title">商户入驻申请</view>
     <view class="apply-sub">限时免费入驻，提交后平台将在 1 个工作日内完成审核</view>
+    <view class="apply-inviter" wx:if="{{inviterName}}">由「{{inviterName}}」邀请入驻，提交后将记录邀请关系</view>
   </view>
 
   <view class="card">
@@ -66,6 +67,12 @@
         <image wx:if="{{form.logo}}" src="{{tools.fileUrl(form.logo)}}" mode="aspectFill" class="logo-img" />
         <view wx:else class="upload-tip">点击上传门店 / 产品照片</view>
       </view>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">邀请码</view>
+      <input class="form-input" maxlength="16" placeholder="同行邀请你入驻时填写（选填）" value="{{form.inviteCode}}" bindinput="onInput" bindblur="onInviteBlur" data-field="inviteCode" />
+      <view class="apply-note" wx:if="{{inviterName}}">邀请人：{{inviterName}}</view>
     </view>
 
     <view class="form-item">

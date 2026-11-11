@@ -26,7 +26,8 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # SQL 日志默认关闭；本地调试时设环境变量 MYBATIS_PLUS_LOG_IMPL=org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: ${MYBATIS_PLUS_LOG_IMPL:org.apache.ibatis.logging.nologging.NoLoggingImpl}
   global-config:
     db-config:
       id-type: auto
@@ -35,13 +36,18 @@ mybatis-plus:
 # 自定义配置
 jiancai:
   # 首次启动自动创建默认账号（已存在则跳过）：admin/123456、merchant/123456
-  init-default-account: true
+  # 创建的默认账号首次登录强制改密；生产环境请通过 JIANCAI_INIT_DEFAULT_ACCOUNT=false 关闭
+  init-default-account: ${JIANCAI_INIT_DEFAULT_ACCOUNT:true}
   jwt:
-    # 生产环境请替换为随机字符串
-    secret: jiancai-platform-secret-key-please-change-me-2026
+    # 生产环境必须通过环境变量 JWT_SECRET 注入随机字符串，使用内置默认值时启动会打印告警
+    secret: ${JWT_SECRET:jiancai-dev-only-secret-do-not-use-in-prod}
     expire-hours: 24
     # 小程序用户聊天 token 有效期（小时）
     user-expire-hours: ${JWT_USER_EXPIRE_HOURS:720}
+  # CORS 跨域白名单（逗号分隔）：后台走 Vite 代理/Nginx 同源部署时本不需要跨域，
+  # 此处仅放行本地开发端口；生产如需直连请通过 CORS_ALLOWED_ORIGINS 设置后台域名
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
   upload:
     # 图片上传目录（Windows 示例），未配置 OSS 时的本地回退目录
     path: D:/jiancai-upload/

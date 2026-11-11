@@ -15,19 +15,26 @@ Page({
       longitude: null,
       categoryId: null,
       intro: '',
-      logo: ''
+      logo: '',
+      inviteCode: ''
     },
     categories: [],
     markets: [],
     selectedCategory: '',
     selectedMarket: '',
     locationText: '',
+    inviterName: '',
     submitting: false
   },
 
   onLoad: function (options) {
     const that = this
     this.pendingMarketId = options && options.marketId ? Number(options.marketId) : 0
+    const invite = options && options.invite ? String(options.invite).trim().toUpperCase() : ''
+    if (invite) {
+      this.setData({ 'form.inviteCode': invite })
+      this.resolveInvite(invite)
+    }
     request('/categories')
       .then(function (data) {
         that.setData({ categories: data || [] })
@@ -74,6 +81,27 @@ Page({
   onInput: function (e) {
     const field = e.currentTarget.dataset.field
     this.setData({ ['form.' + field]: e.detail.value })
+  },
+
+  onInviteBlur: function (e) {
+    const value = (e.detail.value || '').trim().toUpperCase()
+    this.setData({ 'form.inviteCode': value })
+    this.resolveInvite(value)
+  },
+
+  resolveInvite: function (code) {
+    const that = this
+    if (!code) {
+      this.setData({ inviterName: '' })
+      return
+    }
+    request('/invite', 'GET', { code: code })
+      .then(function (data) {
+        that.setData({ inviterName: (data && data.name) || '' })
+      })
+      .catch(function () {
+        that.setData({ inviterName: '' })
+      })
   },
 
   onCategoryChange: function (e) {

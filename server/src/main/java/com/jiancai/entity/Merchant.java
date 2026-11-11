@@ -42,6 +42,13 @@ public class Merchant {
     private java.math.BigDecimal latitude;
     private java.math.BigDecimal longitude;
     private LocalDateTime expireTime;
+    /** 专属邀请码（首次进入邀请页时生成）；仅在邀请接口单独返回，不随商户公开信息下发 */
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    private String inviteCode;
+    /** 邀请人商户 ID（入驻时填写邀请码写入） */
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    private Long inviterId;
+    private LocalDateTime inviteTime;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
@@ -64,4 +71,12 @@ public class Merchant {
     /** 非数据库字段：当前访问者是否会员（非会员时联系方式与坐标已脱敏） */
     @com.baomidou.mybatisplus.annotation.TableField(exist = false)
     private Boolean memberActive;
+
+    /** 非数据库字段：邀请人商户名称 */
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private String inviterName;
+
+    /** 非数据库字段：累计邀请入驻商户数 */
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private Integer inviteCount;
 }

@@ -96,6 +96,18 @@ Page({
     wx.navigateTo({ url: '/pages/merchant/messages/messages' })
   },
 
+  goInvite: function () {
+    if (this.data.shop.memberActive === false) {
+      wx.showModal({
+        title: '邀请同行为会员专享',
+        content: '会员未开通或已到期，请联系平台续费后再邀请同行入驻。',
+        showCancel: false
+      })
+      return
+    }
+    wx.navigateTo({ url: '/pages/merchant/invite/invite' })
+  },
+
   goShop: function () {
     const id = this.data.shop.merchantId
     if (id) {

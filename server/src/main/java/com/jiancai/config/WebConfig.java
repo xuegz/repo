@@ -21,6 +21,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${jiancai.upload.path}")
     private String uploadPath;
 
+    /** 跨域白名单（逗号分隔），默认仅放行本地开发端口 */
+    @Value("#{'${jiancai.cors.allowed-origins:}'.split(',')}")
+    private java.util.List<String> allowedOrigins;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
@@ -31,11 +35,16 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        String[] origins = allowedOrigins.stream()
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toArray(String[]::new);
+        // 鉴权走 Authorization 头而非 Cookie，无需携带凭证
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")
+                .allowedOrigins(origins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .allowCredentials(true)
+                .allowCredentials(false)
                 .maxAge(3600);
     }
 

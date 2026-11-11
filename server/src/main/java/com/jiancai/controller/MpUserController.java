@@ -9,7 +9,9 @@ import com.jiancai.entity.ViewRecord;
 import com.jiancai.mapper.FavoriteMapper;
 import com.jiancai.mapper.InquiryMapper;
 import com.jiancai.mapper.ViewRecordMapper;
+import com.jiancai.security.JwtUtil;
 import com.jiancai.service.MpUserService;
+import com.jiancai.service.WxLoginService;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +31,35 @@ public class MpUserController {
     private final ViewRecordMapper viewRecordMapper;
     private final FavoriteMapper favoriteMapper;
     private final InquiryMapper inquiryMapper;
+    private final WxLoginService wxLoginService;
+    private final JwtUtil jwtUtil;
+
+    /** 微信登录：小程序 wx.login 的 code 换 openid，同时下发聊天 token */
+    @PostMapping("/login")
+    public R<Map<String, Object>> login(@RequestBody Map<String, Object> body) {
+        String code = body.get("code") == null ? "" : body.get("code").toString().trim();
+        if (code.isEmpty()) {
+            throw new BusinessException("缺少微信登录凭证");
+        }
+        if (code.length() > 128) {
+            throw new BusinessException("微信登录凭证不合法");
+        }
+        Map<String, Object> session = wxLoginService.code2Session(code);
+        Object openid = session == null ? null : session.get("openid");
+        if (openid == null) {
+            throw new BusinessException("微信登录失败，请重试");
+        }
+        String value = openid.toString();
+        mpUserService.touchLogin(value);
+        Map<String, Object> result = new HashMap<>(4);
+        result.put("openid", value);
+        result.put("token", jwtUtil.generateUserToken(value));
+        Object unionid = session.get("unionid");
+        if (unionid != null) {
+            result.put("unionid", unionid);
+        }
+        return R.ok(result);
+    }
 
     /** 查询资料；未设置过时返回空对象 */
     @GetMapping("/profile")

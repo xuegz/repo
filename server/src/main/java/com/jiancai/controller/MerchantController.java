@@ -79,6 +79,18 @@ public class MerchantController {
         return R.ok(merchantService.getById(currentMerchantId()));
     }
 
+    /** 邀请同行：邀请码、累计邀请与被邀请商户（会员专享） */
+    @GetMapping("/invite")
+    public R<Map<String, Object>> invite() {
+        Long merchantId = currentMerchantId();
+        Merchant merchant = merchantService.getById(merchantId);
+        if (merchant == null || merchant.getExpireTime() == null
+                || !merchant.getExpireTime().isAfter(LocalDateTime.now())) {
+            throw new BusinessException(403, "邀请同行是会员专享，请续费后再使用");
+        }
+        return R.ok(merchantService.inviteOverview(merchantId));
+    }
+
     @PostMapping("/shop/save")
     public R<Void> shopSave(@RequestBody Merchant merchant) {
         String name = merchant.getName() == null ? "" : merchant.getName().trim();
@@ -124,6 +136,10 @@ public class MerchantController {
         merchant.setForwards(null);
         merchant.setCalls(null);
         merchant.setExpireTime(null);
+        // 邀请关系只由入驻申请写入，门店资料不允许修改
+        merchant.setInviteCode(null);
+        merchant.setInviterId(null);
+        merchant.setInviteTime(null);
         merchant.setCreateTime(null);
         merchant.setUpdateTime(LocalDateTime.now());
         marketService.syncMerchantMarket(merchant);

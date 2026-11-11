@@ -47,6 +47,8 @@ public class AuthController {
         if (merchant.getPhone() == null || merchant.getPhone().isBlank()) {
             throw new BusinessException("请填写联系电话");
         }
+        // 邀请码只用于记录邀请关系，客户端传入的 inviterId 等字段一律忽略
+        merchantService.bindInviter(merchant, merchant.getInviteCode());
         merchant.setStatus(0);
         merchant.setViews(0);
         merchant.setForwards(0);

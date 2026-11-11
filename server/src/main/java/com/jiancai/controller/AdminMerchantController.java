@@ -74,10 +74,16 @@ public class AdminMerchantController {
             merchant.setViews(0);
             merchant.setForwards(0);
             merchant.setCalls(0);
+            // 邀请关系只由小程序入驻申请写入，平台建档不参与邀请
+            merchant.setInviteCode(null);
+            merchant.setInviterId(null);
+            merchant.setInviteTime(null);
             merchantService.applyPromoMembership(merchant);
         }
         marketService.syncMerchantMarket(merchant);
         merchantService.saveOrUpdate(merchant);
+        // 代建档/编辑后补齐登录账号，避免商户手机号 + 初始密码无法登录
+        merchantService.ensureMerchantAccount(merchant);
         return R.ok();
     }
 
@@ -92,6 +98,16 @@ public class AdminMerchantController {
         operationLogService.record("merchant_audit", "merchant", id,
                 actionText + "商户「" + (merchant == null ? id : merchant.getName()) + "」");
         return R.ok();
+    }
+
+    /** 一键通过全部待审核商户，并为每家开通手机号 + 初始密码 123456 的登录账号 */
+    @PostMapping("/audit-pending")
+    public R<Map<String, Object>> auditPending() {
+        Map<String, Object> result = merchantService.auditPending();
+        Object approved = result.get("approved");
+        operationLogService.record("merchant_audit", "merchant", 0L,
+                "批量通过待审核商户 " + approved + " 家");
+        return R.ok(result);
     }
 
     /** 重置商户登录密码，返回临时密码（商户首次登录需修改） */
@@ -170,6 +186,22 @@ public class AdminMerchantController {
         }
         Map<String, Object> data = new HashMap<>(16);
         data.put("merchant", merchant);
+        data.put("inviteCode", merchantService.ensureInviteCode(id));
+        if (merchant.getInviterId() != null) {
+            Merchant inviter = merchantService.getById(merchant.getInviterId());
+            if (inviter != null) {
+                Map<String, Object> inviterInfo = new HashMap<>(4);
+                inviterInfo.put("id", inviter.getId());
+                inviterInfo.put("name", inviter.getName());
+                inviterInfo.put("phone", inviter.getPhone());
+                inviterInfo.put("status", inviter.getStatus());
+                data.put("inviter", inviterInfo);
+            }
+        }
+        data.put("invited", merchantService.list(Wrappers.<Merchant>lambdaQuery()
+                .eq(Merchant::getInviterId, id)
+                .orderByDesc(Merchant::getCreateTime)
+                .last("limit 50")));
         data.put("stats", statService.merchantOverview(id));
         data.put("hotProducts", statService.merchantHotProduct(id));
         data.put("recentRecords", statService.merchantRecords(id, 10));

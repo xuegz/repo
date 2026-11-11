@@ -18,6 +18,7 @@ import com.jiancai.mapper.ProductMapper;
 import com.jiancai.mapper.ViewRecordMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -62,7 +63,8 @@ public class StatService {
     @Autowired
     private InquiryMapper inquiryMapper;
 
-    /** 记录浏览 */
+    /** 记录浏览（流水 + 计数器同事务，失败整体回滚） */
+    @Transactional
     public void recordView(Integer targetType, Long targetId, String openid) {
         if (targetId == null) {
             return;
@@ -76,6 +78,7 @@ public class StatService {
     }
 
     /** 记录转发 */
+    @Transactional
     public void recordForward(Integer targetType, Long targetId, String openid) {
         if (targetId == null) {
             return;
@@ -92,6 +95,7 @@ public class StatService {
      * 记录电话联系：产品页拨号、比价列表询价、商户主页拨号均走这里
      * merchantId 为空时自动推导
      */
+    @Transactional
     public void recordCall(Integer targetType, Long targetId, Long merchantId, String openid) {
         if (targetId == null) {
             return;

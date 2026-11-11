@@ -18,6 +18,7 @@ import com.jiancai.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -132,6 +133,8 @@ public class ChatService {
         return list.stream().map(this::messageView).collect(Collectors.toList());
     }
 
+    /** 用户发消息：消息落库与会话未读数更新为一个事务 */
+    @Transactional
     public Map<String, Object> sendAsUser(String openid, Long conversationId, String type, String content,
                                           Long productId) {
         ChatConversation conversation = requireConversation(conversationId);
@@ -140,6 +143,8 @@ public class ChatService {
         return send(conversation, 1, type, content, productId, target, null);
     }
 
+    /** 商户发消息：消息落库与会话未读数更新为一个事务 */
+    @Transactional
     public Map<String, Object> sendAsMerchant(Long merchantId, Long conversationId, String type, String content,
                                               Long productId) {
         ChatConversation conversation = requireConversation(conversationId);
@@ -167,7 +172,8 @@ public class ChatService {
                 .set(ChatConversation::getUpdateTime, LocalDateTime.now()));
     }
 
-    /** 用户举报会话：写入反馈表供平台处理，同时保留操作日志 */
+    /** 用户举报会话：写入反馈表供平台处理，同时保留操作日志（两步同事务） */
+    @Transactional
     public void reportConversation(String openid, Long conversationId, String reason) {
         ChatConversation conversation = requireConversation(conversationId);
         String target = requireOpenid(openid);

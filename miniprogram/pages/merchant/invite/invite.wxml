@@ -1,0 +1,45 @@
+<view class="page" wx:if="{{loading}}">
+  <view class="empty">加载中...</view>
+</view>
+
+<view class="page" wx:elif="{{locked}}">
+  <view class="card invite-locked">
+    <view class="invite-lock-badge">会员专享</view>
+    <view class="invite-lock-title">邀请同行暂不可用</view>
+    <view class="invite-lock-sub">会员未开通或已到期，请联系平台续费后再邀请同行入驻。</view>
+    <button class="invite-lock-btn" bindtap="goBack">返回商家中心</button>
+  </view>
+</view>
+
+<view class="page" wx:else>
+  <view class="invite-hero">
+    <view class="invite-title">邀请同行入驻</view>
+    <view class="invite-sub">把邀请码发给同行，入驻时填写即记录邀请关系</view>
+    <view class="invite-code-box">
+      <view class="invite-code-label">我的专属邀请码</view>
+      <view class="invite-code">{{code}}</view>
+      <view class="invite-code-hint">同行在入驻申请页填写此码</view>
+    </view>
+    <view class="invite-actions">
+      <view class="invite-btn ghost" bindtap="copyCode">复制邀请码</view>
+      <button class="invite-btn" open-type="share">分享给同行</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="invite-stat">
+      <text class="invite-stat-num">{{inviteCount}}</text>
+      <text class="invite-stat-label">家同行通过你的邀请入驻</text>
+    </view>
+    <view class="invite-row" wx:for="{{invited}}" wx:key="id">
+      <view class="invite-row-main">
+        <view class="invite-name">{{item.name}}</view>
+        <view class="invite-meta">{{item.phone || '未留电话'}} · {{item.timeText}}</view>
+      </view>
+      <text class="invite-status status-{{item.status}}">{{item.statusText}}</text>
+    </view>
+    <view class="invite-empty" wx:if="{{invited.length === 0}}">还没有邀请记录，把邀请码发给同行试试</view>
+  </view>
+
+  <view class="m-form-tip">邀请关系仅用于平台统计，暂不自动发放奖励；如有疑问可联系平台客服。</view>
+</view>

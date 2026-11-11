@@ -20,6 +20,7 @@
         <el-button type="primary" @click="load">查询</el-button>
         <el-button @click="reset">重置</el-button>
         <el-button type="success" @click="openAdd">新增商户</el-button>
+        <el-button type="warning" :loading="batchAuditing" @click="auditPending">一键通过待审核</el-button>
         <el-button @click="openConfig">会员设置</el-button>
       </el-form-item>
     </el-form>
@@ -45,6 +46,13 @@
           <el-tag v-if="!row.expireTime" type="info">未开通</el-tag>
           <el-tag v-else-if="isExpired(row.expireTime)" type="danger">已到期</el-tag>
           <el-tag v-else type="success">{{ formatDate(row.expireTime) }} 到期</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="邀请" width="140">
+        <template #default="{ row }">
+          <div v-if="row.inviterName" class="cell-sub">邀请人：{{ row.inviterName }}</div>
+          <div v-if="row.inviteCount" class="cell-sub">已邀请 {{ row.inviteCount }} 家</div>
+          <span v-if="!row.inviterName && !row.inviteCount">-</span>
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="150" :formatter="formatTime" />
@@ -190,6 +198,8 @@
           </el-descriptions-item>
           <el-descriptions-item label="会员到期">{{ formatDate(detail.stats?.expireTime) }}</el-descriptions-item>
           <el-descriptions-item label="入驻时间">{{ formatTime(null, null, detail.merchant?.createTime) }}</el-descriptions-item>
+          <el-descriptions-item label="邀请码">{{ detail.inviteCode || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="邀请人">{{ detail.inviter?.name || '-' }}</el-descriptions-item>
         </el-descriptions>
 
         <el-row :gutter="12" class="detail-stats">
@@ -228,6 +238,20 @@
               <el-table-column prop="createTime" label="时间" width="160" :formatter="formatTime" />
             </el-table>
           </el-tab-pane>
+          <el-tab-pane :label="`邀请入驻 (${detail.invited?.length || 0})`">
+            <el-table :data="detail.invited" size="small" border>
+              <el-table-column prop="name" label="被邀请商户" min-width="180" show-overflow-tooltip />
+              <el-table-column prop="phone" label="电话" width="130" />
+              <el-table-column label="状态" width="90">
+                <template #default="{ row }">
+                  <el-tag :type="statusType(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="inviteTime" label="邀请时间" width="160" :formatter="formatTime" />
+              <el-table-column prop="createTime" label="入驻时间" width="160" :formatter="formatTime" />
+            </el-table>
+            <div v-if="!detail.invited?.length" class="detail-empty">该商户还没有邀请同行入驻</div>
+          </el-tab-pane>
         </el-tabs>
       </div>
     </el-drawer>
@@ -244,6 +268,7 @@ const query = reactive({ pageNum: 1, pageSize: 10, name: '', marketId: null, sta
 const tableData = ref([])
 const total = ref(0)
 const loading = ref(false)
+const batchAuditing = ref(false)
 const categories = ref([])
 const markets = ref([])
 const dialogVisible = ref(false)
@@ -257,7 +282,10 @@ const detail = reactive({
   account: null,
   hotProducts: [],
   recentInquiries: [],
-  recentRecords: []
+  recentRecords: [],
+  inviteCode: '',
+  inviter: null,
+  invited: []
 })
 
 const memberVisible = ref(false)
@@ -288,6 +316,18 @@ const inquiryStatus = (status) => ({ 0: '待报价', 1: '已报价', 2: '跟进�
 const openDetail = async (row) => {
   detailVisible.value = true
   detailLoading.value = true
+  Object.assign(detail, {
+    merchant: {},
+    stats: {},
+    inquiryCounts: {},
+    account: null,
+    hotProducts: [],
+    recentInquiries: [],
+    recentRecords: [],
+    inviteCode: '',
+    inviter: null,
+    invited: []
+  })
   try {
     const res = await request.get(`/admin/merchant/detail/${row.id}`)
     Object.assign(detail, res.data)
@@ -336,6 +376,40 @@ const audit = async (row, status) => {
   await request.post('/admin/merchant/audit', { id: row.id, status })
   ElMessage.success(status === 1 ? '已通过，商户账号已开通（账号为手机号，初始密码 123456，首次登录需修改）；推广期已按会员设置赠送会员' : '已拒绝')
   load()
+}
+
+const auditPending = async () => {
+  const confirmed = await ElMessageBox.confirm(
+    '将通过全部待审核商户，并为每家开通账号（账号为手机号，初始密码 123456，首次登录需修改）并赠送推广期会员。没有填写联系电话的商户会被跳过。确定继续？',
+    '一键通过待审核',
+    { type: 'warning', confirmButtonText: '确定通过' }
+  ).then(() => true).catch(() => false)
+  if (!confirmed) {
+    return
+  }
+  batchAuditing.value = true
+  try {
+    const res = await request.post('/admin/merchant/audit-pending')
+    const { total = 0, approved = 0, skipped = [] } = res.data || {}
+    if (!total) {
+      ElMessage.info('当前没有待审核商户')
+    } else if (skipped.length) {
+      ElMessageBox.alert(
+        h('div', [
+          h('div', `共 ${total} 家待审核，已通过 ${approved} 家。`),
+          h('div', { style: 'margin-top:6px' }, `跳过 ${skipped.length} 家（缺少手机号或账号冲突）：`),
+          h('div', { style: 'color:#909399;font-size:12px;margin-top:4px' }, skipped.join('、'))
+        ]),
+        '批量审核完成',
+        { type: 'warning' }
+      )
+    } else {
+      ElMessage.success(`已通过 ${approved} 家商户，账号均为手机号 + 初始密码 123456`)
+    }
+    load()
+  } finally {
+    batchAuditing.value = false
+  }
 }
 
 const resetPassword = async (row) => {
@@ -461,6 +535,12 @@ onMounted(() => {
   color: #909399;
   font-size: 12px;
   line-height: 1.4;
+}
+.detail-empty {
+  padding: 18px 0;
+  text-align: center;
+  color: #909399;
+  font-size: 13px;
 }
 .detail-stats {
   margin: 16px 0 4px;

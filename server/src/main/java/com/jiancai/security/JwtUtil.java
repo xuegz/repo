@@ -4,6 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,8 +16,12 @@ import java.util.Date;
 /**
  * JWT 工具类
  */
+@Slf4j
 @Component
 public class JwtUtil {
+
+    /** 仅本地开发使用的兜底密钥，与 application.yml 中的默认值保持一致 */
+    private static final String DEV_FALLBACK_SECRET = "jiancai-dev-only-secret-do-not-use-in-prod";
 
     @Value("${jiancai.jwt.secret}")
     private String secret;
@@ -25,6 +31,14 @@ public class JwtUtil {
 
     @Value("${jiancai.jwt.user-expire-hours:720}")
     private long userExpireHours;
+
+    /** 使用内置兜底密钥时醒目告警，防止误带到生产环境 */
+    @PostConstruct
+    void warnIfDevSecret() {
+        if (DEV_FALLBACK_SECRET.equals(secret)) {
+            log.warn("正在使用内置开发 JWT 密钥，生产环境请务必通过环境变量 JWT_SECRET 配置随机密钥！");
+        }
+    }
 
     private SecretKey getKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));

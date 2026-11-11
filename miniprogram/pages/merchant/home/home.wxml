@@ -65,6 +65,14 @@
       </view>
       <view class="m-entry-arrow">›</view>
     </view>
+    <view class="m-entry" bindtap="goInvite">
+      <view class="m-entry-icon">邀</view>
+      <view class="m-entry-info">
+        <view class="m-entry-title">邀请同行入驻</view>
+        <view class="m-entry-sub">生成专属邀请码，邀请同行免费入驻</view>
+      </view>
+      <view class="m-entry-arrow">›</view>
+    </view>
     <view class="m-entry" bindtap="goShopEdit">
       <view class="m-entry-icon">店</view>
       <view class="m-entry-info">

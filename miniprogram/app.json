@@ -28,7 +28,8 @@
         "inquiries/inquiries",
         "shop/shop",
         "messages/messages",
-        "chat/chat"
+        "chat/chat",
+        "invite/invite"
       ]
     }
   ],

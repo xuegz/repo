@@ -45,7 +45,8 @@
 
 - 后端配置 = 仓库内 `server/src/main/resources/application.yml`（默认值、不含密钥）+ 服务器上 `/opt/jiancai/config/application.yml`（覆盖项、含密钥）。
 - 外部配置优先级更高，改完需 `systemctl restart jiancai`。
-- 覆盖项包含：`server.port`、`spring.profiles.active=mysql`、`spring.datasource.*`、`mybatis-plus.*`、`jiancai.jwt.secret`、`jiancai.upload.path=/opt/jiancai/upload/`、`jiancai.oss.*`、`jiancai.wx.appid`、`jiancai.wx.secret`。
+- 覆盖项包含：`server.port`、`spring.profiles.active=mysql`、`spring.datasource.*`、`mybatis-plus.*`、`jiancai.jwt.secret`、`jiancai.cors.allowed-origins`、`jiancai.upload.path=/opt/jiancai/upload/`、`jiancai.oss.*`、`jiancai.wx.appid`、`jiancai.wx.secret`。
+- 仓库默认值已收紧：SQL 日志默认关闭（`MYBATIS_PLUS_LOG_IMPL` 可临时开启调试）；JWT 密钥用内置开发值会打印告警，生产必须覆盖；CORS 默认仅放行本地 5173，后台同源部署无需额外配置。
 - 修改配置前先备份：`cp /opt/jiancai/config/application.yml{,.bak}`。
 
 ### 微信小程序登录配置
