@@ -1,5 +1,17 @@
 const { request, openidRequest, getMemberAccess, guideMembership } = require('../../utils/request')
 
+/** 两点球面距离（公里），与后端 market 距离口径一致 */
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const rad = Math.PI / 180
+  const radLat1 = lat1 * rad
+  const radLat2 = lat2 * rad
+  const dLat = radLat2 - radLat1
+  const dLng = (lng2 - lng1) * rad
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(radLat1) * Math.cos(radLat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
 Page({
   data: {
     keyword: '',
@@ -74,8 +86,13 @@ Page({
     request('/markets')
       .then(function (data) {
         that.setData({ markets: data || [] })
+        that.marketsReady = true
+        that.maybeLocateCity()
       })
-      .catch(function () {})
+      .catch(function () {
+        that.marketsReady = true
+        that.maybeLocateCity()
+      })
   },
 
   loadCities: function () {
@@ -87,8 +104,73 @@ Page({
           cities: cities,
           cityOptions: ['全部城市'].concat(cities)
         })
+        that.citiesReady = true
+        that.maybeLocateCity()
       })
-      .catch(function () {})
+      .catch(function () {
+        that.citiesReady = true
+        that.maybeLocateCity()
+      })
+  },
+
+  /**
+   * 已授权定位时静默取当前位置，自动选中最近市场所在城市
+   * 不主动弹授权框，也不覆盖用户手动选择
+   */
+  maybeLocateCity: function () {
+    if (this.cityAutoTried || !this.marketsReady || !this.citiesReady) {
+      return
+    }
+    this.cityAutoTried = true
+    if (this.data.cityIndex > 0) {
+      return
+    }
+    const that = this
+    wx.getSetting({
+      success: function (res) {
+        if (!res.authSetting || !res.authSetting['scope.userLocation']) {
+          return
+        }
+        wx.getLocation({
+          type: 'gcj02',
+          success: function (loc) {
+            that.tryAutoCity(loc.latitude, loc.longitude)
+          },
+          fail: function () {}
+        })
+      }
+    })
+  },
+
+  /** 按坐标匹配最近市场所在城市并切换筛选（100 公里内才生效），返回是否切换 */
+  tryAutoCity: function (lat, lng) {
+    if (this.data.cityIndex > 0 || !lat || !lng) {
+      return false
+    }
+    let best = null
+    const markets = this.data.markets || []
+    for (let i = 0; i < markets.length; i++) {
+      const m = markets[i]
+      if (!m.city || m.latitude == null || m.longitude == null) {
+        continue
+      }
+      const km = haversineKm(lat, lng, Number(m.latitude), Number(m.longitude))
+      if (!best || km < best.km) {
+        best = { km: km, city: m.city }
+      }
+    }
+    if (!best || best.km > 100) {
+      return false
+    }
+    const index = this.data.cities.indexOf(best.city)
+    if (index < 0) {
+      return false
+    }
+    const that = this
+    this.setData({ cityIndex: index + 1 }, function () {
+      that.loadList()
+    })
+    return true
   },
 
   onCityChange: function (e) {
@@ -170,7 +252,10 @@ Page({
           sortMode: 'distance',
           locating: false
         }, function () {
-          that.loadList()
+          // 自动切城会自行刷新列表，避免重复请求
+          if (!that.tryAutoCity(res.latitude, res.longitude)) {
+            that.loadList()
+          }
         })
       },
       fail: function (err) {
